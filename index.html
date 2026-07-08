@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Packing Slip - Sarv India Home Furnishing</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body { background-color: var(--background); color: var(--text-main); padding-bottom: 100px; }
+
+        .header { background: var(--surface); padding: 12px 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
+        .header h1 { font-size: 18px; color: var(--primary); font-weight: 700; margin-bottom: 2px; letter-spacing: 0.5px; }
+        .header h2 { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+        .container { padding: 12px; }
+
+        .card { background: var(--surface); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8); }
+
+        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--text-main); }
+
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 3px; font-weight: 500; }
+
+        input, select { width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; background-color: var(--surface); color: var(--text-main); transition: all 0.2s ease; }
+        input[type="text"] { text-transform: uppercase; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        /* ── Item Block ── */
+        .item-block { border: 1.5px solid #cbd5e1; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+        .item-block-header { display: flex; align-items: center; justify-content: space-between; background: #1e293b; color: #fff; padding: 7px 10px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+        .del-item-btn { background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+        .item-table { width: 100%; border-collapse: collapse; }
+        .item-table td, .item-table th { border: 1px solid #d1d5db; font-size: 12px; padding: 4px 5px; vertical-align: middle; }
+
+        /* Item config row (Type + Brand only — no TOTAL SR) */
+        .item-config-row td { background: #fff7ed; }
+        .item-config-header td { background: #f97316; color: #fff; font-weight: 700; text-align: center; font-size: 12px; }
+        .item-config-row input, .item-config-row select {
+            border: 1.5px solid #fdba74; border-radius: 5px; padding: 7px 6px;
+            font-size: 13px; width: 100%; background: #fff; font-weight: 600;
+        }
+        .item-config-row input:focus, .item-config-row select:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
+
+        /* Sub-rows table header */
+        .item-green-header td { background: #16a34a; color: #fff; font-weight: 700; text-align: center; font-size: 12px; }
+
+        /* Brand Name merged row */
+        .brand-name-row td { background: #fff7ed; padding: 5px 6px; border: 1px solid #d1d5db; }
+        /* Brand input: show a subtle list icon to hint datalist is available */
+        .item-brand { cursor: pointer; }
+        .item-brand::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+        .brand-name-row .brand-label { font-size: 10px; font-weight: 700; color: #92400e; white-space: nowrap; width: 72px; padding-right: 4px; }
+        .brand-name-row input { border: 1.5px solid #fdba74; border-radius: 5px; padding: 7px 8px; font-size: 13px; font-weight: 600; background: #fff; }
+        .brand-name-row input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
+
+        /* Sub-rows: col order Sr | Qty | Wt | Actions */
+        .sub-row td { text-align: center; background: #fff; }
+        .sub-row td.sr-cell { font-weight: 700; color: #475569; background: #f8fafc; width: 30px; font-size: 12px; }
+        .sub-row input { border: 1px solid #d1d5db; border-radius: 5px; padding: 6px 3px; font-size: 13px; width: 100%; text-align: center; background: #fff; }
+        .sub-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+
+        /* Actions — last column, only × button */
+        .sub-row td.row-actions { width: 36px; padding: 2px 3px; background: #f8fafc; }
+        .btn-del-row {
+            width: 26px; height: 26px; border: none; border-radius: 5px;
+            background: #ef4444; color: #fff; font-size: 17px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;
+            margin: 0 auto;
+        }
+        .btn-del-row:active { opacity: 0.75; }
+
+        /* Item total row */
+        .item-total-tr td { background: #dbeafe; font-weight: 700; font-size: 12px; color: #1e3a8a; text-align: center; border-top: 2px solid #93c5fd; }
+        .item-total-tr td:first-child { text-align: left; padding-left: 8px; }
+
+        /* Add row button (inside item block) */
+        .add-row-wrap { padding: 6px 8px; background: #f8fafc; border-top: 1px dashed #d1d5db; }
+        .add-row-btn { width: 100%; background: #f0fdf4; color: #166534; border: 1.5px dashed #86efac; border-radius: 6px; padding: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .add-row-btn:active { background: #dcfce7; }
+
+        /* Add item button */
+        .add-item-wrap { margin-bottom: 10px; }
+        .add-item-btn { width: 100%; background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 11px 18px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; box-shadow: 0 2px 8px rgba(37,99,235,0.2); }
+        .add-item-btn:active { opacity: 0.85; }
+
+        /* Summary */
+        .summary-title { font-size: 13px; font-weight: 700; color: #1e3a8a; margin-bottom: 6px; text-transform: uppercase; border-bottom: 1px dashed #bfdbfe; padding-bottom: 3px; }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 5px; }
+        .summary-table th { background: #dbeafe; color: #1e40af; font-weight: 600; padding: 6px; text-align: left; border: 1px solid #bfdbfe; }
+        .summary-table td { padding: 5px 6px; border: 1px solid #bfdbfe; color: #334155; }
+        .totals-box { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; }
+        .totals-flex { display: flex; justify-content: space-between; font-size: 15px; font-weight: 700; color: var(--primary); border-top: 2px solid #bfdbfe; padding-top: 6px; margin-top: 8px; }
+
+        .floating-total { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, var(--primary), #1d4ed8); color: white; padding: 12px 20px; border-radius: 50px; box-shadow: 0 10px 25px -5px rgba(37,99,235,0.5); font-weight: 600; font-size: 14px; z-index: 1000; display: flex; align-items: center; gap: 8px; }
+
+        .required-star { color: var(--error); }
+
+        .finish-container { margin-top: 15px; }
+        .finish-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #059669, #10b981); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 14px rgba(16,185,129,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .finish-btn:active { opacity: 0.85; }
+        .finish-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Saving Overlay */
+        .saving-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .saving-box { background: var(--surface); border-radius: 16px; padding: 30px 26px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .saving-spinner { width: 46px; height: 46px; margin: 0 auto 16px; border: 4px solid #dbeafe; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .saving-check { width: 46px; height: 46px; margin: 0 auto 16px; border-radius: 50%; background: var(--success); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; animation: popIn 0.3s ease-out; }
+        .saving-error-icon { width: 46px; height: 46px; margin: 0 auto 16px; border-radius: 50%; background: var(--error); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; animation: popIn 0.3s ease-out; }
+        .saving-title { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+        .saving-subtitle { font-size: 12px; color: var(--text-muted); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* Print */
+        .print-only-table { display: none; }
+        @media print {
+            @page { size: A4; margin: 8mm 10mm; }
+            body { background: white; color: black; padding-bottom: 0; font-size: 11px; }
+            .header { position: relative; box-shadow: none; padding: 2px 0; border-bottom: 2px solid #000; margin-bottom: 5px; }
+            .header h1 { font-size: 16px; } .header h2 { font-size: 11px; }
+            .card { box-shadow: none; border: none; padding: 0; margin-bottom: 6px; }
+            #items-container, .card-title, .add-item-wrap { display: none !important; }
+            .print-only-table { display: table !important; width: 100%; border-collapse: collapse; margin-top: 2px; }
+            .print-only-table th { background-color: #f1f5f9 !important; color: black !important; font-weight: 600; border: 1px solid black !important; padding: 5px !important; font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-only-table td { border: 1px solid black !important; padding: 4px 6px !important; font-size: 11px; }
+            .print-only-table tr.print-item-header td { background: #e2e8f0 !important; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-only-table tr.print-item-total td { background: #dbeafe !important; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .summary-title { color: black; border-bottom: 1px solid black; }
+            .summary-table th { background: #f1f5f9 !important; color: black !important; border: 1px solid black !important; }
+            .summary-table td { border: 1px solid black !important; color: black; }
+            input { border: none !important; background: transparent !important; padding: 0 !important; font-size: 11px !important; color: black !important; }
+            .required-star, .floating-total, .finish-container, .saving-overlay { display: none !important; }
+            .totals-box { background: transparent !important; border: 1.5px solid black !important; padding: 6px !important; color: black !important; margin-top: 5px; }
+            .totals-flex { color: black !important; font-size: 12px; border-top: 1.5px solid black; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>SARV INDIA HOME FURNISHING</h1>
+    <h2>PACKING SLIP</h2>
+</div>
+
+<div class="floating-total">
+    ⚖️ Total Wt: <span id="float-total-wt">0.00</span> Kg
+</div>
+
+<!-- Saving Overlay -->
+<div class="saving-overlay" id="savingOverlay">
+    <div class="saving-box">
+        <div id="savingIcon" class="saving-spinner"></div>
+        <div class="saving-title" id="savingTitle">Saving to Sheet...</div>
+        <div class="saving-subtitle" id="savingSubtitle">Please wait, do not close</div>
+    </div>
+</div>
+
+<form class="container" id="packing-slip-form" onsubmit="return false;">
+
+    <!-- Packing Type Card — always at top, changes everything below -->
+    <div class="card" style="border: 2px solid var(--primary); background: linear-gradient(135deg,#eff6ff,#dbeafe);">
+        <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:13px;font-weight:700;color:var(--primary);">📦 Packing Type <span class="required-star">*</span></label>
+            <select id="packing-type" onchange="onPackingTypeChange()" required
+                style="font-size:15px;font-weight:700;color:var(--primary);border:2px solid var(--primary);border-radius:8px;padding:10px;">
+                <option value="Billed">🧾 Billed</option>
+                <option value="Non-Bill">📋 Non-Bill</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 📝 Draft Load Card -->
+    <div class="card" id="draft-card" style="border:2px dashed #7c3aed;background:#faf5ff;display:none;">
+        <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:12px;font-weight:700;color:#7c3aed;">📝 Load Saved Draft (Partial Slips)</label>
+            <div style="display:flex;gap:6px;">
+                <select id="draft-select" onchange="onDraftSelect()" style="flex:1;font-size:13px;font-weight:600;color:#7c3aed;border:1.5px solid #c4b5fd;border-radius:8px;padding:9px;">
+                    <option value="">— Select Draft to Load —</option>
+                </select>
+                <button type="button" id="delete-draft-btn" onclick="handleDeleteDraft()"
+                    style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;display:none;">🗑</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Card -->
+    <div class="card">
+        <div class="form-group">
+            <label>Packing Slip Sr. No (From Sheet)</label>
+            <input type="text" id="slip-sr-no" placeholder="Loading..." readonly
+                style="background:#f1f5f9;font-weight:700;color:var(--primary);">
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="date-today" readonly style="background:#f1f5f9;">
+        </div>
+        <div class="form-group">
+            <label>Invoice No</label>
+            <input type="text" id="invoice-no" placeholder="Enter Invoice No (optional)"
+                oninput="convertToUpperCase(this)">
+        </div>
+        <div class="form-group">
+            <label>Party Name <span class="required-star">*</span></label>
+            <input type="text" id="party-name" placeholder="Enter Party Name"
+                oninput="convertToUpperCase(this)" required>
+        </div>
+        <div class="form-group">
+            <label>Delivery Party</label>
+            <input type="text" id="sub-party-name" placeholder="Enter Delivery Party"
+                oninput="convertToUpperCase(this)">
+        </div>
+        <!-- ✅ NEW: Delivery Address -->
+        <div class="form-group">
+            <label>Delivery Address</label>
+            <input type="text" id="third-party-name" placeholder="Enter Delivery Address"
+                oninput="convertToUpperCase(this)">
+        </div>
+        <!-- ✅ NEW: Private Marka -->
+        <div class="form-group">
+            <label>Private Marka</label>
+            <input type="text" id="private-marka" placeholder="Enter Private Marka"
+                oninput="convertToUpperCase(this)">
+        </div>
+        <div class="form-group">
+            <label>Loading Contractor Name</label>
+            <input type="text" id="contractor-name" placeholder="Enter Contractor Name"
+                oninput="convertToUpperCase(this)">
+        </div>
+    </div>
+
+    <!-- Item Details Card -->
+    <div class="card">
+        <div class="card-title">📦 Item Details</div>
+        <div id="items-container"></div>
+        <div class="add-item-wrap">
+            <button type="button" class="add-item-btn" onclick="addItem()">＋ Add New Item Block</button>
+        </div>
+        <!-- Print-only table -->
+        <table class="print-only-table">
+            <thead>
+                <tr>
+                    <th style="width:6%;text-align:center;">Sr.</th>
+                    <th style="width:18%;">Type</th>
+                    <th style="width:30%;">Brand</th>
+                    <th style="width:10%;text-align:center;">Pack Sr.</th>
+                    <th style="width:10%;text-align:center;">Qty</th>
+                    <th style="width:13%;text-align:right;">Wt (Kg)</th>
+                </tr>
+            </thead>
+            <tbody id="print-table-body"></tbody>
+        </table>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="card totals-box">
+        <div class="summary-title">📊 Item &amp; Brand Wise Summary</div>
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Item Type</th>
+                    <th>Brand Name</th>
+                    <th style="text-align:center;width:20%;">Total Qty</th>
+                    <th style="text-align:right;width:25%;">Total Wt (Kg)</th>
+                </tr>
+            </thead>
+            <tbody id="summary-table-body">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No items added yet</td></tr>
+            </tbody>
+        </table>
+        <div class="totals-flex">
+            <span>Grand Qty: <span id="bottom-total-qty">0</span></span>
+            <span>Grand Wt: <span id="bottom-total-wt">0.00</span> Kg</span>
+        </div>
+    </div>
+
+    <!-- Dispatch Details Card -->
+    <div class="card">
+        <div class="card-title">🚚 Dispatch Details</div>
+        <div class="form-group">
+            <label>Tempo No <span class="required-star">*</span></label>
+            <input type="text" id="tempo-no" placeholder="Type or select tempo..."
+                list="vehicle-datalist"
+                oninput="convertToUpperCase(this)"
+                onchange="onTempoChange(this)"
+                autocomplete="off" required>
+        </div>
+        <div class="form-group">
+            <label>Driver Name <span class="required-star">*</span></label>
+            <input type="text" id="driver-name" placeholder="Driver Full Name"
+                oninput="convertToUpperCase(this)" required>
+        </div>
+        <div class="form-group">
+            <label>Driver No (Mobile)</label>
+            <input type="tel" id="driver-mobile" placeholder="10-digit mobile number">
+        </div>
+        <div class="form-group">
+            <label>Supervisor Name <span class="required-star">*</span></label>
+            <input type="text" id="supervisor-name" placeholder="Supervisor Name"
+                oninput="convertToUpperCase(this)" required>
+        </div>
+    </div>
+
+    <!-- Finish Button + Save Partially -->
+    <div class="finish-container">
+        <button type="button" class="finish-btn" id="finishBtn" onclick="handleFinish()">
+            ✅ Finish Packing Slip
+        </button>
+        <button type="button" id="saveDraftBtn" onclick="handleSaveDraft()"
+            style="width:100%;margin-top:8px;padding:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 4px 14px rgba(124,58,237,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+            📝 Save Packing Slip No. Partially
+        </button>
+    </div>
+</form>
+
+<script>
+// ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1njBLX4FlF1dAf5f_-EOPGCdS-LONcoPT0vq48NHdvEOBmOK-GCX9mtwRk5vS0E-X/exec';
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+document.getElementById('date-today').valueAsDate = new Date();
+
+// itemCounter: always increments, never resets — ensures unique block IDs even after deletes
+let itemCounter = 0;
+
+// 📋 Brand list loaded from Sheet "Item List"
+// Map<BRAND_NAME_UPPERCASE, stdPcs> — O(1) lookup when user selects a brand
+let brandMap = new Map();
+
+// 🚛 Vehicle list loaded from Sheet "Vehicle List"
+// Map<TEMPO_NO_UPPERCASE, {driverName, driverMobile}> — O(1) lookup on tempo select
+let vehicleMap = new Map();
+
+// 📝 Draft state
+let currentDraftId = null;  // null = new slip, 'D-x' = editing a saved draft
+
+// Inject a shared <datalist> into the DOM once — all brand inputs reference it
+function buildBrandDatalist(brands) {
+    // Remove old one if re-built (future: live refresh)
+    const old = document.getElementById('brand-datalist');
+    if (old) old.remove();
+
+    const dl = document.createElement('datalist');
+    dl.id = 'brand-datalist';
+    brands.forEach(function (b) {
+        const opt = document.createElement('option');
+        opt.value = b.name;
+        opt.setAttribute('data-std-pcs', b.stdPcs);
+        dl.appendChild(opt);
+        brandMap.set(b.name.toUpperCase(), b.stdPcs);
+    });
+    document.body.appendChild(dl);
+}
+
+// ══════════════════════════════════════════════════════
+// 🔍 AUTO-SUGGESTIONS — built from saved sheet data
+// One <datalist> per field, populated with unique past values
+// User can still type new values (datalist = suggestion, not restriction)
+// ══════════════════════════════════════════════════════
+function buildSuggestionDatalists(suggestions) {
+    if (!suggestions) return;
+
+    var fieldMap = [
+        { id: 'party-name',      key: 'partyNames',      listId: 'dl-party' },
+        { id: 'sub-party-name',  key: 'deliveryParties', listId: 'dl-delivery-party' },
+        { id: 'third-party-name', key: 'deliveryAddrs',  listId: 'dl-delivery-addr' },
+        { id: 'private-marka',   key: 'privateMarkas',   listId: 'dl-marka' },
+        { id: 'contractor-name', key: 'contractors',     listId: 'dl-contractor' },
+        { id: 'supervisor-name', key: 'supervisors',     listId: 'dl-supervisor' }
+    ];
+
+    fieldMap.forEach(function(f) {
+        var values = suggestions[f.key] || [];
+        if (values.length === 0) return;
+
+        // Remove old datalist if exists (for refresh)
+        var old = document.getElementById(f.listId);
+        if (old) old.remove();
+
+        // Build datalist
+        var dl = document.createElement('datalist');
+        dl.id = f.listId;
+        values.forEach(function(v) {
+            var opt = document.createElement('option');
+            opt.value = v;
+            dl.appendChild(opt);
+        });
+        document.body.appendChild(dl);
+
+        // Wire input to datalist
+        var input = document.getElementById(f.id);
+        if (input) {
+            input.setAttribute('list', f.listId);
+            input.setAttribute('autocomplete', 'off');
+        }
+    });
+}
+
+function buildVehicleDatalist(vehicles) {
+    const old = document.getElementById('vehicle-datalist');
+    if (old) old.remove();
+
+    const dl = document.createElement('datalist');
+    dl.id = 'vehicle-datalist';
+    vehicles.forEach(function (v) {
+        const opt = document.createElement('option');
+        opt.value = v.tempoNo;
+        dl.appendChild(opt);
+        vehicleMap.set(v.tempoNo.toUpperCase(), {
+            driverName:   v.driverName,
+            driverMobile: v.driverMobile
+        });
+    });
+    document.body.appendChild(dl);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    addItem(); // Start with 1 item block, 1 sub-row, qty=1 pre-filled
+    startSlipNumberSync(); // initial fetch + live polling for multi-user sync
+});
+
+// ══════════════════════════════════════════════════════
+// 🔄 MULTI-USER SLIP NUMBER SYNC
+//
+// HOW IT WORKS:
+//   1. On load → fetch slip no immediately
+//   2. Poll every 5s → compare with current displayed value
+//   3. If another user saved a slip → number updates automatically
+//   4. If THIS user is mid-save → poller is paused, no conflict
+//   5. If browser tab is hidden → polling pauses (saves GAS quota)
+//
+// QUOTA MATH (10 users):
+//   10 users × 1 req/5s × 3600s = 7,200 reads/hour
+//   GAS free quota = 20,000 reads/day → ✅ well within limits
+// ══════════════════════════════════════════════════════
+let slipSyncInterval  = null;   // holds the setInterval reference
+let slipSyncPaused    = false;  // true while THIS user is saving
+let lastKnownSlipNo   = '';     // last value fetched from server
+
+function startSlipNumberSync() {
+    // Initial fetch immediately
+    fetchSlipNumber(true);
+
+    // Poll every 5 seconds
+    slipSyncInterval = setInterval(function () {
+        // Skip if: user is saving, or tab is hidden (saves quota)
+        if (slipSyncPaused || document.hidden) return;
+        fetchSlipNumber(false);
+    }, 5000);
+
+    // Pause polling when tab loses focus, resume when it regains it
+    // This prevents unnecessary requests when user switches tabs
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+            // Tab became visible → fetch immediately to catch up
+            if (!slipSyncPaused) fetchSlipNumber(false);
+        }
+    });
+}
+
+async function fetchSlipNumber(isInitial) {
+    const field = document.getElementById('slip-sr-no');
+
+    // Show loading only on first load, not on background polls
+    if (isInitial) field.value = 'Loading...';
+
+    try {
+        var pType  = document.getElementById('packing-type') ? document.getElementById('packing-type').value : 'Billed';
+        const res  = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now() + '&type=' + encodeURIComponent(pType), { redirect: 'follow' });
+        const data = await res.json();
+        // 📋 On initial load, build all dropdowns
+        if (isInitial) {
+            if (data.brands   && data.brands.length   > 0) buildBrandDatalist(data.brands);
+            if (data.vehicles && data.vehicles.length  > 0) buildVehicleDatalist(data.vehicles);
+            buildDraftDropdown(data.drafts || []);
+            buildSuggestionDatalists(data.suggestions || null);
+        }
+
+        const newNo = data.nextSlipNo || '';
+
+        if (!newNo) {
+            if (isInitial) field.value = 'Error';
+            return;
+        }
+
+        // Only update UI if value actually changed — avoids visual flicker
+        if (newNo !== lastKnownSlipNo) {
+            lastKnownSlipNo = newNo;
+            field.value = newNo;
+
+            // Flash the field briefly so user notices the update
+            if (!isInitial) {
+                field.style.transition = 'background 0.3s';
+                field.style.background = '#bbf7d0'; // green flash
+                setTimeout(function () {
+                    field.style.background = '#f1f5f9'; // back to readonly grey
+                }, 800);
+            }
+        }
+    } catch (e) {
+        if (isInitial) field.value = 'Offline';
+        // On poll failures (network blip), silently skip — don't alarm user
+        console.warn('Slip sync poll failed (will retry):', e.message);
+    }
+}
+
+function convertToUpperCase(el) { el.value = el.value.toUpperCase(); }
+
+// ══════════════════════════════════════════════
+// 📦 PACKING TYPE CHANGE HANDLER
+// When user switches type:
+//   1. Re-fetch slip number for that type (different sheet, different prefix)
+//   2. Reset the slip-sr-no field to show loading
+//   3. Restart polling with new type context
+// ══════════════════════════════════════════════
+function onPackingTypeChange() {
+    const pType = document.getElementById('packing-type').value;
+    const field = document.getElementById('slip-sr-no');
+
+    // Visual feedback — show which type is active
+    field.value = 'Loading ' + pType + '...';
+    field.style.color = pType === 'Billed' ? 'var(--primary)' : '#7c3aed';
+
+    // Fetch slip number for the newly selected type immediately
+    fetchSlipNumber(true);
+}
+
+// ══════════════════════════════════════════════════════
+// 📋 BRAND DROPDOWN — auto-fill Standard Pcs from Item List
+//
+// WHY two handlers?
+//   oninput  → fires on every keystroke (uppercase + live calculate)
+//   onchange → fires when user SELECTS from datalist (auto-fill stdPcs)
+//
+// WHY onchange for auto-fill and not oninput?
+//   When user picks from datalist, the browser sets the value and fires
+//   'change'. If we used 'input', we'd try to look up every partial keystroke
+//   (e.g. "BR" → not in map → no fill), which is wasted lookups and
+//   would clear stdPcs while user is still typing.
+// ══════════════════════════════════════════════════════
+function onBrandInput(el) {
+    calculateTotals();
+}
+
+function onBrandChange(brandInput) {
+    const brandName = brandInput.value.toUpperCase().trim();
+    if (!brandName) return;
+
+    const stdPcs = brandMap.get(brandName);   // O(1) Map lookup
+    if (stdPcs === undefined) return;          // brand not in list — leave qty as-is
+
+    // Find the item block this input belongs to
+    const block = brandInput.closest('.item-block');
+    if (!block) return;
+
+    // Auto-fill qty of ALL existing sub-rows with the standard pcs value
+    // This matches the "Standard Pcs" concept from the PDF spec (Option A)
+    block.querySelectorAll('.sub-qty').forEach(function (qtyInput) {
+        qtyInput.value = stdPcs;
+    });
+
+    // Re-run totals so item total + summary update immediately
+    const idx = Number(block.dataset.idx);
+    updateItemTotal(idx);
+    calculateTotals();
+}
+
+// ══════════════════════════════════════════════════════
+// 🚛 TEMPO DROPDOWN — auto-fill Driver Name + Mobile
+//
+// WHY fields stay editable after auto-fill:
+//   Same tempo can have different drivers on different days.
+//   Auto-fill saves typing; override stays possible.
+//   Visual cue (light green bg) confirms auto-fill happened.
+// ══════════════════════════════════════════════════════
+function onTempoChange(tempoInput) {
+    const tempoNo = tempoInput.value.toUpperCase().trim();
+    if (!tempoNo) return;
+
+    const vehicle = vehicleMap.get(tempoNo);
+    if (!vehicle) return;   // not in list — leave driver fields as-is
+
+    const driverNameEl   = document.getElementById('driver-name');
+    const driverMobileEl = document.getElementById('driver-mobile');
+
+    driverNameEl.value   = vehicle.driverName;
+    driverMobileEl.value = vehicle.driverMobile;
+
+    // ✅ Visual confirmation flash — user knows auto-fill happened
+    [driverNameEl, driverMobileEl].forEach(function (el) {
+        el.style.transition  = 'background 0.3s';
+        el.style.background  = '#bbf7d0';  // green flash
+        setTimeout(function () {
+            el.style.background = '';          // back to default
+        }, 900);
+    });
+}
+
+// ══════════════════════════════════════
+// ADD ITEM BLOCK
+// ══════════════════════════════════════
+function addItem() {
+    itemCounter++;
+    const idx = itemCounter;
+    const container = document.getElementById('items-container');
+
+    const block = document.createElement('div');
+    block.className = 'item-block';
+    block.id = 'item-block-' + idx;
+    block.dataset.idx = idx;
+
+    block.innerHTML = `
+        <div class="item-block-header">
+            <span class="item-label">Item ${idx}</span>
+            <button type="button" class="del-item-btn" onclick="deleteItem(${idx})">🗑 Remove</button>
+        </div>
+        <table class="item-table">
+            <tbody>
+                <tr class="item-config-header">
+                    <td colspan="4">Type</td>
+                </tr>
+                <tr class="item-config-row">
+                    <td colspan="4">
+                        <select class="item-type" onchange="calculateTotals()" required>
+                            <option value="" disabled selected>Select Type</option>
+                            <option value="BORA">BORA</option>
+                            <option value="PVC BAG">PVC BAG</option>
+                            <option value="LOOSE PCS">LOOSE PCS</option>
+                            <option value="BALE">BALE</option>
+                            <option value="BOX">BOX</option>
+                            <option value="ROLL">ROLL</option>
+                            <option value="BORA WITH BAG">BORA WITH BAG</option>
+                            <option value="OTHER">OTHER</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr class="brand-name-row">
+                    <td class="brand-label">BRAND NAME</td>
+                    <td colspan="3">
+                        <input type="text" class="item-brand" placeholder="Type or select brand..."
+                            list="brand-datalist"
+                            oninput="convertToUpperCase(this); onBrandInput(this);"
+                            onchange="onBrandChange(this);"
+                            autocomplete="off" required>
+                    </td>
+                </tr>
+                <tr class="item-green-header">
+                    <td style="width:30px;text-align:center;">Sr.</td>
+                    <td style="text-align:center;">Quantity</td>
+                    <td style="text-align:center;">Weight (Kg)</td>
+                    <td style="width:36px;text-align:center;">Del</td>
+                </tr>
+            </tbody>
+            <tbody class="sub-rows-body" id="sub-body-${idx}"></tbody>
+            <tfoot>
+                <tr class="item-total-tr" id="item-total-${idx}">
+                    <td>Item Total</td>
+                    <td class="itotal-qty" style="text-align:center;">0</td>
+                    <td class="itotal-wt" style="text-align:center;">0.00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="add-row-wrap">
+            <button type="button" class="add-row-btn" onclick="addRowCopyLast(${idx})">
+                ＋ Add Row &nbsp;<span style="font-size:10px;opacity:0.7;">(copies last row)</span>
+            </button>
+        </div>
+    `;
+
+    container.appendChild(block);
+    renumberItems();
+
+    // ✅ Change 2: first block starts with 1 sub-row, qty pre-filled as 1
+    addSubRow(idx, 1, null);
+}
+
+// ══════════════════════════════════════
+// ADD SUB-ROW (dynamic, no TOTAL SR)
+// qty: pre-fill qty value (or null)
+// wt:  pre-fill weight value (or null)
+// ══════════════════════════════════════
+function addSubRow(blockIdx, qty, wt) {
+    const tbody   = document.getElementById('sub-body-' + blockIdx);
+    const srNum   = tbody.querySelectorAll('.sub-row').length + 1;
+    const rowId   = 'row-' + blockIdx + '-' + Date.now(); // unique even if rows deleted
+
+    const tr = document.createElement('tr');
+    tr.className = 'sub-row';
+    tr.id = rowId;
+
+    const qtyVal = (qty !== null && qty !== undefined) ? qty : '';
+    const wtVal  = (wt  !== null && wt  !== undefined) ? wt  : '';
+
+    tr.innerHTML = `
+        <td class="sr-cell">${srNum}</td>
+        <td>
+            <input type="number" class="sub-qty" min="0" placeholder="0"
+                value="${qtyVal}"
+                oninput="updateItemTotal(${blockIdx}); calculateTotals();"
+                style="border-radius:5px;">
+        </td>
+        <td>
+            <input type="number" class="sub-wt" min="0" step="0.01" placeholder="0.00"
+                value="${wtVal}"
+                oninput="updateItemTotal(${blockIdx}); calculateTotals();"
+                onkeydown="onWeightEnter(event, ${blockIdx}, '${rowId}')"
+                style="border-radius:5px;">
+        </td>
+        <td class="row-actions">
+            <button type="button" class="btn-del-row" title="Remove this row"
+                onclick="deleteSubRow('${rowId}', ${blockIdx})">×</button>
+        </td>
+    `;
+
+    tbody.appendChild(tr);
+    renumberSubRows(blockIdx);
+    updateItemTotal(blockIdx);
+    calculateTotals();
+}
+
+// ══════════════════════════════════════
+// ADD ROW (bottom button) — copies last row's qty+wt (copy-down behavior)
+// This replaces the old per-row + button
+// ══════════════════════════════════════
+function addRowCopyLast(blockIdx) {
+    const tbody = document.getElementById('sub-body-' + blockIdx);
+    const allRows = tbody.querySelectorAll('.sub-row');
+    // Get last row's values to copy down
+    let lastQty = '', lastWt = '';
+    if (allRows.length > 0) {
+        const lastRow = allRows[allRows.length - 1];
+        lastQty = lastRow.querySelector('.sub-qty').value;
+        lastWt  = lastRow.querySelector('.sub-wt').value;
+    }
+    addSubRow(blockIdx, lastQty !== '' ? lastQty : null, lastWt !== '' ? lastWt : null);
+    // ✅ Focus weight input of new row, cursor placed at END of pre-filled value
+    // setTimeout(0) lets the DOM finish rendering the new row before we focus
+    setTimeout(function () {
+        const newRows = document.getElementById('sub-body-' + blockIdx).querySelectorAll('.sub-row');
+        const newRow  = newRows[newRows.length - 1];
+        if (newRow) {
+            const wtInput = newRow.querySelector('.sub-wt');
+            wtInput.focus();
+            // Place cursor at end of existing value (not select-all)
+            // Select ALL text so user can immediately overtype the copied value
+            wtInput.select();
+        }
+    }, 0);
+}
+
+// ══════════════════════════════════════
+// ✅ Change 3: DELETE SUB-ROW
+// ══════════════════════════════════════
+function deleteSubRow(rowId, blockIdx) {
+    const tbody = document.getElementById('sub-body-' + blockIdx);
+    // Don't allow deleting the last row in a block
+    if (tbody.querySelectorAll('.sub-row').length <= 1) {
+        alert('Har item mein kam se kam ek row honi chahiye!');
+        return;
+    }
+    const row = document.getElementById(rowId);
+    if (row) row.remove();
+    renumberSubRows(blockIdx);
+    updateItemTotal(blockIdx);
+    calculateTotals();
+}
+
+// Renumber Sr. column after any add/delete
+function renumberSubRows(blockIdx) {
+    const tbody = document.getElementById('sub-body-' + blockIdx);
+    tbody.querySelectorAll('.sub-row').forEach(function (row, i) {
+        row.querySelector('.sr-cell').textContent = i + 1;
+    });
+}
+
+// ══════════════════════════════════════
+// ✅ Change 5: ENTER on Weight → move cursor to next weight input
+// ══════════════════════════════════════
+function onWeightEnter(event, blockIdx, rowId) {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+
+    const tbody   = document.getElementById('sub-body-' + blockIdx);
+    const allWt   = Array.from(document.querySelectorAll('.sub-wt')); // ALL weight inputs on page
+    const thisWt  = document.getElementById(rowId).querySelector('.sub-wt');
+    const curIdx  = allWt.indexOf(thisWt);
+
+    if (curIdx >= 0 && curIdx < allWt.length - 1) {
+        allWt[curIdx + 1].focus();
+        allWt[curIdx + 1].select();
+    }
+}
+
+// ══════════════════════════════════════
+// DELETE ITEM BLOCK
+// ══════════════════════════════════════
+function deleteItem(idx) {
+    if (document.querySelectorAll('.item-block').length <= 1) {
+        alert('कम से कम एक Item block होना जरूरी है!');
+        return;
+    }
+    const block = document.getElementById('item-block-' + idx);
+    if (block) block.remove();
+    renumberItems();
+    calculateTotals();
+}
+
+function renumberItems() {
+    document.querySelectorAll('.item-block').forEach(function (block, i) {
+        block.querySelector('.item-label').textContent = 'Item ' + (i + 1);
+    });
+}
+
+// ══════════════════════════════════════
+// TOTALS
+// ══════════════════════════════════════
+function updateItemTotal(blockIdx) {
+    const tbody = document.getElementById('sub-body-' + blockIdx);
+    if (!tbody) return;
+    let sumQty = 0, sumWt = 0;
+    tbody.querySelectorAll('.sub-row').forEach(function (row) {
+        sumQty += Number(row.querySelector('.sub-qty').value) || 0;
+        sumWt  += Number(row.querySelector('.sub-wt').value)  || 0;
+    });
+    const totalRow = document.getElementById('item-total-' + blockIdx);
+    if (totalRow) {
+        totalRow.querySelector('.itotal-qty').textContent = sumQty;
+        totalRow.querySelector('.itotal-wt').textContent  = sumWt.toFixed(2);
+    }
+}
+
+function calculateTotals() {
+    let grandQty = 0, grandWt = 0;
+    const summaryMap = {};
+
+    document.querySelectorAll('.item-block').forEach(function (block) {
+        const type  = (block.querySelector('.item-type').value  || '').trim();
+        const brand = (block.querySelector('.item-brand').value || '').trim().toUpperCase();
+
+        block.querySelectorAll('.sub-row').forEach(function (row) {
+            const qty = Number(row.querySelector('.sub-qty').value) || 0;
+            const wt  = Number(row.querySelector('.sub-wt').value)  || 0;
+            grandQty += qty;
+            grandWt  += wt;
+
+            if (type && brand) {
+                const key = type + '|||' + brand;
+                if (!summaryMap[key]) summaryMap[key] = { type, brand, qty: 0, wt: 0 };
+                summaryMap[key].qty += qty;
+                summaryMap[key].wt  += wt;
+            }
+        });
+    });
+
+    document.getElementById('bottom-total-qty').textContent = grandQty;
+    document.getElementById('bottom-total-wt').textContent  = grandWt.toFixed(2);
+    document.getElementById('float-total-wt').textContent   = grandWt.toFixed(2);
+
+    const tbody = document.getElementById('summary-table-body');
+    tbody.innerHTML = '';
+    const keys = Object.keys(summaryMap);
+    if (!keys.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No items yet</td></tr>';
+    } else {
+        keys.forEach(function (key) {
+            const s  = summaryMap[key];
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:600;">${s.type}</td>
+                <td>${s.brand}</td>
+                <td style="text-align:center;font-weight:600;">${s.qty}</td>
+                <td style="text-align:right;font-weight:600;">${s.wt.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+}
+
+// ══════════════════════════════════════
+// VALIDATE
+// ══════════════════════════════════════
+function validateItems() {
+    const blocks = document.querySelectorAll('.item-block');
+    for (let i = 0; i < blocks.length; i++) {
+        const b   = blocks[i];
+        const num = i + 1;
+        if (!b.querySelector('.item-type').value) {
+            alert('Item ' + num + ': Please select a Type');
+            b.querySelector('.item-type').focus(); return false;
+        }
+        if (!b.querySelector('.item-brand').value.trim()) {
+            alert('Item ' + num + ': Brand Name required');
+            b.querySelector('.item-brand').focus(); return false;
+        }
+        if (!b.querySelectorAll('.sub-row').length) {
+            alert('Item ' + num + ': At least one row required');
+            return false;
+        }
+    }
+    return true;
+}
+
+// ══════════════════════════════════════
+// OVERLAY
+// ══════════════════════════════════════
+function setSavingStage(stage, detail) {
+    const overlay  = document.getElementById('savingOverlay');
+    const icon     = document.getElementById('savingIcon');
+    const title    = document.getElementById('savingTitle');
+    const subtitle = document.getElementById('savingSubtitle');
+    overlay.style.display = 'flex';
+
+    if (stage === 'saving') {
+        icon.className = 'saving-spinner'; icon.innerHTML = '';
+        title.textContent = '📊 Saving to Sheet...';
+        subtitle.textContent = 'Data upload ho raha hai, page close mat karein';
+    } else if (stage === 'pdf') {
+        icon.className = 'saving-spinner'; icon.innerHTML = '';
+        title.textContent = '📄 Generating PDF...';
+        subtitle.textContent = 'PDF ban raha hai, download hone wala hai';
+    } else if (stage === 'done') {
+        icon.className = 'saving-check'; icon.innerHTML = '✓';
+        title.textContent = '✅ Saved Successfully!';
+        subtitle.textContent = detail || 'PDF downloaded! Refreshing...';
+    } else if (stage === 'error') {
+        icon.className = 'saving-error-icon'; icon.innerHTML = '✕';
+        title.textContent = '❌ Error!';
+        subtitle.textContent = detail || 'Kuch galat ho gaya';
+        setTimeout(function () { overlay.style.display = 'none'; }, 3000);
+    }
+}
+
+// ══════════════════════════════════════
+// AUTO DOWNLOAD PDF
+// ══════════════════════════════════════
+function autoDownloadPdf(base64Data, fileName) {
+    const byteChars = atob(base64Data);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+    const blob    = new Blob([byteArray], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    const a       = document.createElement('a');
+    a.href        = blobUrl;
+    a.download    = fileName || 'Packing_Slip.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 3000);
+}
+
+// ══════════════════════════════════════
+// MAIN: FINISH
+// ══════════════════════════════════════
+async function handleFinish() {
+    const form = document.getElementById('packing-slip-form');
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    if (!validateItems()) return;
+
+    const btn = document.getElementById('finishBtn');
+    btn.disabled = true;
+
+    // ⏸️ Pause the slip-number poller while saving
+    // Prevents a background poll from overwriting the confirmed slip no
+    // during the save/PDF window
+    slipSyncPaused = true;
+
+    setSavingStage('saving');
+
+    let result;
+    try {
+        result = await saveToSheet();
+    } catch (err) {
+        setSavingStage('error', 'Network error! Internet check karein.');
+        btn.disabled = false;
+        return;
+    }
+
+    if (!result.success) {
+        setSavingStage('error', result.error || 'Save failed!');
+        btn.disabled = false;
+        slipSyncPaused = false; // ▶️ Resume polling so number stays current
+        return;
+    }
+
+    setSavingStage('pdf');
+    document.getElementById('slip-sr-no').value = result.slipNo || '';
+
+    if (result.pdfBase64) {
+        autoDownloadPdf(result.pdfBase64, result.pdfFileName);
+    }
+
+    setSavingStage('done', 'Slip ' + (result.slipNo || '') + ' saved! Refreshing...');
+    setTimeout(function () { location.reload(); }, 1800);
+}
+
+// ══════════════════════════════════════
+// BUILD PAYLOAD + POST
+// ══════════════════════════════════════
+async function saveToSheet() {
+    // Reuses buildFormPayload() — single source of truth for form data collection
+    var payload    = buildFormPayload();
+    payload.action  = 'savePackingSlip';
+    payload.draftId = currentDraftId || ''; // if from draft, Finish auto-deletes it
+
+    const res = await fetch(APPS_SCRIPT_URL, {
+        method:   'POST',
+        body:     JSON.stringify(payload),
+        headers:  { 'Content-Type': 'text/plain;charset=UTF-8' },
+        redirect: 'follow'
+    });
+    return res.json();
+}
+
+// ══════════════════════════════════════════════════════
+// 📝 DRAFT SYSTEM — Save Partially / Load / Delete
+// ══════════════════════════════════════════════════════
+
+// Build the draft dropdown from server data
+function buildDraftDropdown(drafts) {
+    var sel  = document.getElementById('draft-select');
+    var card = document.getElementById('draft-card');
+    sel.innerHTML = '<option value="">— Select Draft to Load —</option>';
+
+    if (!drafts || drafts.length === 0) {
+        card.style.display = 'none';
+        return;
+    }
+
+    card.style.display = '';
+    drafts.forEach(function(d) {
+        var opt = document.createElement('option');
+        opt.value = d.draftId;
+        // Show: D-3 | PARTY NAME | Billed | 2 min ago
+        var ago = d.savedAt ? timeSince(new Date(d.savedAt)) : '';
+        opt.textContent = d.draftId + ' | ' + (d.partyName || 'No Party') + ' | ' + d.packingType + (ago ? ' | ' + ago : '');
+        sel.appendChild(opt);
+    });
+}
+
+// Time-ago helper
+function timeSince(date) {
+    var secs = Math.floor((new Date() - date) / 1000);
+    if (secs < 60) return 'just now';
+    var mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + ' min ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    return days + 'd ago';
+}
+
+// ── SAVE DRAFT (partial) ──
+async function handleSaveDraft() {
+    var partyName = document.getElementById('party-name').value.trim();
+    if (!partyName) {
+        alert('Party Name bharna zaroori hai draft save karne se pehle!');
+        document.getElementById('party-name').focus();
+        return;
+    }
+
+    var btn = document.getElementById('saveDraftBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving Draft...';
+
+    // Build full form state
+    var formPayload = buildFormPayload();
+    formPayload.action  = 'saveDraft';
+    formPayload.draftId = currentDraftId || '';  // update if editing existing draft
+
+    try {
+        var res  = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(formPayload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+
+        if (result.success) {
+            currentDraftId = result.draftId;
+            var msg = result.action === 'updated'
+                ? '✅ Draft ' + result.draftId + ' updated!'
+                : '✅ Draft ' + result.draftId + ' saved!';
+            btn.textContent = msg;
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.innerHTML = '📝 Save Packing Slip No. Partially';
+            }, 1500);
+            // Refresh draft dropdown
+            fetchSlipNumber(true);
+        } else {
+            alert('Draft save failed: ' + (result.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.innerHTML = '📝 Save Packing Slip No. Partially';
+        }
+    } catch (err) {
+        alert('Network error! Internet check karein.');
+        btn.disabled = false;
+        btn.innerHTML = '📝 Save Packing Slip No. Partially';
+    }
+}
+
+// ── LOAD DRAFT (on dropdown select) ──
+async function onDraftSelect() {
+    var sel     = document.getElementById('draft-select');
+    var delBtn  = document.getElementById('delete-draft-btn');
+    var draftId = sel.value;
+
+    if (!draftId) {
+        delBtn.style.display = 'none';
+        return;
+    }
+    delBtn.style.display = '';
+
+    if (!confirm('Draft "' + draftId + '" load karein? Current form data replace ho jayega.')) {
+        sel.value = '';
+        delBtn.style.display = 'none';
+        return;
+    }
+
+    sel.disabled = true;
+    sel.style.opacity = '0.6';
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'loadDraft', draftId: draftId }),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+
+        if (result.success && result.formData) {
+            populateFormFromDraft(result.formData, draftId);
+        } else {
+            alert('Draft load failed: ' + (result.error || 'Unknown'));
+        }
+    } catch (err) {
+        alert('Network error!');
+    } finally {
+        sel.disabled = false;
+        sel.style.opacity = '1';
+    }
+}
+
+// ── DELETE DRAFT ──
+async function handleDeleteDraft() {
+    var sel     = document.getElementById('draft-select');
+    var draftId = sel.value;
+    if (!draftId) return;
+
+    if (!confirm('Draft "' + draftId + '" permanently delete karein?')) return;
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'deleteDraft', draftId: draftId }),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+
+        if (result.success) {
+            if (currentDraftId === draftId) currentDraftId = null;
+            fetchSlipNumber(true); // refresh dropdown
+        } else {
+            alert('Delete failed: ' + (result.error || 'Unknown'));
+        }
+    } catch (err) {
+        alert('Network error!');
+    }
+}
+
+// ── BUILD FORM PAYLOAD (reused by both Finish and Save Draft) ──
+function buildFormPayload() {
+    var itemsData = [];
+    document.querySelectorAll('.item-block').forEach(function (block) {
+        var type  = block.querySelector('.item-type').value;
+        var brand = block.querySelector('.item-brand').value.trim();
+        var rows  = block.querySelectorAll('.sub-row');
+        var subRows = [];
+        rows.forEach(function (row, rowIdx) {
+            subRows.push({
+                sr:     rowIdx + 1,
+                qty:    row.querySelector('.sub-qty').value || '0',
+                weight: row.querySelector('.sub-wt').value  || '0'
+            });
+        });
+        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows });
+    });
+
+    return {
+        packingType: document.getElementById('packing-type').value,
+        header: {
+            date:             document.getElementById('date-today').value,
+            invoiceNo:        document.getElementById('invoice-no').value,
+            partyName:        document.getElementById('party-name').value,
+            subPartyName:     document.getElementById('sub-party-name').value,
+            thirdPartyName:   document.getElementById('third-party-name').value,
+            privateMarka:     document.getElementById('private-marka').value,
+            contractorName:   document.getElementById('contractor-name').value
+        },
+        items: itemsData,
+        dispatch: {
+            tempoNo:        document.getElementById('tempo-no').value,
+            driverName:     document.getElementById('driver-name').value,
+            driverMobile:   document.getElementById('driver-mobile').value,
+            supervisorName: document.getElementById('supervisor-name').value
+        }
+    };
+}
+
+// ── POPULATE FORM from loaded draft JSON ──
+function populateFormFromDraft(data, draftId) {
+    currentDraftId = draftId;
+
+    // Set packing type first (triggers slip no refresh)
+    if (data.packingType) {
+        document.getElementById('packing-type').value = data.packingType;
+        onPackingTypeChange();
+    }
+
+    // Header fields
+    var h = data.header || {};
+    document.getElementById('invoice-no').value       = h.invoiceNo       || '';
+    document.getElementById('party-name').value       = h.partyName       || '';
+    document.getElementById('sub-party-name').value   = h.subPartyName    || '';
+    document.getElementById('third-party-name').value = h.thirdPartyName  || '';
+    document.getElementById('private-marka').value    = h.privateMarka    || '';
+    document.getElementById('contractor-name').value  = h.contractorName  || '';
+
+    // Dispatch fields
+    var d = data.dispatch || {};
+    document.getElementById('tempo-no').value        = d.tempoNo        || '';
+    document.getElementById('driver-name').value     = d.driverName     || '';
+    document.getElementById('driver-mobile').value   = d.driverMobile   || '';
+    document.getElementById('supervisor-name').value = d.supervisorName || '';
+
+    // Rebuild item blocks from draft items
+    var container = document.getElementById('items-container');
+    container.innerHTML = ''; // clear all existing blocks
+    itemCounter = 0;          // reset counter
+
+    var items = data.items || [];
+    if (items.length === 0) {
+        addItem(); // at least 1 empty block
+        return;
+    }
+
+    items.forEach(function(item) {
+        addItem(); // creates block with 1 default row
+        var blocks = container.querySelectorAll('.item-block');
+        var block  = blocks[blocks.length - 1]; // last added block
+        var idx    = Number(block.dataset.idx);
+
+        // Set type and brand
+        if (item.type)  block.querySelector('.item-type').value  = item.type;
+        if (item.brand) block.querySelector('.item-brand').value = item.brand;
+
+        // Rebuild sub-rows
+        var tbody = document.getElementById('sub-body-' + idx);
+        tbody.innerHTML = ''; // clear the default row
+
+        (item.subRows || []).forEach(function(sub) {
+            addSubRow(idx, sub.qty || null, sub.weight || null);
+        });
+
+        if (tbody.querySelectorAll('.sub-row').length === 0) {
+            addSubRow(idx, 1, null); // fallback: at least 1 row
+        }
+
+        updateItemTotal(idx);
+    });
+
+    calculateTotals();
+
+    // Visual feedback — purple flash on header
+    var slipField = document.getElementById('slip-sr-no');
+    slipField.value = '📝 Draft ' + draftId + ' loaded';
+    slipField.style.color = '#7c3aed';
+}
+
+</script>
+</body>
+</html>
