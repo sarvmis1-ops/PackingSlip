@@ -59,7 +59,7 @@
         /* Sub-rows table header */
         .item-green-header td { background: #16a34a; color: #fff; font-weight: 700; text-align: center; font-size: 12px; }
 
-        /* Brand Name merged row */
+        /* Quality merged row */
         .brand-name-row td { background: #fff7ed; padding: 5px 6px; border: 1px solid #d1d5db; }
         /* Brand input: show a subtle list icon to hint datalist is available */
         .item-brand { cursor: pointer; }
@@ -315,11 +315,7 @@
             <label>Date</label>
             <input type="date" id="date-today" readonly style="background:#f1f5f9;">
         </div>
-        <div class="form-group">
-            <label>Invoice No</label>
-            <input type="text" id="invoice-no" placeholder="Enter Invoice No (optional)"
-                oninput="convertToUpperCase(this)">
-        </div>
+
         <div class="form-group">
             <label>Party Name <span class="required-star">*</span></label>
             <input type="text" id="party-name" placeholder="Enter Party Name"
@@ -408,7 +404,7 @@
             <thead>
                 <tr>
                     <th>Item Type</th>
-                    <th>Brand Name</th>
+                    <th>Quality</th>
                     <th style="text-align:center;width:20%;">Total Qty</th>
                     <th style="text-align:right;width:25%;">Total Wt (Kg)</th>
                 </tr>
@@ -460,7 +456,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9ldjwgJtWh4A7gowRG09n9ow_EFfGkqxwLVfnt4oKm_wyKT9POGt_CS_uy9p0chnhgQ/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-Vl0R9OKaYZkdNxGvXvy0gy1M5DfuABYgI5XlqDM3iPH92X0gsXxylo4DG_4ODnaq2w/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -768,7 +764,7 @@ function onOrderIdChange(selectEl) {
         }
     }
 
-    // ── Auto-fill Brand Name ──
+    // ── Auto-fill Quality ──
     const brandInput = block.querySelector('.item-brand');
     if (brandInput) {
         brandInput.value = order.brand;
@@ -1191,9 +1187,9 @@ function addItem() {
                     </td>
                 </tr>
                 <tr class="brand-name-row">
-                    <td class="brand-label">BRAND NAME</td>
+                    <td class="brand-label">QUALITY</td>
                     <td colspan="3">
-                        <input type="text" class="item-brand" placeholder="Type or select brand..."
+                        <input type="text" class="item-brand" placeholder="Type or select quality..."
                             list="brand-datalist"
                             oninput="convertToUpperCase(this); onBrandInput(this);"
                             onchange="onBrandChange(this);"
@@ -1446,7 +1442,7 @@ function validateItems() {
             b.querySelector('.item-type').focus(); return false;
         }
         if (!b.querySelector('.item-brand').value.trim()) {
-            alert('Item ' + num + ': Brand Name required');
+            alert('Item ' + num + ': Quality required');
             b.querySelector('.item-brand').focus(); return false;
         }
         if (!b.querySelectorAll('.sub-row').length) {
@@ -1752,14 +1748,14 @@ function buildFormPayload() {
                 weight: row.querySelector('.sub-wt').value  || '0'
             });
         });
-        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows });
+        var orderId = block.querySelector('.item-order-id') ? block.querySelector('.item-order-id').value : '';
+        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows, orderId: orderId });
     });
 
     return {
         packingType: document.getElementById('packing-type').value,
         header: {
             date:             document.getElementById('date-today').value,
-            invoiceNo:        document.getElementById('invoice-no').value,
             partyName:        document.getElementById('party-name').value,
             subPartyName:     document.getElementById('sub-party-name').value,
             thirdPartyName:   document.getElementById('third-party-name').value,
@@ -1818,9 +1814,13 @@ function populateFormFromDraft(data, draftId) {
         var block  = blocks[blocks.length - 1]; // last added block
         var idx    = Number(block.dataset.idx);
 
-        // Set type and brand
+        // Set type, brand, and order ID
         if (item.type)  block.querySelector('.item-type').value  = item.type;
         if (item.brand) block.querySelector('.item-brand').value = item.brand;
+        if (item.orderId) {
+            var orderSel = block.querySelector('.item-order-id');
+            if (orderSel) orderSel.value = item.orderId;
+        }
 
         // Rebuild sub-rows
         var tbody = document.getElementById('sub-body-' + idx);
@@ -1921,20 +1921,33 @@ function renderVerificationList() {
         var afterBadge = st.actualInvoiceNo  ? '<span class="verify-badge done">✓ Inv</span>'    : '<span class="verify-badge pending">Inv ⏳</span>';
         var recvBadge  = '<span class="verify-badge pending">Recv ⏳</span>';
 
-        // ── Type-wise breakdown table (Change 1) ──
+        // ── Quality + Type breakdown table with TOTAL row ──
         var tb = s.typeBreakdown || {};
         var tbKeys = Object.keys(tb);
         var breakdownHtml = '';
         if (tbKeys.length > 0) {
+            var tds = 'padding:3px 6px;border:1px solid #cbd5e1;';
             breakdownHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:6px 0;">' +
-                '<tr style="background:#e2e8f0;"><th style="padding:4px 6px;text-align:left;border:1px solid #cbd5e1;">Pack Type</th>' +
-                '<th style="padding:4px 6px;text-align:center;border:1px solid #cbd5e1;">Total Pcs</th>' +
-                '<th style="padding:4px 6px;text-align:right;border:1px solid #cbd5e1;">Total Wt (Kg)</th></tr>';
-            tbKeys.forEach(function (t) {
-                breakdownHtml += '<tr><td style="padding:3px 6px;border:1px solid #cbd5e1;font-weight:600;">' + escapeHtmlJs(t) + '</td>' +
-                    '<td style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1;">' + tb[t].pcs + '</td>' +
-                    '<td style="padding:3px 6px;text-align:right;border:1px solid #cbd5e1;">' + tb[t].wt.toFixed(2) + '</td></tr>';
+                '<tr style="background:#e2e8f0;">' +
+                '<th style="' + tds + 'text-align:left;">Quality</th>' +
+                '<th style="' + tds + 'text-align:left;">Pack Type</th>' +
+                '<th style="' + tds + 'text-align:center;">Total Pcs</th>' +
+                '<th style="' + tds + 'text-align:right;">Total Wt (Kg)</th></tr>';
+            var sumPcs = 0, sumWt = 0;
+            tbKeys.forEach(function (k) {
+                var item = tb[k];
+                sumPcs += item.pcs;
+                sumWt  += item.wt;
+                breakdownHtml += '<tr>' +
+                    '<td style="' + tds + 'font-weight:600;">' + escapeHtmlJs(item.quality || '') + '</td>' +
+                    '<td style="' + tds + '">' + escapeHtmlJs(item.type || '') + '</td>' +
+                    '<td style="' + tds + 'text-align:center;">' + item.pcs + '</td>' +
+                    '<td style="' + tds + 'text-align:right;">' + item.wt.toFixed(2) + '</td></tr>';
             });
+            breakdownHtml += '<tr style="background:#fef3c7;font-weight:700;">' +
+                '<td colspan="2" style="' + tds + '">TOTAL</td>' +
+                '<td style="' + tds + 'text-align:center;">' + sumPcs + '</td>' +
+                '<td style="' + tds + 'text-align:right;">' + sumWt.toFixed(2) + '</td></tr>';
             breakdownHtml += '</table>';
         }
 
