@@ -68,6 +68,16 @@
         .brand-name-row input { border: 1.5px solid #fdba74; border-radius: 5px; padding: 7px 8px; font-size: 13px; font-weight: 600; background: #fff; }
         .brand-name-row input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
 
+        /* 📦 Order ID row — pick a pending order to auto-fill Type/Brand + show Order/Pending Qty */
+        .order-id-row td { background: #eff6ff; padding: 5px 6px; border: 1px solid #d1d5db; }
+        .order-id-row .order-id-label { font-size: 10px; font-weight: 700; color: #1e40af; white-space: nowrap; width: 72px; padding-right: 4px; }
+        .order-id-row select { border: 1.5px solid #93c5fd; border-radius: 5px; padding: 7px 8px; font-size: 13px; font-weight: 600; background: #fff; width: 100%; }
+        .order-id-row select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+        .order-info { margin-top: 5px; font-size: 11.5px; font-weight: 700; color: #1e40af; display: flex; gap: 14px; flex-wrap: wrap; }
+        .order-info .oi-order { color: #1e40af; }
+        .order-info .oi-pending { color: #b45309; }
+        .order-info .oi-warn { color: #b91c1c; font-weight: 700; }
+
         /* Sub-rows: col order Sr | Qty | Wt | Actions */
         .sub-row td { text-align: center; background: #fff; }
         .sub-row td.sr-cell { font-weight: 700; color: #475569; background: #f8fafc; width: 30px; font-size: 12px; }
@@ -127,6 +137,70 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+        /* ── Login Screen ── */
+        .login-overlay { position: fixed; inset: 0; background: linear-gradient(135deg,#1e293b,#0f172a); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-box { background: var(--surface); border-radius: 16px; padding: 30px 26px; width: 100%; max-width: 340px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+        .login-box h1 { font-size: 17px; color: var(--primary); font-weight: 700; text-align: center; margin-bottom: 2px; }
+        .login-box h2 { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 20px; font-weight: 500; }
+        .login-error { display: none; background: #fef2f2; border: 1px solid #fecaca; color: var(--error); font-size: 12px; padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; font-weight: 600; }
+        .login-btn { width: 100%; padding: 12px; margin-top: 6px; background: linear-gradient(135deg,#2563eb,#1d4ed8); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ── Top User Bar ── */
+        .user-bar { display: none; background: #1e293b; color: #fff; padding: 8px 15px; font-size: 12px; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
+        .user-bar .who { font-weight: 600; }
+        .user-bar .who .role-tag { font-weight: 500; color: #93c5fd; margin-left: 4px; }
+        .user-bar .actions { display: flex; gap: 8px; }
+        .user-bar button { background: rgba(255,255,255,0.12); color: #fff; border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .user-bar button.logout-btn { background: #ef4444; }
+
+        /* ── Verification Panel ── */
+        #verification-panel { display: none; }
+
+        /* Compact card — one-line summary, click to expand */
+        .verify-slip-card {
+            background: var(--surface); border-radius: 10px; margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border);
+            overflow: hidden; transition: border-color 0.2s;
+        }
+        .verify-slip-card.active { border-color: var(--primary); }
+
+        /* Compact header row — always visible */
+        .verify-compact {
+            display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+            cursor: pointer; user-select: none; flex-wrap: wrap;
+        }
+        .verify-compact:active { background: #f1f5f9; }
+        .vc-slip { font-weight: 700; font-size: 13px; color: var(--primary); min-width: 60px; }
+        .vc-party { font-size: 12px; color: var(--text-main); font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vc-meta { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+        .vc-badges { display: flex; gap: 4px; }
+
+        .verify-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 12px; }
+        .verify-badge.pending { background: #fef3c7; color: #92400e; }
+        .verify-badge.done { background: #dcfce7; color: #166534; }
+
+        /* Expanded detail — hidden by default */
+        .verify-body { display: none; padding: 0 12px 12px; }
+        .verify-body.open { display: block; }
+        .verify-detail { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+
+        .verify-stage { border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 8px; }
+        .verify-stage-title { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+        .verify-stage input, .verify-stage textarea { margin-bottom: 6px; text-transform: none; }
+        .verify-stage button { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; width: 100%; }
+        .verify-stage button:active { opacity: 0.8; }
+
+        /* Filter bar */
+        .verify-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .verify-filter-bar select, .verify-filter-bar input {
+            flex: 1; min-width: 120px; padding: 8px; font-size: 12px; border: 1.5px solid var(--border);
+            border-radius: 8px; background: var(--surface);
+        }
+        .verify-count { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+        .verify-nav-btn { width: 100%; background: #0f172a; color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+
         /* Print */
         .print-only-table { display: none; }
         @media print {
@@ -153,6 +227,37 @@
 </head>
 <body>
 
+<!-- Login Screen -->
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h1>SARV INDIA HOME FURNISHING</h1>
+        <h2>PACKING SLIP — LOGIN</h2>
+        <div class="login-error" id="loginError"></div>
+        <form onsubmit="return false;">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="Enter Username" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="Enter Password" autocomplete="current-password"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();handleLogin();}">
+            </div>
+            <button type="button" class="login-btn" id="loginBtn" onclick="handleLogin()">🔐 Login</button>
+        </form>
+    </div>
+</div>
+
+<!-- Logged-in User Bar -->
+<div class="user-bar" id="userBar">
+    <div class="who">👤 <span id="userBarName"></span><span class="role-tag" id="userBarRole"></span></div>
+    <div class="actions">
+        <button type="button" id="verifyNavBtn" style="display:none;" onclick="showVerificationPanel()">🔍 Verification Panel</button>
+        <button type="button" id="formNavBtn" style="display:none;" onclick="showPackingForm()">📦 Packing Form</button>
+        <button type="button" class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+</div>
+
 <div class="header">
     <h1>SARV INDIA HOME FURNISHING</h1>
     <h2>PACKING SLIP</h2>
@@ -171,7 +276,7 @@
     </div>
 </div>
 
-<form class="container" id="packing-slip-form" onsubmit="return false;">
+<form class="container" id="packing-slip-form" onsubmit="return false;" style="display:none;">
 
     <!-- Packing Type Card — always at top, changes everything below -->
     <div class="card" style="border: 2px solid var(--primary); background: linear-gradient(135deg,#eff6ff,#dbeafe);">
@@ -218,11 +323,13 @@
         <div class="form-group">
             <label>Party Name <span class="required-star">*</span></label>
             <input type="text" id="party-name" placeholder="Enter Party Name"
-                oninput="convertToUpperCase(this)" required>
+                oninput="convertToUpperCase(this)"
+                onchange="onPartyNameChange(this)"
+                autocomplete="off" required>
         </div>
         <div class="form-group">
-            <label>Delivery Party</label>
-            <input type="text" id="sub-party-name" placeholder="Enter Delivery Party"
+            <label>Ship To</label>
+            <input type="text" id="sub-party-name" placeholder="Enter Ship To"
                 oninput="convertToUpperCase(this)">
         </div>
         <!-- ✅ NEW: Delivery Address -->
@@ -241,6 +348,33 @@
             <label>Loading Contractor Name</label>
             <input type="text" id="contractor-name" placeholder="Enter Contractor Name"
                 oninput="convertToUpperCase(this)">
+        </div>
+    </div>
+
+    <!-- Dispatch Details Card -->
+    <div class="card">
+        <div class="card-title">🚚 Dispatch Details</div>
+        <div class="form-group">
+            <label>Tempo No <span class="required-star">*</span></label>
+            <input type="text" id="tempo-no" placeholder="Type or select tempo..."
+                list="vehicle-datalist"
+                oninput="convertToUpperCase(this)"
+                onchange="onTempoChange(this)"
+                autocomplete="off" required>
+        </div>
+        <div class="form-group">
+            <label>Driver Name <span class="required-star">*</span></label>
+            <input type="text" id="driver-name" placeholder="Driver Full Name"
+                oninput="convertToUpperCase(this)" required>
+        </div>
+        <div class="form-group">
+            <label>Driver No (Mobile)</label>
+            <input type="tel" id="driver-mobile" placeholder="10-digit mobile number">
+        </div>
+        <div class="form-group">
+            <label>Supervisor Name <span class="required-star">*</span></label>
+            <input type="text" id="supervisor-name" placeholder="Supervisor Name"
+                oninput="convertToUpperCase(this)" required>
         </div>
     </div>
 
@@ -289,33 +423,6 @@
         </div>
     </div>
 
-    <!-- Dispatch Details Card -->
-    <div class="card">
-        <div class="card-title">🚚 Dispatch Details</div>
-        <div class="form-group">
-            <label>Tempo No <span class="required-star">*</span></label>
-            <input type="text" id="tempo-no" placeholder="Type or select tempo..."
-                list="vehicle-datalist"
-                oninput="convertToUpperCase(this)"
-                onchange="onTempoChange(this)"
-                autocomplete="off" required>
-        </div>
-        <div class="form-group">
-            <label>Driver Name <span class="required-star">*</span></label>
-            <input type="text" id="driver-name" placeholder="Driver Full Name"
-                oninput="convertToUpperCase(this)" required>
-        </div>
-        <div class="form-group">
-            <label>Driver No (Mobile)</label>
-            <input type="tel" id="driver-mobile" placeholder="10-digit mobile number">
-        </div>
-        <div class="form-group">
-            <label>Supervisor Name <span class="required-star">*</span></label>
-            <input type="text" id="supervisor-name" placeholder="Supervisor Name"
-                oninput="convertToUpperCase(this)" required>
-        </div>
-    </div>
-
     <!-- Finish Button + Save Partially -->
     <div class="finish-container">
         <button type="button" class="finish-btn" id="finishBtn" onclick="handleFinish()">
@@ -328,9 +435,32 @@
     </div>
 </form>
 
+<!-- 🔍 Verification Panel (Packing Incharge only) -->
+<div class="container" id="verification-panel">
+    <div class="card">
+        <div class="card-title">🔍 Receiving Verification — Pending Slips</div>
+        <div class="verify-filter-bar">
+            <select id="verify-filter-col" onchange="onVerifyFilterColChange()">
+                <option value="">Filter by...</option>
+                <option value="packingType">Packing Type</option>
+                <option value="partyName">Party Name</option>
+                <option value="slipNo">Slip No</option>
+                <option value="date">Date</option>
+            </select>
+            <input type="text" id="verify-filter-value" placeholder="Type to filter..."
+                oninput="renderVerificationList()" style="display:none;">
+            <select id="verify-filter-select" onchange="renderVerificationList()" style="display:none;">
+                <option value="">All</option>
+            </select>
+        </div>
+        <div class="verify-count" id="verify-count"></div>
+    </div>
+    <div id="verify-slip-list"></div>
+</div>
+
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1njBLX4FlF1dAf5f_-EOPGCdS-LONcoPT0vq48NHdvEOBmOK-GCX9mtwRk5vS0E-X/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9ldjwgJtWh4A7gowRG09n9ow_EFfGkqxwLVfnt4oKm_wyKT9POGt_CS_uy9p0chnhgQ/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -342,12 +472,168 @@ let itemCounter = 0;
 // Map<BRAND_NAME_UPPERCASE, stdPcs> — O(1) lookup when user selects a brand
 let brandMap = new Map();
 
+// 📦 Pending Orders loaded from Sheet "OrderSheet"
+// Map<ORDER_ID, { partyName, shipTo, deliveryAddr, type, brand, orderQty, pendingQty }>
+let orderMap = new Map();
+// Shared <option> markup — rebuilt on load and on party filter change
+let orderIdOptionsHtml = '<option value="">-- Select Order ID (optional) --</option>';
+
+// 🏢 Party Map — built from OrderSheet unique parties
+// Map<PARTY_NAME_UPPER, { shipTo, deliveryAddr }> — O(1) auto-fill on party select
+let partyMap = new Map();
+// Raw orders list — kept in memory to filter Order ID dropdown by selected party
+let allPendingOrders = [];
+
 // 🚛 Vehicle list loaded from Sheet "Vehicle List"
 // Map<TEMPO_NO_UPPERCASE, {driverName, driverMobile}> — O(1) lookup on tempo select
 let vehicleMap = new Map();
 
 // 📝 Draft state
 let currentDraftId = null;  // null = new slip, 'D-x' = editing a saved draft
+
+// ══════════════════════════════════════════════════════
+// 🔐 LOGIN / SESSION
+// Session (token, role, fullName, username) is kept in localStorage so a
+// page refresh doesn't force re-login. The token is a random ID validated
+// server-side against CacheService — the sheet never trusts the client's
+// claimed role, only what the server looked up at login time.
+// ══════════════════════════════════════════════════════
+let session = null; // { token, role, fullName, username }
+
+function loadSessionFromStorage() {
+    try {
+        var raw = localStorage.getItem('packingAppSession');
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+}
+
+function saveSessionToStorage(s) {
+    localStorage.setItem('packingAppSession', JSON.stringify(s));
+}
+
+function clearSession(showError) {
+    session = null;
+    localStorage.removeItem('packingAppSession');
+    document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('userBar').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    if (showError) {
+        document.getElementById('loginError').textContent = 'Session expired. Please login again.';
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+async function handleLogin() {
+    var username = document.getElementById('login-username').value.trim();
+    var password = document.getElementById('login-password').value;
+    var errBox   = document.getElementById('loginError');
+    errBox.style.display = 'none';
+
+    if (!username || !password) {
+        errBox.textContent = 'Username aur Password dono zaroori hain.';
+        errBox.style.display = 'block';
+        return;
+    }
+
+    var btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+
+    try {
+        const res = await fetch(APPS_SCRIPT_URL, {
+            method:   'POST',
+            body:     JSON.stringify({ action: 'login', username: username, password: password }),
+            headers:  { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            session = { token: result.token, role: result.role, fullName: result.fullName, username: result.username };
+            saveSessionToStorage(session);
+            document.getElementById('login-password').value = '';
+            enterApp();
+        } else {
+            errBox.textContent = result.error || 'Login failed.';
+            errBox.style.display = 'block';
+        }
+    } catch (err) {
+        errBox.textContent = 'Network error! Internet check karein.';
+        errBox.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🔐 Login';
+    }
+}
+
+async function handleLogout() {
+    if (session) {
+        try {
+            await fetch(APPS_SCRIPT_URL, {
+                method:   'POST',
+                body:     JSON.stringify({ action: 'logout', token: session.token }),
+                headers:  { 'Content-Type': 'text/plain;charset=UTF-8' },
+                redirect: 'follow'
+            });
+        } catch (e) { /* ignore — clearing local session regardless */ }
+    }
+    clearSession(false);
+}
+
+// Called after a successful login (fresh or restored from storage)
+function enterApp() {
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('userBar').style.display = 'flex';
+    document.getElementById('userBarName').textContent = session.fullName;
+    document.getElementById('userBarRole').textContent =
+        session.role === 'PACKING_INCHARGE' ? '(Packing Incharge)' : '(Data Entry)';
+    document.getElementById('verifyNavBtn').style.display =
+        session.role === 'PACKING_INCHARGE' ? '' : 'none';
+    showPackingForm();
+}
+
+function showPackingForm() {
+    document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('packing-slip-form').style.display = '';
+    document.getElementById('formNavBtn').style.display = 'none';
+    document.getElementById('verifyNavBtn').style.display =
+        session.role === 'PACKING_INCHARGE' ? '' : 'none';
+    if (itemCounter === 0) addItem(); // first entry into the form
+    if (!slipSyncInterval) startSlipNumberSync();
+}
+
+function showVerificationPanel() {
+    document.getElementById('packing-slip-form').style.display = 'none';
+    // ⚠️ Must be 'block', not '' — the stylesheet has #verification-panel{display:none},
+    // so clearing the inline style falls back to that rule and the panel stays hidden.
+    document.getElementById('verification-panel').style.display = 'block';
+    document.getElementById('formNavBtn').style.display = '';
+    document.getElementById('verifyNavBtn').style.display = 'none';
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    fetchVerificationSlips();
+}
+
+// Helper: append the current session token as a URL query param
+function withToken(url) {
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'token=' + encodeURIComponent(session ? session.token : '');
+}
+
+// Helper: any POST that needs auth attaches the token to the payload
+function withAuthPayload(payload) {
+    payload.token = session ? session.token : '';
+    return payload;
+}
+
+// If a server response indicates the session died (expired/removed), bounce to login
+function handleAuthFailure(result) {
+    if (result && result.requireLogin) {
+        clearSession(true);
+        return true;
+    }
+    return false;
+}
 
 // Inject a shared <datalist> into the DOM once — all brand inputs reference it
 function buildBrandDatalist(brands) {
@@ -368,6 +654,156 @@ function buildBrandDatalist(brands) {
 }
 
 // ══════════════════════════════════════════════════════
+// 📦 ORDER ID DROPDOWN — from OrderSheet (pending orders only)
+// Auto-fills Type + Brand and shows Order Qty / Pending Qty
+// when a user picks an Order ID inside an item block.
+// ══════════════════════════════════════════════════════
+function buildOrderIdDropdown(orders, partyFilter) {
+    allPendingOrders = orders || [];
+    orderMap.clear();
+    partyMap.clear();
+
+    // Build partyMap from all orders (not just filtered)
+    allPendingOrders.forEach(function (o) {
+        orderMap.set(o.orderId, o);
+        if (o.partyName && !partyMap.has(o.partyName)) {
+            partyMap.set(o.partyName, {
+                shipTo:       o.shipTo       || '',
+                deliveryAddr: o.deliveryAddr || ''
+            });
+        }
+    });
+
+    // Also build a <datalist> of unique party names from OrderSheet
+    // so the Party Name field gets order-party suggestions
+    buildPartyDatalist();
+
+    // Filter orders by party if a filter is supplied
+    var filteredOrders = partyFilter
+        ? allPendingOrders.filter(function (o) { return o.partyName === partyFilter; })
+        : allPendingOrders;
+
+    var opts = ['<option value="">-- Select Order ID (optional) --</option>'];
+    filteredOrders.forEach(function (o) {
+        opts.push('<option value="' + escapeHtmlAttr(o.orderId) + '">' +
+            escapeHtmlAttr(o.orderId) + ' (' + escapeHtmlAttr(o.brand) + ' | Pending: ' + o.pendingQty + ')' +
+            '</option>');
+    });
+    orderIdOptionsHtml = opts.join('');
+
+    // Refresh all Order ID selects on screen, preserving valid selections
+    document.querySelectorAll('.item-order-id').forEach(function (sel) {
+        var current = sel.value;
+        sel.innerHTML = orderIdOptionsHtml;
+        if (current && orderMap.has(current)) sel.value = current;
+    });
+}
+
+// Build or rebuild a <datalist> of party names sourced from OrderSheet
+// Merges with existing party-name datalist (built from saved slip data)
+// so the user sees ALL known parties, not just order-sheet ones
+function buildPartyDatalist() {
+    if (partyMap.size === 0) return;
+
+    // Get existing datalist (may have been built by buildSuggestionDatalists)
+    var dl = document.getElementById('dl-party');
+    if (!dl) {
+        dl = document.createElement('datalist');
+        dl.id = 'dl-party';
+        document.body.appendChild(dl);
+        var input = document.getElementById('party-name');
+        if (input) {
+            input.setAttribute('list', 'dl-party');
+            input.setAttribute('autocomplete', 'off');
+        }
+    }
+
+    // Add any order-party names not already in the datalist
+    var existing = new Set();
+    Array.from(dl.options).forEach(function (opt) {
+        existing.add(opt.value.toUpperCase());
+    });
+
+    partyMap.forEach(function (_, partyName) {
+        if (!existing.has(partyName.toUpperCase())) {
+            var opt = document.createElement('option');
+            opt.value = partyName;
+            dl.appendChild(opt);
+        }
+    });
+}
+
+// Minimal HTML-attribute escaper for building <option> markup client-side
+function escapeHtmlAttr(str) {
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function onOrderIdChange(selectEl) {
+    const block = selectEl.closest('.item-block');
+    if (!block) return;
+
+    const infoDiv = block.querySelector('.order-info');
+    const orderId = selectEl.value;
+
+    if (!orderId) {
+        if (infoDiv) { infoDiv.style.display = 'none'; infoDiv.innerHTML = ''; }
+        return;
+    }
+
+    const order = orderMap.get(orderId);
+    if (!order) return;
+
+    // ── Auto-fill Type (only if it matches one of the fixed dropdown options) ──
+    const typeSelect = block.querySelector('.item-type');
+    let typeMatched = false;
+    if (typeSelect) {
+        for (var i = 0; i < typeSelect.options.length; i++) {
+            if (typeSelect.options[i].value.toUpperCase() === order.type.toUpperCase()) {
+                typeSelect.value = typeSelect.options[i].value;
+                typeMatched = true;
+                break;
+            }
+        }
+    }
+
+    // ── Auto-fill Brand Name ──
+    const brandInput = block.querySelector('.item-brand');
+    if (brandInput) {
+        brandInput.value = order.brand;
+        onBrandChange(brandInput); // reuse existing std-pcs auto-fill logic
+    }
+
+    calculateTotals();
+
+    // ── Show Order Qty / Pending Qty (and a warning if Type couldn't auto-match) ──
+    // Built via DOM nodes (not innerHTML string concat) so sheet-sourced values
+    // (order.type, etc.) can never inject markup/script into the page.
+    if (!infoDiv) return;
+    infoDiv.innerHTML = '';
+
+    const qtySpan = document.createElement('span');
+    qtySpan.className = 'oi-order';
+    qtySpan.textContent = 'Order Qty: ' + order.orderQty;
+    infoDiv.appendChild(qtySpan);
+
+    const pendingSpan = document.createElement('span');
+    pendingSpan.className = 'oi-pending';
+    pendingSpan.textContent = 'Pending Qty: ' + order.pendingQty;
+    infoDiv.appendChild(pendingSpan);
+
+    if (!typeMatched) {
+        const warnSpan = document.createElement('span');
+        warnSpan.className = 'oi-warn';
+        warnSpan.textContent = '⚠ Type "' + order.type + '" not in list — select manually';
+        infoDiv.appendChild(warnSpan);
+    }
+
+    infoDiv.style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════════════
 // 🔍 AUTO-SUGGESTIONS — built from saved sheet data
 // One <datalist> per field, populated with unique past values
 // User can still type new values (datalist = suggestion, not restriction)
@@ -377,7 +813,7 @@ function buildSuggestionDatalists(suggestions) {
 
     var fieldMap = [
         { id: 'party-name',      key: 'partyNames',      listId: 'dl-party' },
-        { id: 'sub-party-name',  key: 'deliveryParties', listId: 'dl-delivery-party' },
+        { id: 'sub-party-name',  key: 'shipTos',         listId: 'dl-ship-to' },
         { id: 'third-party-name', key: 'deliveryAddrs',  listId: 'dl-delivery-addr' },
         { id: 'private-marka',   key: 'privateMarkas',   listId: 'dl-marka' },
         { id: 'contractor-name', key: 'contractors',     listId: 'dl-contractor' },
@@ -430,8 +866,13 @@ function buildVehicleDatalist(vehicles) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    addItem(); // Start with 1 item block, 1 sub-row, qty=1 pre-filled
-    startSlipNumberSync(); // initial fetch + live polling for multi-user sync
+    var restored = loadSessionFromStorage();
+    if (restored && restored.token) {
+        session = restored;
+        enterApp();
+    }
+    // If not restored, the login overlay (shown by default in HTML) stays up
+    // until handleLogin() succeeds.
 });
 
 // ══════════════════════════════════════════════════════
@@ -481,14 +922,18 @@ async function fetchSlipNumber(isInitial) {
 
     try {
         var pType  = document.getElementById('packing-type') ? document.getElementById('packing-type').value : 'Billed';
-        const res  = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now() + '&type=' + encodeURIComponent(pType), { redirect: 'follow' });
+        const res  = await fetch(withToken(APPS_SCRIPT_URL + '?t=' + Date.now() + '&type=' + encodeURIComponent(pType)), { redirect: 'follow' });
         const data = await res.json();
+
+        if (handleAuthFailure(data)) return;
+
         // 📋 On initial load, build all dropdowns
         if (isInitial) {
             if (data.brands   && data.brands.length   > 0) buildBrandDatalist(data.brands);
             if (data.vehicles && data.vehicles.length  > 0) buildVehicleDatalist(data.vehicles);
             buildDraftDropdown(data.drafts || []);
             buildSuggestionDatalists(data.suggestions || null);
+            buildOrderIdDropdown(data.pendingOrders || []);
         }
 
         const newNo = data.nextSlipNo || '';
@@ -557,25 +1002,47 @@ function onBrandInput(el) {
     calculateTotals();
 }
 
+// Get qty multiplier based on pack type — BALE gets 2× standard pcs
+function getQtyMultiplier(typeValue) {
+    return (typeValue || '').toUpperCase() === 'BALE' ? 2 : 1;
+}
+
+// Re-apply standard pcs (with multiplier) when type changes
+function onTypeChange(selectEl) {
+    calculateTotals();
+
+    // If brand is already selected, re-apply stdPcs with correct multiplier
+    var block     = selectEl.closest('.item-block');
+    if (!block) return;
+    var brandInput = block.querySelector('.item-brand');
+    if (brandInput && brandInput.value.trim()) {
+        applyStdPcsToBlock(block);
+    }
+}
+
 function onBrandChange(brandInput) {
-    const brandName = brandInput.value.toUpperCase().trim();
-    if (!brandName) return;
-
-    const stdPcs = brandMap.get(brandName);   // O(1) Map lookup
-    if (stdPcs === undefined) return;          // brand not in list — leave qty as-is
-
-    // Find the item block this input belongs to
     const block = brandInput.closest('.item-block');
     if (!block) return;
+    applyStdPcsToBlock(block);
+}
 
-    // Auto-fill qty of ALL existing sub-rows with the standard pcs value
-    // This matches the "Standard Pcs" concept from the PDF spec (Option A)
+// Shared: apply standard pcs to all sub-rows in a block, respecting BALE multiplier
+function applyStdPcsToBlock(block) {
+    var brandName = (block.querySelector('.item-brand').value || '').toUpperCase().trim();
+    if (!brandName) return;
+
+    var stdPcs = brandMap.get(brandName);
+    if (stdPcs === undefined) return;
+
+    var typeValue = block.querySelector('.item-type').value || '';
+    var multiplier = getQtyMultiplier(typeValue);
+    var finalQty   = stdPcs * multiplier;
+
     block.querySelectorAll('.sub-qty').forEach(function (qtyInput) {
-        qtyInput.value = stdPcs;
+        qtyInput.value = finalQty;
     });
 
-    // Re-run totals so item total + summary update immediately
-    const idx = Number(block.dataset.idx);
+    var idx = Number(block.dataset.idx);
     updateItemTotal(idx);
     calculateTotals();
 }
@@ -611,6 +1078,71 @@ function onTempoChange(tempoInput) {
     });
 }
 
+// ══════════════════════════════════════════════════════
+// 🏢 PARTY NAME → auto-fill Ship To + Delivery Address
+//    + filter Order ID dropdown to that party's orders
+//
+// Triggered by onchange (browser-confirmed value), not oninput,
+// so partial keystrokes don't fire it mid-typing.
+//
+// Two data sources for auto-fill (first match wins):
+//   1. partyMap  — built from OrderSheet E/F/G columns
+//   2. Falls through gracefully if party not in OrderSheet
+//      (user typed a new party not yet in the order system)
+// ══════════════════════════════════════════════════════
+function onPartyNameChange(input) {
+    var partyName = (input.value || '').trim().toUpperCase();
+
+    // ── Auto-fill Ship To + Delivery Address ──
+    var shipToEl       = document.getElementById('sub-party-name');
+    var deliveryAddrEl = document.getElementById('third-party-name');
+
+    if (partyName && partyMap.has(partyName)) {
+        var info = partyMap.get(partyName);
+
+        // ALWAYS overwrite Ship To + Delivery Address when party changes
+        // (user changed party = previous values are wrong, replace them)
+        if (shipToEl) {
+            shipToEl.value = info.shipTo;
+            shipToEl.style.transition = 'background 0.3s';
+            shipToEl.style.background = '#bbf7d0';
+            setTimeout(function() { shipToEl.style.background = ''; }, 900);
+        }
+        if (deliveryAddrEl) {
+            deliveryAddrEl.value = info.deliveryAddr;
+            deliveryAddrEl.style.transition = 'background 0.3s';
+            deliveryAddrEl.style.background = '#bbf7d0';
+            setTimeout(function() { deliveryAddrEl.style.background = ''; }, 900);
+        }
+    }
+
+    // ── Filter Order ID dropdowns to this party's orders ──
+    // Rebuild the shared orderIdOptionsHtml with party filter applied,
+    // then refresh all item-order-id selects already on screen.
+    var filteredOrders = partyName
+        ? allPendingOrders.filter(function (o) { return o.partyName === partyName; })
+        : allPendingOrders;
+
+    var opts = ['<option value="">-- Select Order ID (optional) --</option>'];
+    filteredOrders.forEach(function (o) {
+        opts.push('<option value="' + escapeHtmlAttr(o.orderId) + '">' +
+            escapeHtmlAttr(o.orderId) + ' (' + escapeHtmlAttr(o.brand) + ' | Pending: ' + o.pendingQty + ')' +
+            '</option>');
+    });
+    orderIdOptionsHtml = opts.join('');
+
+    // Update all Order ID selects currently visible on-screen
+    document.querySelectorAll('.item-order-id').forEach(function (sel) {
+        var current = sel.value;
+        sel.innerHTML = orderIdOptionsHtml;
+        // Preserve selection only if the order still belongs to this party
+        if (current && orderMap.has(current)) {
+            var order = orderMap.get(current);
+            if (!partyName || order.partyName === partyName) sel.value = current;
+        }
+    });
+}
+
 // ══════════════════════════════════════
 // ADD ITEM BLOCK
 // ══════════════════════════════════════
@@ -631,12 +1163,21 @@ function addItem() {
         </div>
         <table class="item-table">
             <tbody>
+                <tr class="order-id-row">
+                    <td class="order-id-label">ORDER ID</td>
+                    <td colspan="3">
+                        <select class="item-order-id" onchange="onOrderIdChange(this)">
+                            ${orderIdOptionsHtml}
+                        </select>
+                        <div class="order-info" style="display:none;"></div>
+                    </td>
+                </tr>
                 <tr class="item-config-header">
                     <td colspan="4">Type</td>
                 </tr>
                 <tr class="item-config-row">
                     <td colspan="4">
-                        <select class="item-type" onchange="calculateTotals()" required>
+                        <select class="item-type" onchange="onTypeChange(this)" required>
                             <option value="" disabled selected>Select Type</option>
                             <option value="BORA">BORA</option>
                             <option value="PVC BAG">PVC BAG</option>
@@ -991,6 +1532,12 @@ async function handleFinish() {
         return;
     }
 
+    if (handleAuthFailure(result)) {
+        document.getElementById('savingOverlay').style.display = 'none';
+        btn.disabled = false;
+        return;
+    }
+
     if (!result.success) {
         setSavingStage('error', result.error || 'Save failed!');
         btn.disabled = false;
@@ -1014,7 +1561,7 @@ async function handleFinish() {
 // ══════════════════════════════════════
 async function saveToSheet() {
     // Reuses buildFormPayload() — single source of truth for form data collection
-    var payload    = buildFormPayload();
+    var payload    = withAuthPayload(buildFormPayload());
     payload.action  = 'savePackingSlip';
     payload.draftId = currentDraftId || ''; // if from draft, Finish auto-deletes it
 
@@ -1079,7 +1626,7 @@ async function handleSaveDraft() {
     btn.textContent = '⏳ Saving Draft...';
 
     // Build full form state
-    var formPayload = buildFormPayload();
+    var formPayload = withAuthPayload(buildFormPayload());
     formPayload.action  = 'saveDraft';
     formPayload.draftId = currentDraftId || '';  // update if editing existing draft
 
@@ -1091,6 +1638,7 @@ async function handleSaveDraft() {
             redirect: 'follow'
         });
         var result = await res.json();
+        if (handleAuthFailure(result)) return;
 
         if (result.success) {
             currentDraftId = result.draftId;
@@ -1140,11 +1688,12 @@ async function onDraftSelect() {
     try {
         var res = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'loadDraft', draftId: draftId }),
+            body: JSON.stringify(withAuthPayload({ action: 'loadDraft', draftId: draftId })),
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
             redirect: 'follow'
         });
         var result = await res.json();
+        if (handleAuthFailure(result)) return;
 
         if (result.success && result.formData) {
             populateFormFromDraft(result.formData, draftId);
@@ -1170,11 +1719,12 @@ async function handleDeleteDraft() {
     try {
         var res = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'deleteDraft', draftId: draftId }),
+            body: JSON.stringify(withAuthPayload({ action: 'deleteDraft', draftId: draftId })),
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
             redirect: 'follow'
         });
         var result = await res.json();
+        if (handleAuthFailure(result)) return;
 
         if (result.success) {
             if (currentDraftId === draftId) currentDraftId = null;
@@ -1238,7 +1788,6 @@ function populateFormFromDraft(data, draftId) {
 
     // Header fields
     var h = data.header || {};
-    document.getElementById('invoice-no').value       = h.invoiceNo       || '';
     document.getElementById('party-name').value       = h.partyName       || '';
     document.getElementById('sub-party-name').value   = h.subPartyName    || '';
     document.getElementById('third-party-name').value = h.thirdPartyName  || '';
@@ -1294,6 +1843,279 @@ function populateFormFromDraft(data, draftId) {
     var slipField = document.getElementById('slip-sr-no');
     slipField.value = '📝 Draft ' + draftId + ' loaded';
     slipField.style.color = '#7c3aed';
+}
+
+// ══════════════════════════════════════════════════════
+// 🔍 VERIFICATION PANEL (Packing Incharge only)
+//
+// Three independent stages per slip, each saved separately:
+//   1. Pre-Invoice Verification  — status + verifier + remark
+//   2. After-Invoice Verification — Actual Invoice No + Chalan No + remark
+//   3. Receiving Verification     — status + verifier + remark
+// Re-submitting a stage overwrites its previous entry (lets Incharge
+// correct a mistake without needing to edit the sheet directly).
+// ══════════════════════════════════════════════════════
+let verifySlips = []; // cached list from last fetch
+
+async function fetchVerificationSlips() {
+    var list = document.getElementById('verify-slip-list');
+    list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">Loading slips...</p>';
+
+    try {
+        const res  = await fetch(withToken(APPS_SCRIPT_URL + '?action=listSlipsForVerification&t=' + Date.now()), { redirect: 'follow' });
+        const data = await res.json();
+        if (handleAuthFailure(data)) return;
+
+        if (!data.success) {
+            list.innerHTML = '<p style="text-align:center;color:var(--error);padding:20px;">' + (data.error || 'Failed to load slips') + '</p>';
+            return;
+        }
+        verifySlips = data.slips || [];
+        renderVerificationList();
+    } catch (err) {
+        list.innerHTML = '<p style="text-align:center;color:var(--error);padding:20px;">Network error! Internet check karein.</p>';
+    }
+}
+
+function renderVerificationList() {
+    var list     = document.getElementById('verify-slip-list');
+    var filterCol = document.getElementById('verify-filter-col').value;
+    var filterTxt = document.getElementById('verify-filter-value').value.trim().toUpperCase();
+    var filterSel = document.getElementById('verify-filter-select').value;
+
+    // Step 1: Only Receiving-PENDING slips
+    var slips = verifySlips.filter(function (s) {
+        var st = s.status || {};
+        return !st.receivingStatus;
+    });
+
+    // Step 2: Column filter
+    if (filterCol) {
+        var fVal = filterSel || filterTxt;
+        if (fVal) {
+            fVal = fVal.toUpperCase();
+            slips = slips.filter(function (s) {
+                if (filterCol === 'packingType') return s.packingType.toUpperCase() === fVal;
+                if (filterCol === 'partyName')   return s.partyName.toUpperCase().indexOf(fVal) >= 0;
+                if (filterCol === 'slipNo')      return s.slipNo.toUpperCase().indexOf(fVal) >= 0;
+                if (filterCol === 'date')        return String(s.date).toUpperCase().indexOf(fVal) >= 0;
+                return true;
+            });
+        }
+    }
+
+    document.getElementById('verify-count').textContent =
+        slips.length + ' pending slip' + (slips.length !== 1 ? 's' : '') +
+        ' (of ' + verifySlips.length + ' total)';
+
+    if (!slips.length) {
+        list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">All slips verified! ✅</p>';
+        return;
+    }
+
+    list.innerHTML = slips.map(function (s) {
+        var key = s.packingType + '__' + s.slipNo;
+        var st  = s.status || {};
+
+        var preBadge   = st.preInvoiceStatus ? '<span class="verify-badge done">✓ Pre</span>'    : '<span class="verify-badge pending">Pre ⏳</span>';
+        var afterBadge = st.actualInvoiceNo  ? '<span class="verify-badge done">✓ Inv</span>'    : '<span class="verify-badge pending">Inv ⏳</span>';
+        var recvBadge  = '<span class="verify-badge pending">Recv ⏳</span>';
+
+        // ── Type-wise breakdown table (Change 1) ──
+        var tb = s.typeBreakdown || {};
+        var tbKeys = Object.keys(tb);
+        var breakdownHtml = '';
+        if (tbKeys.length > 0) {
+            breakdownHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:6px 0;">' +
+                '<tr style="background:#e2e8f0;"><th style="padding:4px 6px;text-align:left;border:1px solid #cbd5e1;">Pack Type</th>' +
+                '<th style="padding:4px 6px;text-align:center;border:1px solid #cbd5e1;">Total Pcs</th>' +
+                '<th style="padding:4px 6px;text-align:right;border:1px solid #cbd5e1;">Total Wt (Kg)</th></tr>';
+            tbKeys.forEach(function (t) {
+                breakdownHtml += '<tr><td style="padding:3px 6px;border:1px solid #cbd5e1;font-weight:600;">' + escapeHtmlJs(t) + '</td>' +
+                    '<td style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1;">' + tb[t].pcs + '</td>' +
+                    '<td style="padding:3px 6px;text-align:right;border:1px solid #cbd5e1;">' + tb[t].wt.toFixed(2) + '</td></tr>';
+            });
+            breakdownHtml += '</table>';
+        }
+
+        // Compact row
+        var compact =
+            '<div class="verify-compact" onclick="toggleVerifyCard(this)">' +
+                '<span class="vc-slip">' + escapeHtmlJs(s.slipNo) + '</span>' +
+                '<span class="vc-party">' + escapeHtmlJs(s.partyName) + '</span>' +
+                '<span class="vc-meta">' + s.totalWeight.toFixed(1) + 'Kg</span>' +
+                '<span class="vc-badges">' + preBadge + afterBadge + recvBadge + '</span>' +
+            '</div>';
+
+        // Expanded body
+        var body =
+            '<div class="verify-body" id="vbody-' + key + '">' +
+                '<div class="verify-detail">' +
+                    'Party: <strong>' + escapeHtmlJs(s.partyName) + '</strong>' +
+                    (s.shipTo ? ' | Ship To: ' + escapeHtmlJs(s.shipTo) : '') +
+                    ' | ' + escapeHtmlJs(s.packingType) +
+                    ' | Qty: ' + s.totalQty +
+                    ' | Wt: ' + s.totalWeight.toFixed(2) + ' Kg' +
+                '</div>' +
+
+                // Type-wise breakdown (Change 1)
+                breakdownHtml +
+
+                // Stage 1: Pre-Invoice
+                '<div class="verify-stage">' +
+                    '<div class="verify-stage-title">1️⃣ Pre Invoice ' + preBadge + '</div>' +
+                    (st.preInvoiceStatus
+                        ? '<div class="verify-detail">By ' + escapeHtmlJs(st.preInvoiceVerifier) + ' | ' + escapeHtmlJs(formatVerifyDate(st.preInvoiceDateTime)) + (st.preInvoiceRemark ? ' | "' + escapeHtmlJs(st.preInvoiceRemark) + '"' : '') + '</div>'
+                        : '') +
+                    '<textarea id="pre-remark-' + key + '" placeholder="Remark (optional)" rows="1" onclick="event.stopPropagation()"></textarea>' +
+                    '<button type="button" onclick="event.stopPropagation();submitVerificationStage(\'' + key + '\',\'preInvoice\')">✅ Mark Pre-Invoice Verified</button>' +
+                '</div>' +
+
+                // Stage 2: After Invoice + Kanta Weight (Change 2)
+                '<div class="verify-stage">' +
+                    '<div class="verify-stage-title">2️⃣ After Invoice ' + afterBadge + '</div>' +
+                    (st.actualInvoiceNo
+                        ? '<div class="verify-detail">Invoice: <strong>' + escapeHtmlJs(st.actualInvoiceNo) + '</strong> | Chalan: <strong>' + escapeHtmlJs(st.chalanNo || '-') + '</strong>' + (st.kantaWeight ? ' | Kanta Wt: <strong>' + escapeHtmlJs(st.kantaWeight) + ' Kg</strong>' : '') + ' | By ' + escapeHtmlJs(st.afterInvoiceVerifier) + '</div>'
+                        : '') +
+                    '<input type="text" id="after-invno-' + key + '" placeholder="Actual Invoice No *" value="' + escapeHtmlJs(st.actualInvoiceNo || '') + '" onclick="event.stopPropagation()">' +
+                    '<input type="text" id="after-chalan-' + key + '" placeholder="Chalan No" value="' + escapeHtmlJs(st.chalanNo || '') + '" onclick="event.stopPropagation()">' +
+                    '<input type="number" id="after-kanta-' + key + '" placeholder="Kanta Weight (Kg)" step="0.01" value="' + escapeHtmlJs(st.kantaWeight || '') + '" onclick="event.stopPropagation()" style="text-transform:none;">' +
+                    '<textarea id="after-remark-' + key + '" placeholder="Remark (optional)" rows="1" onclick="event.stopPropagation()"></textarea>' +
+                    '<button type="button" onclick="event.stopPropagation();submitVerificationStage(\'' + key + '\',\'afterInvoice\')">✅ Save Invoice, Chalan &amp; Kanta Wt</button>' +
+                '</div>' +
+
+                // Stage 3: Receiving
+                '<div class="verify-stage">' +
+                    '<div class="verify-stage-title">3️⃣ Receiving ' + recvBadge + '</div>' +
+                    '<textarea id="recv-remark-' + key + '" placeholder="Remark (shortage/damage)" rows="1" onclick="event.stopPropagation()"></textarea>' +
+                    '<button type="button" onclick="event.stopPropagation();submitVerificationStage(\'' + key + '\',\'receiving\')">✅ Mark Received</button>' +
+                '</div>' +
+            '</div>';
+
+        return '<div class="verify-slip-card">' + compact + body + '</div>';
+    }).join('');
+}
+
+function toggleVerifyCard(compactEl) {
+    var card = compactEl.closest('.verify-slip-card');
+    var body = card.querySelector('.verify-body');
+    var isOpen = body.classList.contains('open');
+
+    // Close all others first (accordion behavior — one open at a time on mobile)
+    document.querySelectorAll('.verify-body.open').forEach(function (b) {
+        b.classList.remove('open');
+        b.closest('.verify-slip-card').classList.remove('active');
+    });
+
+    if (!isOpen) {
+        body.classList.add('open');
+        card.classList.add('active');
+    }
+}
+
+// Column filter handler — show select for packingType, text input for others
+function onVerifyFilterColChange() {
+    var col      = document.getElementById('verify-filter-col').value;
+    var inputEl  = document.getElementById('verify-filter-value');
+    var selectEl = document.getElementById('verify-filter-select');
+
+    inputEl.value  = '';
+    inputEl.style.display  = 'none';
+    selectEl.innerHTML     = '<option value="">All</option>';
+    selectEl.style.display = 'none';
+
+    if (!col) {
+        renderVerificationList();
+        return;
+    }
+
+    if (col === 'packingType') {
+        // Show a select with fixed options
+        selectEl.innerHTML = '<option value="">All</option>' +
+            '<option value="Billed">Billed</option>' +
+            '<option value="Non-Bill">Non-Bill</option>';
+        selectEl.style.display = '';
+    } else if (col === 'partyName') {
+        // Build unique party names from loaded data
+        var parties = {};
+        verifySlips.forEach(function (s) {
+            var st = s.status || {};
+            if (!st.receivingStatus) parties[s.partyName] = true;
+        });
+        var opts = '<option value="">All</option>';
+        Object.keys(parties).sort().forEach(function (p) {
+            opts += '<option value="' + escapeHtmlJs(p) + '">' + escapeHtmlJs(p) + '</option>';
+        });
+        selectEl.innerHTML = opts;
+        selectEl.style.display = '';
+    } else {
+        // Free-text filter for slipNo, date
+        inputEl.style.display = '';
+        inputEl.placeholder = col === 'slipNo' ? 'e.g. PS-12' : 'e.g. 2026-07';
+    }
+
+    renderVerificationList();
+}
+
+function escapeHtmlJs(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatVerifyDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+async function submitVerificationStage(key, stage) {
+    var parts       = key.split('__');
+    var packingType = parts[0];
+    var slipNo      = parts[1];
+    var slip        = verifySlips.find(function (s) { return s.packingType === packingType && s.slipNo === slipNo; });
+
+    var payload = withAuthPayload({
+        action:      'updateVerification',
+        slipNo:      slipNo,
+        packingType: packingType,
+        partyName:   slip ? slip.partyName : '',
+        stage:       stage
+    });
+
+    if (stage === 'preInvoice') {
+        payload.remark = document.getElementById('pre-remark-' + key).value;
+    } else if (stage === 'afterInvoice') {
+        payload.actualInvoiceNo = document.getElementById('after-invno-' + key).value.trim();
+        payload.chalanNo        = document.getElementById('after-chalan-' + key).value.trim();
+        payload.kantaWeight     = document.getElementById('after-kanta-' + key).value.trim();
+        payload.remark          = document.getElementById('after-remark-' + key).value;
+        if (!payload.actualInvoiceNo) {
+            alert('Actual Invoice No bharna zaroori hai.');
+            return;
+        }
+    } else if (stage === 'receiving') {
+        payload.remark = document.getElementById('recv-remark-' + key).value;
+    }
+
+    try {
+        const res    = await fetch(APPS_SCRIPT_URL, {
+            method:   'POST',
+            body:     JSON.stringify(payload),
+            headers:  { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        const result = await res.json();
+        if (handleAuthFailure(result)) return;
+
+        if (result.success) {
+            fetchVerificationSlips(); // refresh to show updated status
+        } else {
+            alert('Update failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (err) {
+        alert('Network error! Internet check karein.');
+    }
 }
 
 </script>
