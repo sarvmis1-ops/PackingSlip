@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>Packing Slip - Sarv India Home Furnishing</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
         :root {
             --primary: #2563eb;
@@ -201,6 +203,57 @@
 
         .verify-nav-btn { width: 100%; background: #0f172a; color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
 
+        /* ── Order Panel ── */
+        #order-panel { display: none; }
+        #reports-panel { display: none; }
+        .report-card { background: var(--surface); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .report-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--primary); }
+        .report-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .report-table th { background: #1e293b; color: #fff; padding: 6px 8px; text-align: left; font-size: 11px; font-weight: 600; }
+        .report-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+        .report-table tr:hover { background: #f1f5f9; }
+        .report-table .num { text-align: right; font-weight: 600; }
+        .report-table .center { text-align: center; }
+        .report-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .kpi-card { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 10px; padding: 12px; text-align: center; border: 1px solid #bfdbfe; }
+        .kpi-value { font-size: 22px; font-weight: 900; color: var(--primary); }
+        .kpi-label { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+        /* Quality row inside order form */
+        .quality-row { display:grid; grid-template-columns:1fr 1fr 80px auto; gap:6px; align-items:end; margin-bottom:6px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:8px 10px; }
+        .quality-row label { font-size:11px; font-weight:600; color:#166534; display:block; margin-bottom:2px; }
+        .quality-row input, .quality-row select { padding:7px 8px; border:1.5px solid #86efac; border-radius:6px; font-size:13px; font-weight:600; background:#fff; width:100%; }
+        .quality-row .btn-remove-quality { background:#ef4444; color:#fff; border:none; border-radius:6px; padding:8px 10px; font-size:14px; cursor:pointer; line-height:1; align-self:end; }
+        .order-card { background: var(--surface); border-radius: 10px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; }
+        .order-card.active { border-color: var(--primary); }
+        .order-compact { display: flex; align-items: center; gap: 6px; padding: 10px 12px; cursor: pointer; user-select: none; flex-wrap: wrap; }
+        .order-compact:active { background: #f1f5f9; }
+        .oc-no { font-weight: 700; font-size: 13px; color: var(--primary); min-width: 42px; }
+        .oc-party { font-size: 12px; color: var(--text-main); font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .oc-qty { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+        .status-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 12px; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.partial { background: #dbeafe; color: #1e40af; }
+        .status-badge.completed { background: #dcfce7; color: #166534; }
+        .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+        .order-body { display: none; padding: 0 12px 12px; }
+        .order-body.open { display: block; }
+        .order-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 11px; margin-bottom: 8px; }
+        .order-detail-grid .od-lbl { color: var(--text-muted); font-weight: 600; }
+        .order-detail-grid .od-val { color: var(--text-main); font-weight: 500; word-break: break-word; }
+        .order-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .order-actions button { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .order-actions .btn-edit { background: var(--primary); color: #fff; }
+        .order-actions .btn-delete { background: #ef4444; color: #fff; }
+        .order-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .order-form-grid .form-group { margin-bottom: 0; }
+        .order-form-grid .full-width { grid-column: 1 / -1; }
+        .order-form-btns { display: flex; gap: 8px; margin-top: 12px; }
+        .order-form-btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .order-form-btns .btn-save-order { background: linear-gradient(135deg,#059669,#10b981); color: #fff; box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+        .order-form-btns .btn-cancel-order { background: #e2e8f0; color: var(--text-main); }
+        .order-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+        .order-filter-bar select, .order-filter-bar input { flex: 1; min-width: 100px; padding: 8px; font-size: 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--surface); }
+
         /* Print */
         .print-only-table { display: none; }
         @media print {
@@ -245,6 +298,9 @@
             </div>
             <button type="button" class="login-btn" id="loginBtn" onclick="handleLogin()">🔐 Login</button>
         </form>
+        <div style="margin-top:14px;font-size:10px;color:#94a3b8;text-align:center;line-height:1.6;">
+            v9.1 &nbsp;|&nbsp; <span id="login-url-check"></span>
+        </div>
     </div>
 </div>
 
@@ -252,8 +308,10 @@
 <div class="user-bar" id="userBar">
     <div class="who">👤 <span id="userBarName"></span><span class="role-tag" id="userBarRole"></span></div>
     <div class="actions">
-        <button type="button" id="verifyNavBtn" style="display:none;" onclick="showVerificationPanel()">🔍 Verification Panel</button>
-        <button type="button" id="formNavBtn" style="display:none;" onclick="showPackingForm()">📦 Packing Form</button>
+        <button type="button" id="verifyNavBtn" style="display:none;" onclick="showVerificationPanel()">🔍 Verify</button>
+        <button type="button" id="orderNavBtn" onclick="showOrderPanel()">📋 Orders</button>
+            <button id="reportsNavBtn" type="button" onclick="showReportsPanel()" style="display:none;">📊 Reports</button>
+        <button type="button" id="formNavBtn" style="display:none;" onclick="showPackingForm()">📦 Packing</button>
         <button type="button" class="logout-btn" onclick="handleLogout()">Logout</button>
     </div>
 </div>
@@ -454,9 +512,141 @@
     <div id="verify-slip-list"></div>
 </div>
 
+<!-- 📋 Order Collection Panel -->
+<!-- 📊 Reports Panel (Admin only) -->
+<div class="container" id="reports-panel">
+    <div class="card">
+        <div class="card-title">📊 MIS Reports Dashboard</div>
+        <div class="report-kpi" id="report-kpi-row"></div>
+    </div>
+    <div id="report-daily" class="report-card" style="display:none;"></div>
+    <div id="report-parties" class="report-card" style="display:none;"></div>
+    <div id="report-qualities" class="report-card" style="display:none;"></div>
+    <div id="report-types" class="report-card" style="display:none;"></div>
+    <div id="report-order-status" class="report-card" style="display:none;"></div>
+    <div id="report-order-parties" class="report-card" style="display:none;"></div>
+    <div id="report-order-qualities" class="report-card" style="display:none;"></div>
+    <div id="report-order-review" class="report-card" style="display:none;"></div>
+    <div id="report-loading" style="text-align:center;padding:30px;color:var(--text-muted);">📊 Loading reports...</div>
+</div>
+
+<div class="container" id="order-panel">
+
+    <!-- Order Form (hidden by default) -->
+    <div class="card" id="order-form-card" style="border:2px solid #059669;display:none;">
+        <div class="card-title" id="order-form-title">📋 New Order</div>
+        <div class="order-form-grid">
+            <div class="form-group">
+                <label>Order No <span class="required-star">*</span></label>
+                <input type="text" id="ord-no" placeholder="Auto from sheet..." readonly
+                    style="background:#f1f5f9;font-weight:700;color:var(--primary);">
+                <span style="font-size:10px;color:var(--text-muted);">Auto-assigned per Quality row (e.g. 5, 5A, 5B)</span>
+            </div>
+            <div class="form-group">
+                <label>Order Date</label>
+                <input type="date" id="ord-date">
+            </div>
+            <div class="form-group">
+                <label>Order By</label>
+                <input type="text" id="ord-by" placeholder="Order By" oninput="convertToUpperCase(this)">
+            </div>
+            <div class="form-group">
+                <label>Party Name <span class="required-star">*</span></label>
+                <input type="text" id="ord-party" placeholder="Party Name" list="dl-party" oninput="convertToUpperCase(this)" autocomplete="off" required>
+            </div>
+            <div class="form-group">
+                <label>Sub Dealer Name</label>
+                <input type="text" id="ord-sub-dealer" placeholder="Sub Dealer / Direct" oninput="convertToUpperCase(this)">
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="ord-address" placeholder="Address" oninput="convertToUpperCase(this)">
+            </div>
+        </div>
+        <!-- Quality Rows (dynamic — one per quality) -->
+        <div style="margin-bottom:8px;">
+            <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:6px;">📦 Quality Details <span class="required-star">*</span></div>
+            <div id="ord-quality-rows"></div>
+            <button type="button" onclick="addQualityRow()"
+                style="width:100%;background:#f0fdf4;color:#166534;border:1.5px dashed #86efac;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">
+                ＋ Add Another Quality
+            </button>
+        </div>
+        <div class="order-form-grid">
+            <div class="form-group">
+                <label>Transport Type</label>
+                <select id="ord-transport-type">
+                    <option value="">Select</option>
+                    <option value="TEMPO">TEMPO</option>
+                    <option value="TRUCK">TRUCK</option>
+                    <option value="BY HAND">BY HAND</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Deliver Destination</label>
+                <select id="ord-deliver-dest">
+                    <option value="">Select</option>
+                    <option value="GODOWN">GODOWN</option>
+                    <option value="TRANSPORT">TRANSPORT</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Transporter Name</label>
+                <input type="text" id="ord-transporter" placeholder="Transporter Name" oninput="convertToUpperCase(this)">
+            </div>
+            <div class="form-group">
+                <label>Buyer Name</label>
+                <input type="text" id="ord-buyer" placeholder="Buyer Name" oninput="convertToUpperCase(this)">
+            </div>
+            <div class="form-group">
+                <label>Mob.</label>
+                <input type="tel" id="ord-mob" placeholder="Mobile No">
+            </div>
+            <div class="form-group">
+                <label>Review Order</label>
+                <select id="ord-review">
+                    <option value="">Select</option>
+                    <option value="CONFIRM">CONFIRM</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="PARTIAL HOLD">PARTIAL HOLD</option>
+                    <option value="STARTED">STARTED</option>
+                    <option value="CANCEL">CANCEL</option>
+                </select>
+            </div>
+        </div>
+        <div class="order-form-btns">
+            <button type="button" class="btn-save-order" id="ord-save-btn" onclick="handleSaveOrder()">💾 Save Order</button>
+            <button type="button" class="btn-cancel-order" onclick="hideOrderForm()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="card">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <button type="button" onclick="showOrderForm()" style="flex:1;background:#059669;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">＋ New Order</button>
+            <button type="button" onclick="fetchAllOrders()" style="background:#e2e8f0;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;">🔄</button>
+        </div>
+        <div class="order-filter-bar">
+            <select id="order-filter-status" onchange="renderOrderList()">
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="PARTIAL">Partial</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+            </select>
+            <input type="text" id="order-filter-search" placeholder="Search Order/Party/Quality..." oninput="renderOrderList()">
+        </div>
+        <div id="order-count" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+    </div>
+
+    <!-- Order List -->
+    <div id="order-list"></div>
+</div>
+
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-Vl0R9OKaYZkdNxGvXvy0gy1M5DfuABYgI5XlqDM3iPH92X0gsXxylo4DG_4ODnaq2w/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGNELMyKUdykoEowbT8NcOr3ML3pXWHjj6Iz9JQRQFDIPM2isvXsHknQZCCp6vzu5V/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -512,6 +702,7 @@ function clearSession(showError) {
     localStorage.removeItem('packingAppSession');
     document.getElementById('packing-slip-form').style.display = 'none';
     document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('order-panel').style.display = 'none';
     document.getElementById('userBar').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
@@ -556,8 +747,10 @@ async function handleLogin() {
             errBox.style.display = 'block';
         }
     } catch (err) {
-        errBox.textContent = 'Network error! Internet check karein.';
+        // Show exact error to help debug
+        errBox.textContent = 'Network error: ' + err.message;
         errBox.style.display = 'block';
+        console.error('Login fetch error:', err);
     } finally {
         btn.disabled = false;
         btn.textContent = '🔐 Login';
@@ -583,32 +776,64 @@ function enterApp() {
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('userBar').style.display = 'flex';
     document.getElementById('userBarName').textContent = session.fullName;
-    document.getElementById('userBarRole').textContent =
-        session.role === 'PACKING_INCHARGE' ? '(Packing Incharge)' : '(Data Entry)';
-    document.getElementById('verifyNavBtn').style.display =
-        session.role === 'PACKING_INCHARGE' ? '' : 'none';
+
+    // Role display label
+    var roleLabels = { 'ADMIN': '(Admin)', 'PACKING_INCHARGE': '(Packing Incharge)', 'DATA_ENTRY': '(Data Entry)' };
+    document.getElementById('userBarRole').textContent = roleLabels[session.role] || '(' + session.role + ')';
+
+    // Verification panel: ADMIN + PACKING_INCHARGE only
+    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
+    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
+
+    // Orders panel: ADMIN + PACKING_INCHARGE only (hidden for DATA_ENTRY)
+    var canOrders = session.role !== 'DATA_ENTRY';
+    document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
+
+    // Reports panel: ADMIN only
+    document.getElementById('reportsNavBtn').style.display =
+        session.role === 'ADMIN' ? '' : 'none';
+
     showPackingForm();
 }
 
 function showPackingForm() {
     document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('reports-panel').style.display = 'none';
     document.getElementById('packing-slip-form').style.display = '';
     document.getElementById('formNavBtn').style.display = 'none';
-    document.getElementById('verifyNavBtn').style.display =
-        session.role === 'PACKING_INCHARGE' ? '' : 'none';
-    if (itemCounter === 0) addItem(); // first entry into the form
+    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
+    var canOrders = session.role !== 'DATA_ENTRY';
+    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
+    document.getElementById('orderNavBtn').style.display  = canOrders ? '' : 'none';
+    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    if (itemCounter === 0) addItem();
     if (!slipSyncInterval) startSlipNumberSync();
 }
 
 function showVerificationPanel() {
     document.getElementById('packing-slip-form').style.display = 'none';
-    // ⚠️ Must be 'block', not '' — the stylesheet has #verification-panel{display:none},
-    // so clearing the inline style falls back to that rule and the panel stays hidden.
+    document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('reports-panel').style.display = 'none';
     document.getElementById('verification-panel').style.display = 'block';
     document.getElementById('formNavBtn').style.display = '';
     document.getElementById('verifyNavBtn').style.display = 'none';
+    document.getElementById('orderNavBtn').style.display = '';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     fetchVerificationSlips();
+}
+
+function showOrderPanel() {
+    document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('reports-panel').style.display = 'none';
+    document.getElementById('order-panel').style.display = 'block';
+    document.getElementById('formNavBtn').style.display = '';
+    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
+    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
+    document.getElementById('orderNavBtn').style.display = 'none';
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    fetchAllOrders();
 }
 
 // Helper: append the current session token as a URL query param
@@ -862,6 +1087,13 @@ function buildVehicleDatalist(vehicles) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Quick URL sanity-check — shows if URL is still the default placeholder
+    var urlEl = document.getElementById('login-url-check');
+    if (urlEl) {
+        var isPlaceholder = APPS_SCRIPT_URL.includes('PASTE_YOUR') || APPS_SCRIPT_URL.length < 50;
+        urlEl.textContent = isPlaceholder ? '⚠️ APPS_SCRIPT_URL not set!' : '🔗 URL: OK';
+        urlEl.style.color  = isPlaceholder ? '#f87171' : '#6ee7b7';
+    }
     var restored = loadSessionFromStorage();
     if (restored && restored.token) {
         session = restored;
@@ -875,39 +1107,40 @@ document.addEventListener('DOMContentLoaded', function () {
 // 🔄 MULTI-USER SLIP NUMBER SYNC
 //
 // HOW IT WORKS:
-//   1. On load → fetch slip no immediately
-//   2. Poll every 5s → compare with current displayed value
+//   1. On load → full fetch (brands, vehicles, drafts, suggestions, orders)
+//   2. Poll every 15s → lightweight call returns ONLY slip number
 //   3. If another user saved a slip → number updates automatically
 //   4. If THIS user is mid-save → poller is paused, no conflict
 //   5. If browser tab is hidden → polling pauses (saves GAS quota)
 //
 // QUOTA MATH (10 users):
-//   10 users × 1 req/5s × 3600s = 7,200 reads/hour
-//   GAS free quota = 20,000 reads/day → ✅ well within limits
+//   10 users × 1 req/15s × 3600s = 2,400 reads/hour
+//   GAS free quota = 20,000 reads/day → ✅ very comfortable
 // ══════════════════════════════════════════════════════
 let slipSyncInterval  = null;   // holds the setInterval reference
 let slipSyncPaused    = false;  // true while THIS user is saving
 let lastKnownSlipNo   = '';     // last value fetched from server
+let visibilityListenerAdded = false; // prevent duplicate listeners
 
 function startSlipNumberSync() {
-    // Initial fetch immediately
+    // Initial fetch immediately (full load — brands, vehicles, etc.)
     fetchSlipNumber(true);
 
-    // Poll every 5 seconds
+    // Poll every 15 seconds (lightweight — slip number only)
     slipSyncInterval = setInterval(function () {
-        // Skip if: user is saving, or tab is hidden (saves quota)
         if (slipSyncPaused || document.hidden) return;
         fetchSlipNumber(false);
-    }, 5000);
+    }, 15000);
 
-    // Pause polling when tab loses focus, resume when it regains it
-    // This prevents unnecessary requests when user switches tabs
-    document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) {
-            // Tab became visible → fetch immediately to catch up
-            if (!slipSyncPaused) fetchSlipNumber(false);
-        }
-    });
+    // Register visibilitychange listener ONCE (prevents leak on repeated calls)
+    if (!visibilityListenerAdded) {
+        visibilityListenerAdded = true;
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && !slipSyncPaused) {
+                fetchSlipNumber(false);
+            }
+        });
+    }
 }
 
 async function fetchSlipNumber(isInitial) {
@@ -917,8 +1150,14 @@ async function fetchSlipNumber(isInitial) {
     if (isInitial) field.value = 'Loading...';
 
     try {
-        var pType  = document.getElementById('packing-type') ? document.getElementById('packing-type').value : 'Billed';
-        const res  = await fetch(withToken(APPS_SCRIPT_URL + '?t=' + Date.now() + '&type=' + encodeURIComponent(pType)), { redirect: 'follow' });
+        var pType = document.getElementById('packing-type') ? document.getElementById('packing-type').value : 'Billed';
+
+        // ⚡ Non-initial polls use lightweight endpoint (slip number only — no sheet scans)
+        var url = isInitial
+            ? withToken(APPS_SCRIPT_URL + '?t=' + Date.now() + '&type=' + encodeURIComponent(pType))
+            : withToken(APPS_SCRIPT_URL + '?action=pollSlipNo&t=' + Date.now() + '&type=' + encodeURIComponent(pType));
+
+        const res  = await fetch(url, { redirect: 'follow' });
         const data = await res.json();
 
         if (handleAuthFailure(data)) return;
@@ -962,6 +1201,13 @@ async function fetchSlipNumber(isInitial) {
 
 function convertToUpperCase(el) { el.value = el.value.toUpperCase(); }
 
+// ⚡ Debounce helper — prevents rapid-fire calls during fast typing
+let _calcDebounceTimer = null;
+function debouncedCalculateTotals() {
+    if (_calcDebounceTimer) clearTimeout(_calcDebounceTimer);
+    _calcDebounceTimer = setTimeout(calculateTotals, 80);
+}
+
 // ══════════════════════════════════════════════
 // 📦 PACKING TYPE CHANGE HANDLER
 // When user switches type:
@@ -977,8 +1223,8 @@ function onPackingTypeChange() {
     field.value = 'Loading ' + pType + '...';
     field.style.color = pType === 'Billed' ? 'var(--primary)' : '#7c3aed';
 
-    // Fetch slip number for the newly selected type immediately
-    fetchSlipNumber(true);
+    // ⚡ Only fetch slip number — brands/vehicles/drafts don't change with packing type
+    fetchSlipNumber(false);
 }
 
 // ══════════════════════════════════════════════════════
@@ -1249,13 +1495,13 @@ function addSubRow(blockIdx, qty, wt) {
         <td>
             <input type="number" class="sub-qty" min="0" placeholder="0"
                 value="${qtyVal}"
-                oninput="updateItemTotal(${blockIdx}); calculateTotals();"
+                oninput="updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
                 style="border-radius:5px;">
         </td>
         <td>
             <input type="number" class="sub-wt" min="0" step="0.01" placeholder="0.00"
                 value="${wtVal}"
-                oninput="updateItemTotal(${blockIdx}); calculateTotals();"
+                oninput="updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
                 onkeydown="onWeightEnter(event, ${blockIdx}, '${rowId}')"
                 style="border-radius:5px;">
         </td>
@@ -1608,6 +1854,19 @@ function timeSince(date) {
     return days + 'd ago';
 }
 
+// ⚡ Lightweight draft-list refresh — avoids a full doGet round-trip
+async function refreshDraftList() {
+    try {
+        var pType = document.getElementById('packing-type') ? document.getElementById('packing-type').value : 'Billed';
+        var res = await fetch(withToken(APPS_SCRIPT_URL + '?t=' + Date.now() + '&type=' + encodeURIComponent(pType)), { redirect: 'follow' });
+        var data = await res.json();
+        if (handleAuthFailure(data)) return;
+        buildDraftDropdown(data.drafts || []);
+    } catch (e) {
+        console.warn('Draft list refresh failed:', e.message);
+    }
+}
+
 // ── SAVE DRAFT (partial) ──
 async function handleSaveDraft() {
     var partyName = document.getElementById('party-name').value.trim();
@@ -1646,8 +1905,8 @@ async function handleSaveDraft() {
                 btn.disabled = false;
                 btn.innerHTML = '📝 Save Packing Slip No. Partially';
             }, 1500);
-            // Refresh draft dropdown
-            fetchSlipNumber(true);
+            // ⚡ Refresh draft dropdown only (full initial fetch is overkill here)
+            refreshDraftList();
         } else {
             alert('Draft save failed: ' + (result.error || 'Unknown error'));
             btn.disabled = false;
@@ -1724,7 +1983,7 @@ async function handleDeleteDraft() {
 
         if (result.success) {
             if (currentDraftId === draftId) currentDraftId = null;
-            fetchSlipNumber(true); // refresh dropdown
+            refreshDraftList(); // ⚡ lightweight refresh
         } else {
             alert('Delete failed: ' + (result.error || 'Unknown'));
         }
@@ -1921,31 +2180,39 @@ function renderVerificationList() {
         var afterBadge = st.actualInvoiceNo  ? '<span class="verify-badge done">✓ Inv</span>'    : '<span class="verify-badge pending">Inv ⏳</span>';
         var recvBadge  = '<span class="verify-badge pending">Recv ⏳</span>';
 
-        // ── Quality + Type breakdown table with TOTAL row ──
+        // ── Quality + Type breakdown — matches image format ──
         var tb = s.typeBreakdown || {};
         var tbKeys = Object.keys(tb);
         var breakdownHtml = '';
         if (tbKeys.length > 0) {
-            var tds = 'padding:3px 6px;border:1px solid #cbd5e1;';
-            breakdownHtml = '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:6px 0;">' +
+            var tds = 'padding:3px 6px;border:1px solid #cbd5e1;font-size:11px;';
+            breakdownHtml = '<table style="width:100%;border-collapse:collapse;margin:6px 0;">' +
                 '<tr style="background:#e2e8f0;">' +
                 '<th style="' + tds + 'text-align:left;">Quality</th>' +
                 '<th style="' + tds + 'text-align:left;">Pack Type</th>' +
-                '<th style="' + tds + 'text-align:center;">Total Pcs</th>' +
+                '<th style="' + tds + 'text-align:center;">Standard Pcs</th>' +
+                '<th style="' + tds + 'text-align:center;">Qty</th>' +
+                '<th style="' + tds + 'text-align:center;">Pcs</th>' +
                 '<th style="' + tds + 'text-align:right;">Total Wt (Kg)</th></tr>';
-            var sumPcs = 0, sumWt = 0;
+            var sumQty = 0, sumPcs = 0, sumWt = 0;
             tbKeys.forEach(function (k) {
                 var item = tb[k];
+                var stdPcs = item.packCount > 0 ? Math.round(item.pcs / item.packCount) : item.firstQty || 0;
+                sumQty += item.packCount;
                 sumPcs += item.pcs;
                 sumWt  += item.wt;
                 breakdownHtml += '<tr>' +
                     '<td style="' + tds + 'font-weight:600;">' + escapeHtmlJs(item.quality || '') + '</td>' +
                     '<td style="' + tds + '">' + escapeHtmlJs(item.type || '') + '</td>' +
+                    '<td style="' + tds + 'text-align:center;">' + stdPcs + '</td>' +
+                    '<td style="' + tds + 'text-align:center;">' + item.packCount + '</td>' +
                     '<td style="' + tds + 'text-align:center;">' + item.pcs + '</td>' +
                     '<td style="' + tds + 'text-align:right;">' + item.wt.toFixed(2) + '</td></tr>';
             });
             breakdownHtml += '<tr style="background:#fef3c7;font-weight:700;">' +
                 '<td colspan="2" style="' + tds + '">TOTAL</td>' +
+                '<td style="' + tds + 'text-align:center;"></td>' +
+                '<td style="' + tds + 'text-align:center;">' + sumQty + '</td>' +
                 '<td style="' + tds + 'text-align:center;">' + sumPcs + '</td>' +
                 '<td style="' + tds + 'text-align:right;">' + sumWt.toFixed(2) + '</td></tr>';
             breakdownHtml += '</table>';
@@ -2122,12 +2389,556 @@ async function submitVerificationStage(key, stage) {
         if (handleAuthFailure(result)) return;
 
         if (result.success) {
-            fetchVerificationSlips(); // refresh to show updated status
+            fetchVerificationSlips();
         } else {
             alert('Update failed: ' + (result.error || 'Unknown error'));
         }
     } catch (err) {
         alert('Network error! Internet check karein.');
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// 📋 ORDER COLLECTION PANEL
+// ══════════════════════════════════════════════════════
+let allOrders = [];
+let editingOrderNo = null;
+
+async function fetchAllOrders() {
+    var list = document.getElementById('order-list');
+    list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">Loading orders...</p>';
+    try {
+        var res  = await fetch(withToken(APPS_SCRIPT_URL + '?action=listOrders&t=' + Date.now()), { redirect: 'follow' });
+        var data = await res.json();
+        if (handleAuthFailure(data)) return;
+        if (!data.success) {
+            list.innerHTML = '<p style="text-align:center;color:var(--error);padding:20px;">' + (data.error || 'Failed') + '</p>';
+            return;
+        }
+        allOrders = data.orders || [];
+        if (data.nextOrderNo) allOrders._nextOrderNo = data.nextOrderNo;
+        renderOrderList();
+    } catch (err) {
+        list.innerHTML = '<p style="text-align:center;color:var(--error);padding:20px;">Network error!</p>';
+    }
+}
+
+function renderOrderList() {
+    var list      = document.getElementById('order-list');
+    var statusF   = document.getElementById('order-filter-status').value;
+    var searchF   = document.getElementById('order-filter-search').value.trim().toUpperCase();
+
+    var filtered = allOrders.filter(function (o) {
+        if (statusF && o.status !== statusF) return false;
+        if (searchF) {
+            var hay = (o.orderNo + ' ' + o.partyName + ' ' + o.quality + ' ' + o.buyerName + ' ' + o.address).toUpperCase();
+            if (hay.indexOf(searchF) < 0) return false;
+        }
+        return true;
+    });
+
+    document.getElementById('order-count').textContent =
+        filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' (of ' + allOrders.length + ' total)';
+
+    if (!filtered.length) {
+        list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">No orders found.</p>';
+        return;
+    }
+
+    list.innerHTML = filtered.map(function (o) {
+        var badgeClass = o.status === 'COMPLETED' ? 'completed' : o.status === 'PARTIAL' ? 'partial' : o.status === 'CANCELLED' ? 'cancelled' : 'pending';
+        var packed = o.quantity - o.pendingOrder;
+
+        var compact =
+            '<div class="order-compact" onclick="toggleOrderCard(this)">' +
+                '<span class="oc-no">' + escapeHtmlJs(o.orderNo) + '</span>' +
+                '<span class="oc-party">' + escapeHtmlJs(o.partyName) + '</span>' +
+                '<span class="oc-qty">' + packed + '/' + o.quantity + '</span>' +
+                '<span class="status-badge ' + badgeClass + '">' + escapeHtmlJs(o.status || 'PENDING') + '</span>' +
+            '</div>';
+
+        var body =
+            '<div class="order-body" id="obody-' + escapeHtmlJs(o.orderNo) + '">' +
+                '<div class="order-detail-grid">' +
+                    '<span class="od-lbl">Date</span><span class="od-val">' + escapeHtmlJs(o.orderDate) + '</span>' +
+                    '<span class="od-lbl">Order By</span><span class="od-val">' + escapeHtmlJs(o.orderBy) + '</span>' +
+                    '<span class="od-lbl">Party</span><span class="od-val">' + escapeHtmlJs(o.partyName) + '</span>' +
+                    '<span class="od-lbl">Sub Dealer</span><span class="od-val">' + escapeHtmlJs(o.subDealerName || '-') + '</span>' +
+                    '<span class="od-lbl">Address</span><span class="od-val">' + escapeHtmlJs(o.address || '-') + '</span>' +
+                    '<span class="od-lbl">Quality</span><span class="od-val" style="font-weight:700;">' + escapeHtmlJs(o.quality) + '</span>' +
+                    '<span class="od-lbl">Item</span><span class="od-val">' + escapeHtmlJs(o.item) + '</span>' +
+                    '<span class="od-lbl">Quantity</span><span class="od-val" style="font-weight:700;">' + o.quantity + '</span>' +
+                    '<span class="od-lbl">Pending</span><span class="od-val" style="font-weight:700;color:' + (o.pendingOrder > 0 ? '#b45309' : '#16a34a') + ';">' + o.pendingOrder + '</span>' +
+                    '<span class="od-lbl">Packed</span><span class="od-val" style="color:#16a34a;">' + packed + '</span>' +
+                    '<span class="od-lbl">Transport</span><span class="od-val">' + escapeHtmlJs(o.transportType || '-') + '</span>' +
+                    '<span class="od-lbl">Destination</span><span class="od-val">' + escapeHtmlJs(o.deliverDestination || '-') + '</span>' +
+                    '<span class="od-lbl">Transporter</span><span class="od-val">' + escapeHtmlJs(o.transporterName || '-') + '</span>' +
+                    '<span class="od-lbl">Buyer</span><span class="od-val">' + escapeHtmlJs(o.buyerName || '-') + '</span>' +
+                    '<span class="od-lbl">Mob.</span><span class="od-val">' + escapeHtmlJs(o.mob || '-') + '</span>' +
+                    '<span class="od-lbl">Review</span><span class="od-val">' + escapeHtmlJs(o.reviewOrder || '-') + '</span>' +
+                    '<span class="od-lbl">Review Time</span><span class="od-val">' + escapeHtmlJs(o.reviewTime || '-') + '</span>' +
+                '</div>' +
+                '<div class="order-actions">' +
+                    '<button type="button" class="btn-edit" onclick="event.stopPropagation();editOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">✏️ Edit</button>' +
+                    '<button type="button" class="btn-delete" onclick="event.stopPropagation();handleDeleteOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">🗑 Delete</button>' +
+                '</div>' +
+            '</div>';
+
+        return '<div class="order-card">' + compact + body + '</div>';
+    }).join('');
+}
+
+function toggleOrderCard(el) {
+    var card = el.closest('.order-card');
+    var body = card.querySelector('.order-body');
+    var isOpen = body.classList.contains('open');
+    document.querySelectorAll('.order-body.open').forEach(function (b) {
+        b.classList.remove('open');
+        b.closest('.order-card').classList.remove('active');
+    });
+    if (!isOpen) {
+        body.classList.add('open');
+        card.classList.add('active');
+    }
+}
+
+function showOrderForm(order) {
+    var card = document.getElementById('order-form-card');
+    var title = document.getElementById('order-form-title');
+    var noInput = document.getElementById('ord-no');
+    var btn = document.getElementById('ord-save-btn');
+
+    if (order) {
+        editingOrderNo = order.orderNo;
+        title.textContent = '✏️ Edit Order — ' + order.orderNo;
+        btn.textContent = '💾 Update Order';
+        noInput.value = order.orderNo;
+        noInput.readOnly = true;
+        noInput.style.background = '#f1f5f9';
+        document.getElementById('ord-date').value       = order.orderDate || '';
+        document.getElementById('ord-by').value          = order.orderBy || '';
+        document.getElementById('ord-party').value       = order.partyName || '';
+        document.getElementById('ord-sub-dealer').value  = order.subDealerName || '';
+        document.getElementById('ord-address').value     = order.address || '';
+        // Populate single quality row for edit (one order row = one quality)
+        clearQualityRows();
+        addQualityRow(order.quality, order.item, order.quantity);
+        document.getElementById('ord-transport-type').value    = order.transportType || '';
+        document.getElementById('ord-deliver-dest').value      = order.deliverDestination || '';
+        document.getElementById('ord-transporter').value       = order.transporterName || '';
+        document.getElementById('ord-buyer').value             = order.buyerName || '';
+        document.getElementById('ord-mob').value               = order.mob || '';
+        document.getElementById('ord-review').value            = order.reviewOrder || '';
+    } else {
+        editingOrderNo = null;
+        title.textContent = '📋 New Order';
+        btn.textContent = '💾 Save Order';
+        // Auto-assign next Order No from sheet (readonly)
+        var nextNo = (typeof allOrders !== 'undefined' && allOrders._nextOrderNo)
+            ? allOrders._nextOrderNo : '1';
+        noInput.readOnly = true;
+        noInput.style.background = '#f1f5f9';
+        noInput.setAttribute('data-next', nextNo);
+        noInput.value = nextNo;
+        document.getElementById('ord-date').valueAsDate = new Date();
+        document.getElementById('ord-by').value = '';
+        document.getElementById('ord-party').value = '';
+        document.getElementById('ord-sub-dealer').value = '';
+        document.getElementById('ord-address').value = '';
+        document.getElementById('ord-transport-type').value = '';
+        document.getElementById('ord-deliver-dest').value = '';
+        document.getElementById('ord-transporter').value = '';
+        document.getElementById('ord-buyer').value = '';
+        document.getElementById('ord-mob').value = '';
+        document.getElementById('ord-review').value = '';
+        // Start with one empty quality row
+        clearQualityRows();
+        addQualityRow();
+    }
+
+    card.style.display = '';
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ══════════════════════════════════════════════════════════
+// 📦 MULTI-QUALITY ROW SYSTEM
+// ══════════════════════════════════════════════════════════
+var qualityRowCounter = 0;
+
+function addQualityRow(quality, item, qty) {
+    qualityRowCounter++;
+    var id = 'qr-' + qualityRowCounter;
+    var container = document.getElementById('ord-quality-rows');
+    var div = document.createElement('div');
+    div.className = 'quality-row';
+    div.id = id;
+    div.innerHTML =
+        '<div>' +
+            '<label>Quality *</label>' +
+            '<input type="text" class="qr-quality" placeholder="Quality..." list="brand-datalist" autocomplete="off" ' +
+            'value="' + escapeHtmlJs(quality || '') + '" oninput="this.value=this.value.toUpperCase()">' +
+        '</div>' +
+        '<div>' +
+            '<label>Item *</label>' +
+            '<select class="qr-item">' +
+                '<option value="">Select</option>' +
+                ['BORA','PVC BAG','LOOSE PCS','BALE','BOX','ROLL','BORA WITH BAG','OTHER'].map(function(v){
+                    return '<option value="'+v+'"'+(v===(item||'')?'selected':'')+'>'+v+'</option>';
+                }).join('') +
+            '</select>' +
+        '</div>' +
+        '<div>' +
+            '<label>Qty *</label>' +
+            '<input type="number" class="qr-qty" min="1" placeholder="0" value="' + (qty || '') + '">' +
+        '</div>' +
+        '<button type="button" class="btn-remove-quality" onclick="removeQualityRow(\'' + id + '\')" title="Remove">×</button>';
+    container.appendChild(div);
+}
+
+function removeQualityRow(id) {
+    var rows = document.querySelectorAll('.quality-row');
+    if (rows.length <= 1) {
+        alert('At least one Quality row required!'); return;
+    }
+    var el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function clearQualityRows() {
+    document.getElementById('ord-quality-rows').innerHTML = '';
+    qualityRowCounter = 0;
+}
+
+function getQualityRows() {
+    var rows = [];
+    document.querySelectorAll('.quality-row').forEach(function(div) {
+        rows.push({
+            quality:  div.querySelector('.qr-quality').value.trim().toUpperCase(),
+            item:     div.querySelector('.qr-item').value,
+            quantity: div.querySelector('.qr-qty').value
+        });
+    });
+    return rows;
+}
+
+// Update Order No display based on count of quality rows and next order no
+function updateOrderNoPreview() {
+    var noInput = document.getElementById('ord-no');
+    if (noInput.readOnly && !editingOrderNo) {
+        var base   = noInput.getAttribute('data-next') || '1';
+        var count  = document.querySelectorAll('.quality-row').length;
+        if (count <= 1) {
+            noInput.value = base;
+        } else {
+            var suffixes = 'ABCDEFGHIJKLMNOP'.split('');
+            var nos = suffixes.slice(0, count).map(function(s){ return base + s; });
+            noInput.value = nos.join(', ');
+        }
+    }
+}
+
+function hideOrderForm() {
+    document.getElementById('order-form-card').style.display = 'none';
+    editingOrderNo = null;
+}
+
+async function handleSaveOrder() {
+    var orderNoDisplay = document.getElementById('ord-no').value.trim();
+    var party          = document.getElementById('ord-party').value.trim();
+
+    if (!party) { alert('Party Name zaroori hai!'); document.getElementById('ord-party').focus(); return; }
+
+    // Collect and validate all quality rows
+    var qualityRows = getQualityRows();
+    for (var v = 0; v < qualityRows.length; v++) {
+        var qr = qualityRows[v];
+        if (!qr.quality) { alert('Quality row ' + (v+1) + ': Quality required'); return; }
+        if (!qr.item)    { alert('Quality row ' + (v+1) + ': Item required'); return; }
+        if (!qr.quantity || Number(qr.quantity) <= 0) { alert('Quality row ' + (v+1) + ': Quantity must be > 0'); return; }
+    }
+    if (!qualityRows.length) { alert('At least one Quality row zaroori hai!'); return; }
+
+    var btn = document.getElementById('ord-save-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving...';
+
+    // For edit (single row), keep original orderNo
+    // For new, use base number from ord-no (backend assigns suffixes)
+    var baseOrderNo = editingOrderNo
+        ? editingOrderNo
+        : document.getElementById('ord-no').getAttribute('data-next') || orderNoDisplay;
+
+    var payload = withAuthPayload({
+        action:             editingOrderNo ? 'updateOrder' : 'saveOrder',
+        orderNo:            baseOrderNo,
+        orderDate:          document.getElementById('ord-date').value,
+        orderBy:            document.getElementById('ord-by').value,
+        partyName:          party,
+        subDealerName:      document.getElementById('ord-sub-dealer').value,
+        address:            document.getElementById('ord-address').value,
+        qualities:          qualityRows,            // multi-quality array
+        // compat: first quality row for edit (updateOrder uses single row)
+        quality:            qualityRows[0].quality,
+        item:               qualityRows[0].item,
+        quantity:           qualityRows[0].quantity,
+        transportType:      document.getElementById('ord-transport-type').value,
+        deliverDestination: document.getElementById('ord-deliver-dest').value,
+        transporterName:    document.getElementById('ord-transporter').value,
+        buyerName:          document.getElementById('ord-buyer').value,
+        mob:                document.getElementById('ord-mob').value,
+        reviewOrder:        document.getElementById('ord-review').value
+    });
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST', body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+
+        if (result.success) {
+            btn.textContent = '✅ ' + (result.action === 'updated' ? 'Updated!' : 'Saved!');
+            setTimeout(function () {
+                btn.disabled = false;
+                btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
+                hideOrderForm();
+                fetchAllOrders();
+            }, 1000);
+        } else {
+            alert('Error: ' + (result.error || 'Unknown'));
+            btn.disabled = false;
+            btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
+        }
+    } catch (err) {
+        alert('Network error! Internet check karein.');
+        btn.disabled = false;
+        btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
+    }
+}
+
+function editOrder(orderNo) {
+    var order = allOrders.find(function (o) { return o.orderNo === orderNo; });
+    if (!order) { alert('Order not found!'); return; }
+    showOrderForm(order);
+}
+
+async function handleDeleteOrder(orderNo) {
+    if (!confirm('Order "' + orderNo + '" permanently delete karein?')) return;
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(withAuthPayload({ action: 'deleteOrder', orderNo: orderNo })),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+        if (result.success) {
+            fetchAllOrders();
+        } else {
+            alert('Delete failed: ' + (result.error || 'Unknown'));
+        }
+    } catch (err) {
+        alert('Network error!');
+    }
+}
+
+
+// ══════════════════════════════════════════════
+// 📊 REPORTS PANEL (Admin only)
+// ══════════════════════════════════════════════
+function showReportsPanel() {
+    document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('reports-panel').style.display = 'block';
+    document.getElementById('formNavBtn').style.display = '';
+    document.getElementById('verifyNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    document.getElementById('orderNavBtn').style.display  = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    document.getElementById('reportsNavBtn').style.display = 'none';
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    fetchReports();
+}
+
+async function fetchReports() {
+    document.getElementById('report-loading').style.display = '';
+    document.getElementById('report-daily').style.display = 'none';
+    document.getElementById('report-parties').style.display = 'none';
+    document.getElementById('report-qualities').style.display = 'none';
+    document.getElementById('report-types').style.display = 'none';
+
+    try {
+        var url = withToken(APPS_SCRIPT_URL + '?action=getReports');
+        var res = await fetch(url, { redirect: 'follow' });
+        var data = await res.json();
+        if (handleAuthFailure(data)) return;
+        if (data.success) {
+            renderReports(data.reports);
+        } else {
+            document.getElementById('report-loading').textContent = 'Error: ' + (data.error || 'Unknown');
+        }
+    } catch (err) {
+        document.getElementById('report-loading').textContent = 'Network error!';
+    }
+}
+
+function renderReports(r) {
+    document.getElementById('report-loading').style.display = 'none';
+
+    // KPI Cards
+    var kpi = document.getElementById('report-kpi-row');
+    kpi.innerHTML =
+        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.packs || 0).toLocaleString() + '</div><div class="kpi-label">Total Packs</div></div>' +
+        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.pcs || 0).toLocaleString() + '</div><div class="kpi-label">Total Pcs</div></div>' +
+        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.wt || 0).toLocaleString() + '</div><div class="kpi-label">Total Wt (Kg)</div></div>';
+
+    // Daily Dispatch (last 30 days)
+    var dailyEl = document.getElementById('report-daily');
+    if (r.daily && r.daily.length) {
+        dailyEl.style.display = '';
+        dailyEl.innerHTML = '<div class="report-title">📅 Daily Dispatch (Last 30 Days)</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Date</th><th class="center">Slips</th><th class="center">Packs</th><th class="num">Pcs</th><th class="num">Weight (Kg)</th>' +
+            '</tr></thead><tbody>' +
+            r.daily.map(function(d) {
+                return '<tr><td>' + d.date + '</td><td class="center">' + d.slips + '</td><td class="center">' + d.packs + '</td><td class="num">' + d.pcs.toLocaleString() + '</td><td class="num">' + d.wt.toLocaleString() + '</td></tr>';
+            }).join('') +
+            '</tbody></table>';
+    }
+
+    // Party-wise Summary
+    var partyEl = document.getElementById('report-parties');
+    if (r.parties && r.parties.length) {
+        partyEl.style.display = '';
+        var partyTotal = { slips:0, packs:0, pcs:0, wt:0 };
+        var partyRows = r.parties.map(function(p) {
+            partyTotal.slips += p.slips; partyTotal.packs += p.packs;
+            partyTotal.pcs += p.pcs; partyTotal.wt += p.wt;
+            return '<tr><td style="font-weight:600;">' + escapeHtmlJs(p.party) + '</td><td class="center">' + p.slips + '</td><td class="center">' + p.packs + '</td><td class="num">' + p.pcs.toLocaleString() + '</td><td class="num">' + p.wt.toLocaleString() + '</td></tr>';
+        }).join('');
+        partyEl.innerHTML = '<div class="report-title">🏢 Party-wise Dispatch Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Party Name</th><th class="center">Slips</th><th class="center">Packs</th><th class="num">Total Pcs</th><th class="num">Total Wt (Kg)</th>' +
+            '</tr></thead><tbody>' + partyRows +
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + partyTotal.slips + '</td><td class="center">' + partyTotal.packs + '</td><td class="num">' + partyTotal.pcs.toLocaleString() + '</td><td class="num">' + partyTotal.wt.toLocaleString() + '</td></tr>' +
+            '</tbody></table>';
+    }
+
+    // Quality-wise Summary
+    var qualEl = document.getElementById('report-qualities');
+    if (r.qualities && r.qualities.length) {
+        qualEl.style.display = '';
+        var qualTotal = { packs:0, pcs:0, wt:0 };
+        var qualRows = r.qualities.map(function(q) {
+            qualTotal.packs += q.packs; qualTotal.pcs += q.pcs; qualTotal.wt += q.wt;
+            return '<tr><td style="font-weight:600;">' + escapeHtmlJs(q.quality) + '</td><td class="center">' + q.packs + '</td><td class="num">' + q.pcs.toLocaleString() + '</td><td class="num">' + q.wt.toLocaleString() + '</td></tr>';
+        }).join('');
+        qualEl.innerHTML = '<div class="report-title">🧵 Quality-wise Dispatch Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Quality</th><th class="center">Packs</th><th class="num">Total Pcs</th><th class="num">Total Wt (Kg)</th>' +
+            '</tr></thead><tbody>' + qualRows +
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + qualTotal.packs + '</td><td class="num">' + qualTotal.pcs.toLocaleString() + '</td><td class="num">' + qualTotal.wt.toLocaleString() + '</td></tr>' +
+            '</tbody></table>';
+    }
+
+    // Packing Type Summary
+    var typeEl = document.getElementById('report-types');
+    if (r.types && r.types.length) {
+        typeEl.style.display = '';
+        typeEl.innerHTML = '<div class="report-title">📦 Billed vs Non-Bill Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Packing Type</th><th class="center">Slips</th><th class="num">Total Pcs</th><th class="num">Total Wt (Kg)</th>' +
+            '</tr></thead><tbody>' +
+            r.types.map(function(t) {
+                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(t.type) + '</td><td class="center">' + t.slips + '</td><td class="num">' + t.pcs.toLocaleString() + '</td><td class="num">' + t.wt.toLocaleString() + '</td></tr>';
+            }).join('') +
+            '</tbody></table>';
+    }
+
+    // ══════════════════════════════════════
+    // 📋 ORDER SHEET SUMMARY
+    // ══════════════════════════════════════
+    var ord = r.orders || {};
+
+    // Order KPI — add to existing KPI row
+    if (ord.totals && ord.totals.orders) {
+        var kpi = document.getElementById('report-kpi-row');
+        kpi.innerHTML +=
+            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
+                '<div class="kpi-value" style="color:#b45309;">' + ord.totals.orders + '</div>' +
+                '<div class="kpi-label">Total Orders</div>' +
+            '</div>' +
+            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
+                '<div class="kpi-value" style="color:#b45309;">' + (ord.totals.ordQty || 0).toLocaleString() + '</div>' +
+                '<div class="kpi-label">Ordered Qty</div>' +
+            '</div>' +
+            '<div class="kpi-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444;">' +
+                '<div class="kpi-value" style="color:#dc2626;">' + (ord.totals.pendQty || 0).toLocaleString() + '</div>' +
+                '<div class="kpi-label">Pending Qty</div>' +
+            '</div>';
+    }
+
+    // Status-wise Order Summary
+    var osEl = document.getElementById('report-order-status');
+    if (ord.statusWise && ord.statusWise.length) {
+        osEl.style.display = '';
+        var osTotal = { count:0, ordQty:0, pendQty:0 };
+        osEl.innerHTML = '<div class="report-title">📋 Order Status Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Status</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '</tr></thead><tbody>' +
+            ord.statusWise.map(function(s) {
+                osTotal.count += s.count; osTotal.ordQty += s.ordQty; osTotal.pendQty += s.pendQty;
+                var color = s.status === 'PENDING' ? '#f59e0b' : s.status === 'CANCEL' ? '#ef4444' : '#10b981';
+                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span><strong>' + escapeHtmlJs(s.status) + '</strong></td>' +
+                '<td class="center">' + s.count + '</td><td class="num">' + s.ordQty.toLocaleString() + '</td><td class="num">' + s.pendQty.toLocaleString() + '</td></tr>';
+            }).join('') +
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + osTotal.count + '</td><td class="num">' + osTotal.ordQty.toLocaleString() + '</td><td class="num">' + osTotal.pendQty.toLocaleString() + '</td></tr>' +
+            '</tbody></table>';
+    }
+
+    // Party-wise Order Summary (sorted by pending qty desc)
+    var opEl = document.getElementById('report-order-parties');
+    if (ord.partyWise && ord.partyWise.length) {
+        opEl.style.display = '';
+        opEl.innerHTML = '<div class="report-title">🏢 Order Party-wise Summary (by Pending Qty)</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Party Name</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '</tr></thead><tbody>' +
+            ord.partyWise.slice(0, 20).map(function(p) {
+                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(p.party) + '</td><td class="center">' + p.count + '</td><td class="num">' + p.ordQty.toLocaleString() + '</td><td class="num">' + p.pendQty.toLocaleString() + '</td></tr>';
+            }).join('') +
+            '</tbody></table>';
+    }
+
+    // Quality-wise Order Summary
+    var oqEl = document.getElementById('report-order-qualities');
+    if (ord.qualityWise && ord.qualityWise.length) {
+        oqEl.style.display = '';
+        oqEl.innerHTML = '<div class="report-title">🧵 Order Quality-wise Summary (by Pending Qty)</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Quality</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '</tr></thead><tbody>' +
+            ord.qualityWise.slice(0, 20).map(function(q) {
+                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(q.quality) + '</td><td class="center">' + q.count + '</td><td class="num">' + q.ordQty.toLocaleString() + '</td><td class="num">' + q.pendQty.toLocaleString() + '</td></tr>';
+            }).join('') +
+            '</tbody></table>';
+    }
+
+    // Review Order Summary
+    var orEl = document.getElementById('report-order-review');
+    if (ord.reviewWise && ord.reviewWise.length) {
+        orEl.style.display = '';
+        orEl.innerHTML = '<div class="report-title">📝 Order Review Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Review Status</th><th class="center">Count</th>' +
+            '</tr></thead><tbody>' +
+            ord.reviewWise.map(function(rv) {
+                var color = rv.review === 'CONFIRM' ? '#10b981' : rv.review === 'CANCEL' ? '#ef4444' : rv.review === 'STARTED' ? '#2563eb' : '#f59e0b';
+                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span><strong>' + escapeHtmlJs(rv.review) + '</strong></td><td class="center">' + rv.count + '</td></tr>';
+            }).join('') +
+            '</tbody></table>';
     }
 }
 
