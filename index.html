@@ -552,15 +552,15 @@
             </div>
             <div class="form-group">
                 <label>Party Name <span class="required-star">*</span></label>
-                <input type="text" id="ord-party" placeholder="Party Name" list="dl-party" oninput="convertToUpperCase(this)" autocomplete="off" required>
+                <input type="text" id="ord-party" placeholder="Party Name" list="dl-ord-party" oninput="convertToUpperCase(this)" autocomplete="off" required>
             </div>
             <div class="form-group">
                 <label>Sub Dealer Name</label>
-                <input type="text" id="ord-sub-dealer" placeholder="Sub Dealer / Direct" oninput="convertToUpperCase(this)">
+                <input type="text" id="ord-sub-dealer" placeholder="Sub Dealer / Direct" list="dl-ord-sub-dealer" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>Address</label>
-                <input type="text" id="ord-address" placeholder="Address" oninput="convertToUpperCase(this)">
+                <input type="text" id="ord-address" placeholder="Address" list="dl-ord-address" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
         </div>
         <!-- Quality Rows (dynamic — one per quality) -->
@@ -593,11 +593,11 @@
             </div>
             <div class="form-group">
                 <label>Transporter Name</label>
-                <input type="text" id="ord-transporter" placeholder="Transporter Name" oninput="convertToUpperCase(this)">
+                <input type="text" id="ord-transporter" placeholder="Transporter Name" list="dl-ord-transporter" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>Buyer Name</label>
-                <input type="text" id="ord-buyer" placeholder="Buyer Name" oninput="convertToUpperCase(this)">
+                <input type="text" id="ord-buyer" placeholder="Buyer Name" list="dl-ord-buyer" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
             <div class="form-group">
                 <label>Mob.</label>
@@ -646,7 +646,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZRYhj09VWTINLlzorxTTAGyutT6hUvYEjMybmrw7iOXEapu81SaL6OlD0GCqvi0sn/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWuJK967OJ90aJwSLTxYQ5ESf3NH-WWNJStyYglKBDYPQEbfmltmvOPY8Y8lKWoWxp/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -2428,6 +2428,7 @@ async function fetchAllOrders() {
         }
         allOrders = data.orders || [];
         if (data.nextOrderNo) allOrders._nextOrderNo = data.nextOrderNo;
+        if (data.orderSuggestions) buildOrderFieldDatalists(data.orderSuggestions);
         renderOrderList();
     } catch (err) {
         list.innerHTML = '<p style="text-align:center;color:var(--error);padding:20px;">Network error!</p>';
@@ -2890,51 +2891,90 @@ function renderReports(r) {
             '</div>';
     }
 
-    // Status-wise Order Summary
+    // Item names for column headers
+    var itemNames = ord.itemNames || [];
+
+    // Helper: build item-wise columns for a row
+    function itemCols(items) {
+        return itemNames.map(function(it) {
+            var d = (items||{})[it];
+            return '<td class="num" style="font-size:10px;">' + (d ? d.ordQty + '/' + d.pendQty : '-') + '</td>';
+        }).join('');
+    }
+    function itemHeaders() {
+        return itemNames.map(function(it) {
+            return '<th class="center" style="font-size:9px;">' + escapeHtmlJs(it) + '<br><span style="font-size:8px;color:#93c5fd;">Ord/Pend</span></th>';
+        }).join('');
+    }
+
+    // Status-wise Order Summary (with item columns)
     var osEl = document.getElementById('report-order-status');
     if (ord.statusWise && ord.statusWise.length) {
         osEl.style.display = '';
         var osTotal = { count:0, ordQty:0, pendQty:0 };
         osEl.innerHTML = '<div class="report-title">📋 Order Status Summary</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Status</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
+            '<th>Status</th><th class="center">Orders</th>' +
+            itemHeaders() +
             '</tr></thead><tbody>' +
             ord.statusWise.map(function(s) {
                 osTotal.count += s.count; osTotal.ordQty += s.ordQty; osTotal.pendQty += s.pendQty;
                 var color = s.status === 'PENDING' ? '#f59e0b' : s.status === 'CANCEL' ? '#ef4444' : '#10b981';
-                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span><strong>' + escapeHtmlJs(s.status) + '</strong></td>' +
-                '<td class="center">' + s.count + '</td><td class="num">' + s.ordQty.toLocaleString() + '</td><td class="num">' + s.pendQty.toLocaleString() + '</td></tr>';
+                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:4px;"></span><strong>' + escapeHtmlJs(s.status) + '</strong></td>' +
+                '<td class="center">' + s.count + '</td>' + itemCols(s.items) + '</tr>';
             }).join('') +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + osTotal.count + '</td><td class="num">' + osTotal.ordQty.toLocaleString() + '</td><td class="num">' + osTotal.pendQty.toLocaleString() + '</td></tr>' +
-            '</tbody></table>';
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + osTotal.count + '</td>' +
+            itemNames.map(function(){ return '<td></td>'; }).join('') + '</tr>' +
+            '</tbody></table></div>';
     }
 
-    // Party-wise Order Summary (sorted by pending qty desc)
+    // Party-wise Order Summary with item columns
     var opEl = document.getElementById('report-order-parties');
     if (ord.partyWise && ord.partyWise.length) {
         opEl.style.display = '';
         opEl.innerHTML = '<div class="report-title">🏢 Order Party-wise Summary (by Pending Qty)</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Party Name</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
+            '<th>Party Name</th><th class="center">Orders</th>' +
+            itemHeaders() +
             '</tr></thead><tbody>' +
-            ord.partyWise.slice(0, 20).map(function(p) {
-                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(p.party) + '</td><td class="center">' + p.count + '</td><td class="num">' + p.ordQty.toLocaleString() + '</td><td class="num">' + p.pendQty.toLocaleString() + '</td></tr>';
+            ord.partyWise.slice(0, 25).map(function(p) {
+                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(p.party) + '</td><td class="center">' + p.count + '</td>' + itemCols(p.items) + '</tr>';
             }).join('') +
-            '</tbody></table>';
+            '</tbody></table></div>';
     }
 
-    // Quality-wise Order Summary
+    // Quality-wise with item columns
     var oqEl = document.getElementById('report-order-qualities');
     if (ord.qualityWise && ord.qualityWise.length) {
         oqEl.style.display = '';
         oqEl.innerHTML = '<div class="report-title">🧵 Order Quality-wise Summary (by Pending Qty)</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Quality</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
+            '<th>Quality</th><th class="center">Orders</th>' +
+            itemHeaders() +
             '</tr></thead><tbody>' +
-            ord.qualityWise.slice(0, 20).map(function(q) {
-                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(q.quality) + '</td><td class="center">' + q.count + '</td><td class="num">' + q.ordQty.toLocaleString() + '</td><td class="num">' + q.pendQty.toLocaleString() + '</td></tr>';
+            ord.qualityWise.slice(0, 25).map(function(q) {
+                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(q.quality) + '</td><td class="center">' + q.count + '</td>' + itemCols(q.items) + '</tr>';
             }).join('') +
-            '</tbody></table>';
+            '</tbody></table></div>';
+    }
+
+    // Item-wise Summary (standalone table)
+    if (ord.itemWise && ord.itemWise.length) {
+        var iwEl = document.getElementById('report-order-review');
+        var iwHtml = '<div class="report-title" style="margin-bottom:8px;">📦 Item-wise Order Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Item Type</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '</tr></thead><tbody>';
+        var iwTotal = { count:0, ordQty:0, pendQty:0 };
+        ord.itemWise.forEach(function(i) {
+            iwTotal.count += i.count; iwTotal.ordQty += i.ordQty; iwTotal.pendQty += i.pendQty;
+            iwHtml += '<tr><td style="font-weight:600;">' + escapeHtmlJs(i.item) + '</td><td class="center">' + i.count + '</td><td class="num">' + i.ordQty.toLocaleString() + '</td><td class="num">' + i.pendQty.toLocaleString() + '</td></tr>';
+        });
+        iwHtml += '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + iwTotal.count + '</td><td class="num">' + iwTotal.ordQty.toLocaleString() + '</td><td class="num">' + iwTotal.pendQty.toLocaleString() + '</td></tr>';
+        iwHtml += '</tbody></table>';
+        // Prepend to review section (reuse the div)
+        iwEl.style.display = '';
+        iwEl.innerHTML = iwHtml + iwEl.innerHTML;
     }
 
     // Review Order Summary
@@ -2993,6 +3033,40 @@ async function saveRates(key) {
     } catch (err) {
         alert('Network error!');
     }
+}
+
+
+// ══════════════════════════════════════
+// 📋 ORDER FORM — editable dropdowns (input + datalist)
+// Values from OrderSheet, but user CAN type new ones
+// ══════════════════════════════════════
+function buildOrderFieldDatalists(suggestions) {
+    if (!suggestions) return;
+
+    var fieldMap = [
+        { id: 'ord-party',       key: 'parties',      listId: 'dl-ord-party' },
+        { id: 'ord-sub-dealer',  key: 'subDealers',   listId: 'dl-ord-sub-dealer' },
+        { id: 'ord-address',     key: 'addresses',    listId: 'dl-ord-address' },
+        { id: 'ord-transporter', key: 'transporters', listId: 'dl-ord-transporter' },
+        { id: 'ord-buyer',       key: 'buyers',       listId: 'dl-ord-buyer' }
+    ];
+
+    fieldMap.forEach(function(f) {
+        var values = suggestions[f.key] || [];
+
+        // Remove old datalist if exists
+        var old = document.getElementById(f.listId);
+        if (old) old.remove();
+
+        var dl = document.createElement('datalist');
+        dl.id = f.listId;
+        values.forEach(function(v) {
+            var opt = document.createElement('option');
+            opt.value = v;
+            dl.appendChild(opt);
+        });
+        document.body.appendChild(dl);
+    });
 }
 
 </script>
