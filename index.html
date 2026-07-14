@@ -376,10 +376,10 @@
 
         <div class="form-group">
             <label>Party Name <span class="required-star">*</span></label>
-            <input type="text" id="party-name" placeholder="Enter Party Name"
-                oninput="convertToUpperCase(this)"
-                onchange="onPartyNameChange(this)"
-                autocomplete="off" required>
+            <select id="party-name" onchange="onPartyNameChange(this)" required
+                style="font-weight:600;">
+                <option value="">— Select Party —</option>
+            </select>
         </div>
         <div class="form-group">
             <label>Ship To</label>
@@ -410,20 +410,20 @@
         <div class="card-title">🚚 Dispatch Details</div>
         <div class="form-group">
             <label>Tempo No <span class="required-star">*</span></label>
-            <input type="text" id="tempo-no" placeholder="Type or select tempo..."
-                list="vehicle-datalist"
-                oninput="convertToUpperCase(this)"
-                onchange="onTempoChange(this)"
-                autocomplete="off" required>
+            <select id="tempo-no" onchange="onTempoChange(this)" required
+                style="font-weight:600;">
+                <option value="">— Select Tempo —</option>
+            </select>
         </div>
         <div class="form-group">
             <label>Driver Name <span class="required-star">*</span></label>
-            <input type="text" id="driver-name" placeholder="Driver Full Name"
-                oninput="convertToUpperCase(this)" required>
+            <input type="text" id="driver-name" placeholder="Auto-fill on Tempo select"
+                readonly style="background:#f1f5f9;font-weight:600;" required>
         </div>
         <div class="form-group">
             <label>Driver No (Mobile)</label>
-            <input type="tel" id="driver-mobile" placeholder="10-digit mobile number">
+            <input type="tel" id="driver-mobile" placeholder="Auto-fill on Tempo select"
+                readonly style="background:#f1f5f9;font-weight:600;">
         </div>
         <div class="form-group">
             <label>Supervisor Name <span class="required-star">*</span></label>
@@ -646,7 +646,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxR4_LQP3AqJ4-TqNt-Vn6WI-A20emg7Hir-ljQLNXIF_tiQLi0BS4azC0hKCwiNtJW/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZRYhj09VWTINLlzorxTTAGyutT6hUvYEjMybmrw7iOXEapu81SaL6OlD0GCqvi0sn/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -857,21 +857,24 @@ function handleAuthFailure(result) {
 }
 
 // Inject a shared <datalist> into the DOM once — all brand inputs reference it
-function buildBrandDatalist(brands) {
-    // Remove old one if re-built (future: live refresh)
-    const old = document.getElementById('brand-datalist');
-    if (old) old.remove();
+// Store brand options HTML for populating Quality <select> in each item block
+var brandOptionsHtml = '<option value="">— Select Quality —</option>';
 
-    const dl = document.createElement('datalist');
-    dl.id = 'brand-datalist';
+function buildBrandDatalist(brands) {
+    brandMap.clear();
+    var opts = '<option value="">— Select Quality —</option>';
     brands.forEach(function (b) {
-        const opt = document.createElement('option');
-        opt.value = b.name;
-        opt.setAttribute('data-std-pcs', b.stdPcs);
-        dl.appendChild(opt);
         brandMap.set(b.name.toUpperCase(), b.stdPcs);
+        opts += '<option value="' + escapeHtmlAttr(b.name) + '">' + escapeHtmlAttr(b.name) + '</option>';
     });
-    document.body.appendChild(dl);
+    brandOptionsHtml = opts;
+
+    // Populate all existing Quality <select>s on screen
+    document.querySelectorAll('.item-brand').forEach(function (sel) {
+        var current = sel.value;
+        sel.innerHTML = brandOptionsHtml;
+        if (current) sel.value = current;
+    });
 }
 
 // ══════════════════════════════════════════════════════
@@ -920,38 +923,31 @@ function buildOrderIdDropdown(orders, partyFilter) {
     });
 }
 
-// Build or rebuild a <datalist> of party names sourced from OrderSheet
-// Merges with existing party-name datalist (built from saved slip data)
-// so the user sees ALL known parties, not just order-sheet ones
+// Populate Party Name <select> from OrderSheet parties (locked dropdown)
 function buildPartyDatalist() {
-    if (partyMap.size === 0) return;
+    var sel = document.getElementById('party-name');
+    if (!sel) return;
+    var currentVal = sel.value;
 
-    // Get existing datalist (may have been built by buildSuggestionDatalists)
-    var dl = document.getElementById('dl-party');
-    if (!dl) {
-        dl = document.createElement('datalist');
-        dl.id = 'dl-party';
-        document.body.appendChild(dl);
-        var input = document.getElementById('party-name');
-        if (input) {
-            input.setAttribute('list', 'dl-party');
-            input.setAttribute('autocomplete', 'off');
-        }
-    }
+    // Keep the default option, rebuild the rest
+    sel.innerHTML = '<option value="">— Select Party —</option>';
 
-    // Add any order-party names not already in the datalist
-    var existing = new Set();
-    Array.from(dl.options).forEach(function (opt) {
-        existing.add(opt.value.toUpperCase());
+    // Collect unique party names from partyMap (OrderSheet)
+    var parties = [];
+    partyMap.forEach(function (info, partyName) {
+        parties.push(partyName);
+    });
+    parties.sort();
+
+    parties.forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        sel.appendChild(opt);
     });
 
-    partyMap.forEach(function (_, partyName) {
-        if (!existing.has(partyName.toUpperCase())) {
-            var opt = document.createElement('option');
-            opt.value = partyName;
-            dl.appendChild(opt);
-        }
-    });
+    // Restore previous selection if still valid
+    if (currentVal) sel.value = currentVal;
 }
 
 // Minimal HTML-attribute escaper for building <option> markup client-side
@@ -1033,7 +1029,7 @@ function buildSuggestionDatalists(suggestions) {
     if (!suggestions) return;
 
     var fieldMap = [
-        { id: 'party-name',      key: 'partyNames',      listId: 'dl-party' },
+        // party-name is now a locked <select> — skip datalist
         { id: 'sub-party-name',  key: 'shipTos',         listId: 'dl-ship-to' },
         { id: 'third-party-name', key: 'deliveryAddrs',  listId: 'dl-delivery-addr' },
         { id: 'private-marka',   key: 'privateMarkas',   listId: 'dl-marka' },
@@ -1069,21 +1065,21 @@ function buildSuggestionDatalists(suggestions) {
 }
 
 function buildVehicleDatalist(vehicles) {
-    const old = document.getElementById('vehicle-datalist');
-    if (old) old.remove();
+    vehicleMap.clear();
+    var sel = document.getElementById('tempo-no');
+    if (!sel) return;
 
-    const dl = document.createElement('datalist');
-    dl.id = 'vehicle-datalist';
+    sel.innerHTML = '<option value="">— Select Tempo —</option>';
     vehicles.forEach(function (v) {
-        const opt = document.createElement('option');
-        opt.value = v.tempoNo;
-        dl.appendChild(opt);
         vehicleMap.set(v.tempoNo.toUpperCase(), {
             driverName:   v.driverName,
             driverMobile: v.driverMobile
         });
+        var opt = document.createElement('option');
+        opt.value = v.tempoNo;
+        opt.textContent = v.tempoNo;
+        sel.appendChild(opt);
     });
-    document.body.appendChild(dl);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1310,12 +1306,12 @@ function onTempoChange(tempoInput) {
     driverNameEl.value   = vehicle.driverName;
     driverMobileEl.value = vehicle.driverMobile;
 
-    // ✅ Visual confirmation flash — user knows auto-fill happened
+    // Visual feedback on readonly fields
     [driverNameEl, driverMobileEl].forEach(function (el) {
         el.style.transition  = 'background 0.3s';
-        el.style.background  = '#bbf7d0';  // green flash
+        el.style.background  = '#bbf7d0';
         setTimeout(function () {
-            el.style.background = '';          // back to default
+            el.style.background = '#f1f5f9'; // back to readonly grey
         }, 900);
     });
 }
@@ -1435,11 +1431,9 @@ function addItem() {
                 <tr class="brand-name-row">
                     <td class="brand-label">QUALITY</td>
                     <td colspan="3">
-                        <input type="text" class="item-brand" placeholder="Type or select quality..."
-                            list="brand-datalist"
-                            oninput="convertToUpperCase(this); onBrandInput(this);"
-                            onchange="onBrandChange(this);"
-                            autocomplete="off" required>
+                        <select class="item-brand" onchange="onBrandChange(this)" required>
+                            <option value="">— Select Quality —</option>
+                        </select>
                     </td>
                 </tr>
                 <tr class="item-green-header">
@@ -1469,7 +1463,12 @@ function addItem() {
     container.appendChild(block);
     renumberItems();
 
-    // ✅ Change 2: first block starts with 1 sub-row, qty pre-filled as 1
+    // Populate Quality <select> with options from Item List
+    var brandSel = block.querySelector('.item-brand');
+    if (brandSel && typeof brandOptionsHtml !== 'undefined') {
+        brandSel.innerHTML = brandOptionsHtml;
+    }
+
     addSubRow(idx, 1, null);
 }
 
@@ -2180,10 +2179,12 @@ function renderVerificationList() {
         var afterBadge = st.actualInvoiceNo  ? '<span class="verify-badge done">✓ Inv</span>'    : '<span class="verify-badge pending">Inv ⏳</span>';
         var recvBadge  = '<span class="verify-badge pending">Recv ⏳</span>';
 
-        // ── Quality + Type breakdown — matches image format ──
+        // ── Quality + Type breakdown with Rate input ──
         var tb = s.typeBreakdown || {};
         var tbKeys = Object.keys(tb);
         var breakdownHtml = '';
+        var existingRates = {};
+        try { existingRates = JSON.parse((s.status || {}).ratesJson || '{}'); } catch(e) {}
         if (tbKeys.length > 0) {
             var tds = 'padding:3px 6px;border:1px solid #cbd5e1;font-size:11px;';
             breakdownHtml = '<table style="width:100%;border-collapse:collapse;margin:6px 0;">' +
@@ -2193,7 +2194,8 @@ function renderVerificationList() {
                 '<th style="' + tds + 'text-align:center;">Standard Pcs</th>' +
                 '<th style="' + tds + 'text-align:center;">Qty</th>' +
                 '<th style="' + tds + 'text-align:center;">Pcs</th>' +
-                '<th style="' + tds + 'text-align:right;">Total Wt (Kg)</th></tr>';
+                '<th style="' + tds + 'text-align:right;">Total Wt (Kg)</th>' +
+                '<th style="' + tds + 'text-align:center;width:70px;">Rate</th></tr>';
             var sumQty = 0, sumPcs = 0, sumWt = 0;
             tbKeys.forEach(function (k) {
                 var item = tb[k];
@@ -2207,15 +2209,24 @@ function renderVerificationList() {
                     '<td style="' + tds + 'text-align:center;">' + stdPcs + '</td>' +
                     '<td style="' + tds + 'text-align:center;">' + item.packCount + '</td>' +
                     '<td style="' + tds + 'text-align:center;">' + item.pcs + '</td>' +
-                    '<td style="' + tds + 'text-align:right;">' + item.wt.toFixed(2) + '</td></tr>';
+                    '<td style="' + tds + 'text-align:right;">' + item.wt.toFixed(2) + '</td>' +
+                    '<td style="' + tds + 'text-align:center;">' +
+                    '<input type="number" class="rate-input" data-key="' + key + '" data-quality="' + escapeHtmlJs(k) + '" ' +
+                    'value="' + (existingRates[k] || '') + '" placeholder="₹" step="0.01" ' +
+                    'onclick="event.stopPropagation()" style="width:60px;padding:3px;text-align:center;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;">' +
+                    '</td></tr>';
             });
             breakdownHtml += '<tr style="background:#fef3c7;font-weight:700;">' +
                 '<td colspan="2" style="' + tds + '">TOTAL</td>' +
                 '<td style="' + tds + 'text-align:center;"></td>' +
                 '<td style="' + tds + 'text-align:center;">' + sumQty + '</td>' +
                 '<td style="' + tds + 'text-align:center;">' + sumPcs + '</td>' +
-                '<td style="' + tds + 'text-align:right;">' + sumWt.toFixed(2) + '</td></tr>';
+                '<td style="' + tds + 'text-align:right;">' + sumWt.toFixed(2) + '</td>' +
+                '<td style="' + tds + '"></td></tr>';
             breakdownHtml += '</table>';
+            breakdownHtml += '<button type="button" onclick="event.stopPropagation();saveRates(\'' + key + '\')" ' +
+                'style="margin-top:4px;background:#7c3aed;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;width:100%;">' +
+                '💰 Save Rates</button>';
         }
 
         // Compact row
@@ -2939,6 +2950,48 @@ function renderReports(r) {
                 return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span><strong>' + escapeHtmlJs(rv.review) + '</strong></td><td class="center">' + rv.count + '</td></tr>';
             }).join('') +
             '</tbody></table>';
+    }
+}
+
+
+// ══════════════════════════════════════
+// 💰 SAVE RATES — per quality+type in verification panel
+// ══════════════════════════════════════
+async function saveRates(key) {
+    // Collect all rate inputs for this slip
+    var rateInputs = document.querySelectorAll('.rate-input[data-key="' + key + '"]');
+    var ratesObj = {};
+    rateInputs.forEach(function (inp) {
+        var qualityKey = inp.getAttribute('data-quality');
+        var val = inp.value.trim();
+        if (val) ratesObj[qualityKey] = Number(val) || 0;
+    });
+
+    var parts = key.split('__');
+    var payload = withAuthPayload({
+        action:      'updateVerification',
+        packingType: parts[0],
+        slipNo:      parts[1],
+        stage:       'saveRates',
+        ratesJson:   JSON.stringify(ratesObj)
+    });
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+        if (result.success) {
+            alert('✅ Rates saved successfully!');
+        } else {
+            alert('Error: ' + (result.error || 'Unknown'));
+        }
+    } catch (err) {
+        alert('Network error!');
     }
 }
 
