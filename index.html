@@ -2798,199 +2798,205 @@ async function fetchReports() {
 function renderReports(r) {
     document.getElementById('report-loading').style.display = 'none';
 
-    // KPI Cards
+    var ord = r.orders || {};
+    var itemNames = ord.itemNames || [];
+
+    // ── Shared helpers ──
+    function esc(v) { return escapeHtmlJs(String(v||'')); }
+
+    // Item-wise Ord/Pend cell per row
+    function itemCols(items) {
+        return itemNames.map(function(it) {
+            var d = (items||{})[it];
+            if (!d) return '<td class="num" style="font-size:10px;color:#94a3b8;">-</td>';
+            return '<td class="num" style="font-size:10px;">' + d.ordQty + '/<span style="color:#ef4444;">' + d.pendQty + '</span></td>';
+        }).join('');
+    }
+    function itemHeaders() {
+        return itemNames.map(function(it) {
+            return '<th class="center" style="font-size:9px;background:#312e81;color:#e0e7ff;">' + esc(it) + '<br><span style="font-size:8px;opacity:.8;">Ord/Pend</span></th>';
+        }).join('');
+    }
+
+    // ── KPI Cards (Dispatch + Order) ──
     var kpi = document.getElementById('report-kpi-row');
     kpi.innerHTML =
-        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.packs || 0).toLocaleString() + '</div><div class="kpi-label">Total Packs</div></div>' +
-        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.pcs || 0).toLocaleString() + '</div><div class="kpi-label">Total Pcs</div></div>' +
-        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.wt || 0).toLocaleString() + '</div><div class="kpi-label">Total Wt (Kg)</div></div>';
+        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.packs||0).toLocaleString() + '</div><div class="kpi-label">Dispatched Packs</div></div>' +
+        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.pcs||0).toLocaleString() + '</div><div class="kpi-label">Dispatched Pcs</div></div>' +
+        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.wt||0).toLocaleString() + '</div><div class="kpi-label">Total Wt (Kg)</div></div>';
+    if (ord.totals && ord.totals.orders) {
+        kpi.innerHTML +=
+            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
+                '<div class="kpi-value" style="color:#b45309;">' + ord.totals.orders + '</div><div class="kpi-label">Total Orders</div></div>' +
+            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
+                '<div class="kpi-value" style="color:#b45309;">' + (ord.totals.ordQty||0).toLocaleString() + '</div><div class="kpi-label">Ordered Qty</div></div>' +
+            '<div class="kpi-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444;">' +
+                '<div class="kpi-value" style="color:#dc2626;">' + (ord.totals.pendQty||0).toLocaleString() + '</div><div class="kpi-label">Pending Qty</div></div>';
+    }
 
-    // Daily Dispatch (last 30 days)
+    // ── 1. Daily Dispatch (dispatch only — orders have no date dimension to merge)
     var dailyEl = document.getElementById('report-daily');
     if (r.daily && r.daily.length) {
         dailyEl.style.display = '';
         dailyEl.innerHTML = '<div class="report-title">📅 Daily Dispatch (Last 30 Days)</div>' +
-            '<table class="report-table"><thead><tr>' +
+            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
             '<th>Date</th><th class="center">Slips</th><th class="center">Packs</th><th class="num">Pcs</th><th class="num">Weight (Kg)</th>' +
             '</tr></thead><tbody>' +
             r.daily.map(function(d) {
                 return '<tr><td>' + d.date + '</td><td class="center">' + d.slips + '</td><td class="center">' + d.packs + '</td><td class="num">' + d.pcs.toLocaleString() + '</td><td class="num">' + d.wt.toLocaleString() + '</td></tr>';
             }).join('') +
-            '</tbody></table>';
+            '</tbody></table></div>';
     }
 
-    // Party-wise Summary
+    // ── Build lookup maps for fast join ──
+    var dispByParty = {};
+    (r.parties||[]).forEach(function(p){ dispByParty[p.party.toUpperCase()] = p; });
+    var dispByQual = {};
+    (r.qualities||[]).forEach(function(q){ dispByQual[q.quality.toUpperCase()] = q; });
+
+    var dispH = '<th class="center" style="background:#064e3b;color:#a7f3d0;font-size:9px;">Slips</th>' +
+                '<th class="center" style="background:#064e3b;color:#a7f3d0;font-size:9px;">Packs</th>' +
+                '<th class="num"   style="background:#064e3b;color:#a7f3d0;font-size:9px;">Pcs</th>' +
+                '<th class="num"   style="background:#064e3b;color:#a7f3d0;font-size:9px;">Wt(Kg)</th>';
+
+    function dispCells(d) {
+        if (!d) return '<td colspan="4" style="text-align:center;color:#94a3b8;font-size:10px;">—</td>';
+        return '<td class="center" style="font-size:10px;">' + d.slips + '</td>' +
+               '<td class="center" style="font-size:10px;">' + d.packs + '</td>' +
+               '<td class="num"    style="font-size:10px;">' + d.pcs.toLocaleString() + '</td>' +
+               '<td class="num"    style="font-size:10px;">' + d.wt.toLocaleString() + '</td>';
+    }
+
+    // ═══ TABLE 1: Party-wise Merged ═══════════════
     var partyEl = document.getElementById('report-parties');
-    if (r.parties && r.parties.length) {
+    var allPartyKeys = {};
+    (ord.partyWise||[]).forEach(function(p){ allPartyKeys[p.party] = true; });
+    (r.parties||[]).forEach(function(p){ allPartyKeys[p.party] = true; });
+    var allParties = Object.keys(allPartyKeys).sort();
+    var ordPartyMap = {};
+    (ord.partyWise||[]).forEach(function(p){ ordPartyMap[p.party.toUpperCase()] = p; });
+    if (allParties.length) {
         partyEl.style.display = '';
-        var partyTotal = { slips:0, packs:0, pcs:0, wt:0 };
-        var partyRows = r.parties.map(function(p) {
-            partyTotal.slips += p.slips; partyTotal.packs += p.packs;
-            partyTotal.pcs += p.pcs; partyTotal.wt += p.wt;
-            return '<tr><td style="font-weight:600;">' + escapeHtmlJs(p.party) + '</td><td class="center">' + p.slips + '</td><td class="center">' + p.packs + '</td><td class="num">' + p.pcs.toLocaleString() + '</td><td class="num">' + p.wt.toLocaleString() + '</td></tr>';
-        }).join('');
-        partyEl.innerHTML = '<div class="report-title">🏢 Party-wise Dispatch Summary</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Party Name</th><th class="center">Slips</th><th class="center">Packs</th><th class="num">Total Pcs</th><th class="num">Total Wt (Kg)</th>' +
-            '</tr></thead><tbody>' + partyRows +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + partyTotal.slips + '</td><td class="center">' + partyTotal.packs + '</td><td class="num">' + partyTotal.pcs.toLocaleString() + '</td><td class="num">' + partyTotal.wt.toLocaleString() + '</td></tr>' +
-            '</tbody></table>';
-    }
-
-    // Quality-wise Summary
-    var qualEl = document.getElementById('report-qualities');
-    if (r.qualities && r.qualities.length) {
-        qualEl.style.display = '';
-        var qualTotal = { packs:0, pcs:0, wt:0 };
-        var qualRows = r.qualities.map(function(q) {
-            qualTotal.packs += q.packs; qualTotal.pcs += q.pcs; qualTotal.wt += q.wt;
-            return '<tr><td style="font-weight:600;">' + escapeHtmlJs(q.quality) + '</td><td class="center">' + q.packs + '</td><td class="num">' + q.pcs.toLocaleString() + '</td><td class="num">' + q.wt.toLocaleString() + '</td></tr>';
-        }).join('');
-        qualEl.innerHTML = '<div class="report-title">🧵 Quality-wise Dispatch Summary</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Quality</th><th class="center">Packs</th><th class="num">Total Pcs</th><th class="num">Total Wt (Kg)</th>' +
-            '</tr></thead><tbody>' + qualRows +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + qualTotal.packs + '</td><td class="num">' + qualTotal.pcs.toLocaleString() + '</td><td class="num">' + qualTotal.wt.toLocaleString() + '</td></tr>' +
-            '</tbody></table>';
-    }
-
-    // Packing Type Summary
-    var typeEl = document.getElementById('report-types');
-    if (r.types && r.types.length) {
-        typeEl.style.display = '';
-        typeEl.innerHTML = '<div class="report-title">📦 Billed vs Non-Bill Summary</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Packing Type</th><th class="center">Slips</th><th class="num">Total Pcs</th><th class="num">Total Wt (Kg)</th>' +
-            '</tr></thead><tbody>' +
-            r.types.map(function(t) {
-                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(t.type) + '</td><td class="center">' + t.slips + '</td><td class="num">' + t.pcs.toLocaleString() + '</td><td class="num">' + t.wt.toLocaleString() + '</td></tr>';
+        var pTotal = { slips:0, packs:0, pcs:0, wt:0 };
+        partyEl.innerHTML = '<div class="report-title">🏢 Party-wise Summary — Order + Dispatch</div>' +
+            '<div style="overflow-x:auto;"><table class="report-table"><thead>' +
+            '<tr><th rowspan="2" style="vertical-align:bottom;">Party Name</th>' +
+            '<th colspan="' + (1 + itemNames.length) + '" style="text-align:center;background:#312e81;color:#e0e7ff;font-size:10px;">📋 ORDER</th>' +
+            '<th colspan="4" style="text-align:center;background:#064e3b;color:#a7f3d0;font-size:10px;">🚚 DISPATCH</th></tr>' +
+            '<tr><th class="center" style="background:#312e81;color:#e0e7ff;font-size:9px;">Count</th>' +
+            itemHeaders() + dispH + '</tr></thead><tbody>' +
+            allParties.map(function(pName) {
+                var o = ordPartyMap[pName.toUpperCase()] || null;
+                var d = dispByParty[pName.toUpperCase()] || null;
+                if (d) { pTotal.slips+=d.slips; pTotal.packs+=d.packs; pTotal.pcs+=d.pcs; pTotal.wt+=d.wt; }
+                return '<tr><td style="font-weight:600;">' + esc(pName) + '</td>' +
+                    '<td class="center" style="font-size:10px;">' + (o ? o.count : '—') + '</td>' +
+                    itemCols(o ? o.items : null) + dispCells(d) + '</tr>';
             }).join('') +
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td></td>' +
+            itemNames.map(function(){ return '<td></td>'; }).join('') +
+            '<td class="center">' + pTotal.slips + '</td><td class="center">' + pTotal.packs +
+            '</td><td class="num">' + pTotal.pcs.toLocaleString() + '</td><td class="num">' + pTotal.wt.toLocaleString() + '</td>' +
+            '</tr></tbody></table></div>';
+    }
+
+    // ═══ TABLE 2: Quality-wise Merged ═════════════
+    var qualEl = document.getElementById('report-qualities');
+    var allQualKeys = {};
+    (ord.qualityWise||[]).forEach(function(q){ allQualKeys[q.quality] = true; });
+    (r.qualities||[]).forEach(function(q){ allQualKeys[q.quality] = true; });
+    var allQuals = Object.keys(allQualKeys).sort();
+    var ordQualMap = {};
+    (ord.qualityWise||[]).forEach(function(q){ ordQualMap[q.quality.toUpperCase()] = q; });
+    if (allQuals.length) {
+        qualEl.style.display = '';
+        var qTotal = { slips:0, packs:0, pcs:0, wt:0 };
+        qualEl.innerHTML = '<div class="report-title">🧵 Quality-wise Summary — Order + Dispatch</div>' +
+            '<div style="overflow-x:auto;"><table class="report-table"><thead>' +
+            '<tr><th rowspan="2" style="vertical-align:bottom;">Quality</th>' +
+            '<th colspan="' + (1 + itemNames.length) + '" style="text-align:center;background:#312e81;color:#e0e7ff;font-size:10px;">📋 ORDER</th>' +
+            '<th colspan="4" style="text-align:center;background:#064e3b;color:#a7f3d0;font-size:10px;">🚚 DISPATCH</th></tr>' +
+            '<tr><th class="center" style="background:#312e81;color:#e0e7ff;font-size:9px;">Count</th>' +
+            itemHeaders() + dispH + '</tr></thead><tbody>' +
+            allQuals.map(function(qName) {
+                var o = ordQualMap[qName.toUpperCase()] || null;
+                var d = dispByQual[qName.toUpperCase()] || null;
+                if (d) { qTotal.slips+=d.slips; qTotal.packs+=d.packs; qTotal.pcs+=d.pcs; qTotal.wt+=d.wt; }
+                return '<tr><td style="font-weight:600;">' + esc(qName) + '</td>' +
+                    '<td class="center" style="font-size:10px;">' + (o ? o.count : '—') + '</td>' +
+                    itemCols(o ? o.items : null) + dispCells(d) + '</tr>';
+            }).join('') +
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td></td>' +
+            itemNames.map(function(){ return '<td></td>'; }).join('') +
+            '<td class="center">' + qTotal.slips + '</td><td class="center">' + qTotal.packs +
+            '</td><td class="num">' + qTotal.pcs.toLocaleString() + '</td><td class="num">' + qTotal.wt.toLocaleString() + '</td>' +
+            '</tr></tbody></table></div>';
+    }
+
+    // ═══ TABLE 3: Item-wise Order Summary ═════════
+    var typeEl = document.getElementById('report-types');
+    if (ord.itemWise && ord.itemWise.length) {
+        typeEl.style.display = '';
+        var iTotal = { count:0, ordQty:0, pendQty:0 };
+        typeEl.innerHTML = '<div class="report-title">📦 Item-wise Order Summary</div>' +
+            '<table class="report-table"><thead><tr>' +
+            '<th>Item Type</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
+            '</tr></thead><tbody>' +
+            ord.itemWise.map(function(i) {
+                iTotal.count += i.count; iTotal.ordQty += i.ordQty; iTotal.pendQty += i.pendQty;
+                return '<tr><td style="font-weight:600;">' + esc(i.item) + '</td><td class="center">' + i.count +
+                    '</td><td class="num">' + i.ordQty.toLocaleString() + '</td><td class="num">' + i.pendQty.toLocaleString() + '</td></tr>';
+            }).join('') +
+            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + iTotal.count +
+            '</td><td class="num">' + iTotal.ordQty.toLocaleString() + '</td><td class="num">' + iTotal.pendQty.toLocaleString() + '</td></tr>' +
             '</tbody></table>';
     }
 
-    // ══════════════════════════════════════
-    // 📋 ORDER SHEET SUMMARY
-    // ══════════════════════════════════════
-    var ord = r.orders || {};
-
-    // Order KPI — add to existing KPI row
-    if (ord.totals && ord.totals.orders) {
-        var kpi = document.getElementById('report-kpi-row');
-        kpi.innerHTML +=
-            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
-                '<div class="kpi-value" style="color:#b45309;">' + ord.totals.orders + '</div>' +
-                '<div class="kpi-label">Total Orders</div>' +
-            '</div>' +
-            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
-                '<div class="kpi-value" style="color:#b45309;">' + (ord.totals.ordQty || 0).toLocaleString() + '</div>' +
-                '<div class="kpi-label">Ordered Qty</div>' +
-            '</div>' +
-            '<div class="kpi-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444;">' +
-                '<div class="kpi-value" style="color:#dc2626;">' + (ord.totals.pendQty || 0).toLocaleString() + '</div>' +
-                '<div class="kpi-label">Pending Qty</div>' +
-            '</div>';
-    }
-
-    // Item names for column headers
-    var itemNames = ord.itemNames || [];
-
-    // Helper: build item-wise columns for a row
-    function itemCols(items) {
-        return itemNames.map(function(it) {
-            var d = (items||{})[it];
-            return '<td class="num" style="font-size:10px;">' + (d ? d.ordQty + '/' + d.pendQty : '-') + '</td>';
-        }).join('');
-    }
-    function itemHeaders() {
-        return itemNames.map(function(it) {
-            return '<th class="center" style="font-size:9px;">' + escapeHtmlJs(it) + '<br><span style="font-size:8px;color:#93c5fd;">Ord/Pend</span></th>';
-        }).join('');
-    }
-
-    // Status-wise Order Summary (with item columns)
+    // ═══ TABLE 4: Order Status Summary ════════════
     var osEl = document.getElementById('report-order-status');
     if (ord.statusWise && ord.statusWise.length) {
         osEl.style.display = '';
-        var osTotal = { count:0, ordQty:0, pendQty:0 };
+        var osTotal = { count:0 };
         osEl.innerHTML = '<div class="report-title">📋 Order Status Summary</div>' +
             '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
-            '<th>Status</th><th class="center">Orders</th>' +
-            itemHeaders() +
+            '<th>Status</th><th class="center">Orders</th>' + itemHeaders() +
             '</tr></thead><tbody>' +
             ord.statusWise.map(function(s) {
-                osTotal.count += s.count; osTotal.ordQty += s.ordQty; osTotal.pendQty += s.pendQty;
-                var color = s.status === 'PENDING' ? '#f59e0b' : s.status === 'CANCEL' ? '#ef4444' : '#10b981';
-                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:4px;"></span><strong>' + escapeHtmlJs(s.status) + '</strong></td>' +
-                '<td class="center">' + s.count + '</td>' + itemCols(s.items) + '</tr>';
+                osTotal.count += s.count;
+                var color = s.status==='PENDING'?'#f59e0b':s.status==='COMPLETED'?'#10b981':s.status==='CANCEL'?'#ef4444':'#6366f1';
+                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:4px;"></span>' +
+                    '<strong>' + esc(s.status) + '</strong></td><td class="center">' + s.count + '</td>' + itemCols(s.items) + '</tr>';
             }).join('') +
             '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + osTotal.count + '</td>' +
-            itemNames.map(function(){ return '<td></td>'; }).join('') + '</tr>' +
-            '</tbody></table></div>';
+            itemNames.map(function(){ return '<td></td>'; }).join('') +
+            '</tr></tbody></table></div>';
     }
 
-    // Party-wise Order Summary with item columns
+    // ═══ TABLE 5: Billed vs Non-Bill + Review ═════
     var opEl = document.getElementById('report-order-parties');
-    if (ord.partyWise && ord.partyWise.length) {
+    if (r.types && r.types.length) {
         opEl.style.display = '';
-        opEl.innerHTML = '<div class="report-title">🏢 Order Party-wise Summary (by Pending Qty)</div>' +
-            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
-            '<th>Party Name</th><th class="center">Orders</th>' +
-            itemHeaders() +
-            '</tr></thead><tbody>' +
-            ord.partyWise.slice(0, 25).map(function(p) {
-                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(p.party) + '</td><td class="center">' + p.count + '</td>' + itemCols(p.items) + '</tr>';
-            }).join('') +
-            '</tbody></table></div>';
-    }
-
-    // Quality-wise with item columns
-    var oqEl = document.getElementById('report-order-qualities');
-    if (ord.qualityWise && ord.qualityWise.length) {
-        oqEl.style.display = '';
-        oqEl.innerHTML = '<div class="report-title">🧵 Order Quality-wise Summary (by Pending Qty)</div>' +
-            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
-            '<th>Quality</th><th class="center">Orders</th>' +
-            itemHeaders() +
-            '</tr></thead><tbody>' +
-            ord.qualityWise.slice(0, 25).map(function(q) {
-                return '<tr><td style="font-weight:600;">' + escapeHtmlJs(q.quality) + '</td><td class="center">' + q.count + '</td>' + itemCols(q.items) + '</tr>';
-            }).join('') +
-            '</tbody></table></div>';
-    }
-
-    // Item-wise Summary (standalone table)
-    if (ord.itemWise && ord.itemWise.length) {
-        var iwEl = document.getElementById('report-order-review');
-        var iwHtml = '<div class="report-title" style="margin-bottom:8px;">📦 Item-wise Order Summary</div>' +
+        opEl.innerHTML = '<div class="report-title">📦 Billed vs Non-Bill Dispatch</div>' +
             '<table class="report-table"><thead><tr>' +
-            '<th>Item Type</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
-            '</tr></thead><tbody>';
-        var iwTotal = { count:0, ordQty:0, pendQty:0 };
-        ord.itemWise.forEach(function(i) {
-            iwTotal.count += i.count; iwTotal.ordQty += i.ordQty; iwTotal.pendQty += i.pendQty;
-            iwHtml += '<tr><td style="font-weight:600;">' + escapeHtmlJs(i.item) + '</td><td class="center">' + i.count + '</td><td class="num">' + i.ordQty.toLocaleString() + '</td><td class="num">' + i.pendQty.toLocaleString() + '</td></tr>';
-        });
-        iwHtml += '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + iwTotal.count + '</td><td class="num">' + iwTotal.ordQty.toLocaleString() + '</td><td class="num">' + iwTotal.pendQty.toLocaleString() + '</td></tr>';
-        iwHtml += '</tbody></table>';
-        // Prepend to review section (reuse the div)
-        iwEl.style.display = '';
-        iwEl.innerHTML = iwHtml + iwEl.innerHTML;
+            '<th>Packing Type</th><th class="center">Slips</th><th class="num">Pcs</th><th class="num">Wt(Kg)</th>' +
+            '</tr></thead><tbody>' +
+            r.types.map(function(t) {
+                return '<tr><td style="font-weight:600;">' + esc(t.type) + '</td><td class="center">' + t.slips +
+                    '</td><td class="num">' + t.pcs.toLocaleString() + '</td><td class="num">' + t.wt.toLocaleString() + '</td></tr>';
+            }).join('') + '</tbody></table>';
     }
-
-    // Review Order Summary
     var orEl = document.getElementById('report-order-review');
     if (ord.reviewWise && ord.reviewWise.length) {
         orEl.style.display = '';
         orEl.innerHTML = '<div class="report-title">📝 Order Review Summary</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Review Status</th><th class="center">Count</th>' +
-            '</tr></thead><tbody>' +
+            '<table class="report-table"><thead><tr><th>Review Status</th><th class="center">Count</th></tr></thead><tbody>' +
             ord.reviewWise.map(function(rv) {
-                var color = rv.review === 'CONFIRM' ? '#10b981' : rv.review === 'CANCEL' ? '#ef4444' : rv.review === 'STARTED' ? '#2563eb' : '#f59e0b';
-                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span><strong>' + escapeHtmlJs(rv.review) + '</strong></td><td class="center">' + rv.count + '</td></tr>';
-            }).join('') +
-            '</tbody></table>';
+                var color = rv.review==='CONFIRM'?'#10b981':rv.review==='CANCEL'?'#ef4444':rv.review==='STARTED'?'#2563eb':'#f59e0b';
+                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span>' +
+                    '<strong>' + esc(rv.review) + '</strong></td><td class="center">' + rv.count + '</td></tr>';
+            }).join('') + '</tbody></table>';
     }
+    document.getElementById('report-order-qualities').style.display = 'none';
 }
 
 
