@@ -482,10 +482,7 @@
         <button type="button" class="finish-btn" id="finishBtn" onclick="handleFinish()">
             ✅ Finish Packing Slip
         </button>
-        <button type="button" id="saveDraftBtn" onclick="handleSaveDraft()"
-            style="width:100%;margin-top:8px;padding:12px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;box-shadow:0 4px 14px rgba(124,58,237,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
-            📝 Save Packing Slip No. Partially
-        </button>
+
     </div>
 </form>
 
@@ -646,7 +643,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWuJK967OJ90aJwSLTxYQ5ESf3NH-WWNJStyYglKBDYPQEbfmltmvOPY8Y8lKWoWxp/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyz8Slo4L6V2WHovqkZFuyv4OZ7qxC4mDhH_lcskegjwGRkMOGktnVgYC_WM--xLxk4/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -706,6 +703,7 @@ function clearSession(showError) {
     document.getElementById('userBar').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
     if (showError) {
         document.getElementById('loginError').textContent = 'Session expired. Please login again.';
         document.getElementById('loginError').style.display = 'block';
@@ -809,6 +807,7 @@ function showPackingForm() {
     document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
     if (itemCounter === 0) addItem();
     if (!slipSyncInterval) startSlipNumberSync();
+    startAutoSaveDraft();
 }
 
 function showVerificationPanel() {
@@ -820,6 +819,7 @@ function showVerificationPanel() {
     document.getElementById('verifyNavBtn').style.display = 'none';
     document.getElementById('orderNavBtn').style.display = '';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
     fetchVerificationSlips();
 }
 
@@ -833,6 +833,7 @@ function showOrderPanel() {
     document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
     document.getElementById('orderNavBtn').style.display = 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
     fetchAllOrders();
 }
 
@@ -1867,56 +1868,58 @@ async function refreshDraftList() {
 }
 
 // ── SAVE DRAFT (partial) ──
-async function handleSaveDraft() {
-    var partyName = document.getElementById('party-name').value.trim();
-    if (!partyName) {
-        alert('Party Name bharna zaroori hai draft save karne se pehle!');
-        document.getElementById('party-name').focus();
-        return;
-    }
+// ══════════════════════════════════════════
+// 📝 AUTO-SAVE DRAFT — silent, every 30 seconds
+// Only saves if Party Name is filled (no empty drafts)
+// ══════════════════════════════════════════
+var autoSaveInterval = null;
+var lastAutoSaveHash = '';
 
-    var btn = document.getElementById('saveDraftBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Saving Draft...';
+function startAutoSaveDraft() {
+    if (autoSaveInterval) return;
+    autoSaveInterval = setInterval(function() {
+        autoSaveDraftSilent();
+    }, 30000);
+}
 
-    // Build full form state
+function stopAutoSaveDraft() {
+    if (autoSaveInterval) { clearInterval(autoSaveInterval); autoSaveInterval = null; }
+}
+
+async function autoSaveDraftSilent() {
+    var partyEl = document.getElementById('party-name');
+    var partyName = partyEl ? partyEl.value.trim() : '';
+    if (!partyName) return;
+
     var formPayload = withAuthPayload(buildFormPayload());
+    var hash = JSON.stringify(formPayload).length + '_' + partyName;
+    if (hash === lastAutoSaveHash) return;
+
     formPayload.action  = 'saveDraft';
-    formPayload.draftId = currentDraftId || '';  // update if editing existing draft
+    formPayload.draftId = currentDraftId || '';
 
     try {
-        var res  = await fetch(APPS_SCRIPT_URL, {
+        var res = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify(formPayload),
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
             redirect: 'follow'
         });
         var result = await res.json();
-        if (handleAuthFailure(result)) return;
-
         if (result.success) {
             currentDraftId = result.draftId;
-            var msg = result.action === 'updated'
-                ? '✅ Draft ' + result.draftId + ' updated!'
-                : '✅ Draft ' + result.draftId + ' saved!';
-            btn.textContent = msg;
-            setTimeout(function() {
-                btn.disabled = false;
-                btn.innerHTML = '📝 Save Packing Slip No. Partially';
-            }, 1500);
-            // ⚡ Refresh draft dropdown only (full initial fetch is overkill here)
+            lastAutoSaveHash = hash;
+            var slipField = document.getElementById('slip-sr-no');
+            if (slipField) {
+                slipField.style.color = '#7c3aed';
+                setTimeout(function() { slipField.style.color = ''; }, 1500);
+            }
             refreshDraftList();
-        } else {
-            alert('Draft save failed: ' + (result.error || 'Unknown error'));
-            btn.disabled = false;
-            btn.innerHTML = '📝 Save Packing Slip No. Partially';
         }
-    } catch (err) {
-        alert('Network error! Internet check karein.');
-        btn.disabled = false;
-        btn.innerHTML = '📝 Save Packing Slip No. Partially';
-    }
+    } catch (err) { /* silent */ }
 }
+
+async function handleSaveDraft() { await autoSaveDraftSilent(); }
 
 // ── LOAD DRAFT (on dropdown select) ──
 async function onDraftSelect() {
@@ -2195,6 +2198,7 @@ function renderVerificationList() {
                 '<th style="' + tds + 'text-align:center;">Qty</th>' +
                 '<th style="' + tds + 'text-align:center;">Pcs</th>' +
                 '<th style="' + tds + 'text-align:right;">Total Wt (Kg)</th>' +
+                '<th style="' + tds + 'text-align:center;">Order ID</th>' +
                 '<th style="' + tds + 'text-align:center;width:70px;">Rate</th></tr>';
             var sumQty = 0, sumPcs = 0, sumWt = 0;
             tbKeys.forEach(function (k) {
@@ -2210,6 +2214,7 @@ function renderVerificationList() {
                     '<td style="' + tds + 'text-align:center;">' + item.packCount + '</td>' +
                     '<td style="' + tds + 'text-align:center;">' + item.pcs + '</td>' +
                     '<td style="' + tds + 'text-align:right;">' + item.wt.toFixed(2) + '</td>' +
+                    '<td style="' + tds + 'text-align:center;font-size:10px;color:#2563eb;font-weight:600;">' + escapeHtmlJs(item.orderId || '-') + '</td>' +
                     '<td style="' + tds + 'text-align:center;">' +
                     '<input type="number" class="rate-input" data-key="' + key + '" data-quality="' + escapeHtmlJs(k) + '" ' +
                     'value="' + (existingRates[k] || '') + '" placeholder="₹" step="0.01" ' +
@@ -2222,6 +2227,7 @@ function renderVerificationList() {
                 '<td style="' + tds + 'text-align:center;">' + sumQty + '</td>' +
                 '<td style="' + tds + 'text-align:center;">' + sumPcs + '</td>' +
                 '<td style="' + tds + 'text-align:right;">' + sumWt.toFixed(2) + '</td>' +
+                '<td style="' + tds + '"></td>' +
                 '<td style="' + tds + '"></td></tr>';
             breakdownHtml += '</table>';
             breakdownHtml += '<button type="button" onclick="event.stopPropagation();saveRates(\'' + key + '\')" ' +
@@ -2236,6 +2242,7 @@ function renderVerificationList() {
                 '<span class="vc-party">' + escapeHtmlJs(s.partyName) + '</span>' +
                 '<span class="vc-meta">' + s.totalWeight.toFixed(1) + 'Kg</span>' +
                 '<span class="vc-badges">' + preBadge + afterBadge + recvBadge + '</span>' +
+                (s.pdfLink ? '<a href="' + escapeHtmlJs(s.pdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:10px;color:#2563eb;text-decoration:none;margin-left:4px;">📄PDF</a>' : '') +
             '</div>';
 
         // Expanded body
@@ -2770,6 +2777,7 @@ function showReportsPanel() {
     document.getElementById('orderNavBtn').style.display  = session.role !== 'DATA_ENTRY' ? '' : 'none';
     document.getElementById('reportsNavBtn').style.display = 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
     fetchReports();
 }
 
