@@ -376,10 +376,11 @@
 
         <div class="form-group">
             <label>Party Name <span class="required-star">*</span></label>
-            <select id="party-name" onchange="onPartyNameChange(this)" required
+            <input type="text" id="party-name" placeholder="Type to search party..."
+                list="dl-party" autocomplete="off" required
+                oninput="this.value=this.value.toUpperCase();"
+                onchange="onPartyNameChange(this)"
                 style="font-weight:600;">
-                <option value="">— Select Party —</option>
-            </select>
         </div>
         <div class="form-group">
             <label>Ship To</label>
@@ -410,10 +411,11 @@
         <div class="card-title">🚚 Dispatch Details</div>
         <div class="form-group">
             <label>Tempo No <span class="required-star">*</span></label>
-            <select id="tempo-no" onchange="onTempoChange(this)" required
+            <input type="text" id="tempo-no" placeholder="Type to search tempo..."
+                list="dl-tempo" autocomplete="off" required
+                oninput="this.value=this.value.toUpperCase();"
+                onchange="onTempoChange(this)"
                 style="font-weight:600;">
-                <option value="">— Select Tempo —</option>
-            </select>
         </div>
         <div class="form-group">
             <label>Driver Name <span class="required-star">*</span></label>
@@ -611,6 +613,14 @@
                     <option value="CANCEL">CANCEL</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Order Type <span class="required-star">*</span></label>
+                <select id="ord-type" required>
+                    <option value="">Select Type</option>
+                    <option value="BILL">Bill</option>
+                    <option value="NB">NB</option>
+                </select>
+            </div>
         </div>
         <div class="order-form-btns">
             <button type="button" class="btn-save-order" id="ord-save-btn" onclick="handleSaveOrder()">💾 Save Order</button>
@@ -643,7 +653,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydFOAoHsdKZslTsX4HnMOBZcLxaAjkOeaxFvJlvVaSlz-6eXwiDUNNY1G88g96eSI/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye7FdKii3NtGE5qgpahDJZ7wryqET6OmwxUE8Rrled7JRrZ-URcRPsqPMCY1Sk7tk/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -859,23 +869,28 @@ function handleAuthFailure(result) {
 
 // Inject a shared <datalist> into the DOM once — all brand inputs reference it
 // Store brand options HTML for populating Quality <select> in each item block
-var brandOptionsHtml = '<option value="">— Select Quality —</option>';
-
 function buildBrandDatalist(brands) {
     brandMap.clear();
-    var opts = '<option value="">— Select Quality —</option>';
+
+    // Create/update <datalist id="dl-brand"> for Quality search
+    var old = document.getElementById('dl-brand');
+    if (old) old.remove();
+    var dl = document.createElement('datalist');
+    dl.id = 'dl-brand';
     brands.forEach(function (b) {
         brandMap.set(b.name.toUpperCase(), b.stdPcs);
-        opts += '<option value="' + escapeHtmlAttr(b.name) + '">' + escapeHtmlAttr(b.name) + '</option>';
+        var opt = document.createElement('option');
+        opt.value = b.name;
+        dl.appendChild(opt);
     });
-    brandOptionsHtml = opts;
+    document.body.appendChild(dl);
 
-    // Populate all existing Quality <select>s on screen
-    document.querySelectorAll('.item-brand').forEach(function (sel) {
-        var current = sel.value;
-        sel.innerHTML = brandOptionsHtml;
-        if (current) sel.value = current;
-    });
+    // Also create <datalist id="dl-brand-order"> for Order form quality rows
+    var oldOrd = document.getElementById('dl-brand-order');
+    if (oldOrd) oldOrd.remove();
+    var dlOrd = dl.cloneNode(true);
+    dlOrd.id = 'dl-brand-order';
+    document.body.appendChild(dlOrd);
 }
 
 // ══════════════════════════════════════════════════════
@@ -924,31 +939,25 @@ function buildOrderIdDropdown(orders, partyFilter) {
     });
 }
 
-// Populate Party Name <select> from OrderSheet parties (locked dropdown)
+// Create <datalist id="dl-party"> for Party Name search
 function buildPartyDatalist() {
-    var sel = document.getElementById('party-name');
-    if (!sel) return;
-    var currentVal = sel.value;
+    if (partyMap.size === 0) return;
 
-    // Keep the default option, rebuild the rest
-    sel.innerHTML = '<option value="">— Select Party —</option>';
+    var old = document.getElementById('dl-party');
+    if (old) old.remove();
+    var dl = document.createElement('datalist');
+    dl.id = 'dl-party';
 
-    // Collect unique party names from partyMap (OrderSheet)
     var parties = [];
-    partyMap.forEach(function (info, partyName) {
-        parties.push(partyName);
-    });
+    partyMap.forEach(function (info, partyName) { parties.push(partyName); });
     parties.sort();
 
     parties.forEach(function (p) {
         var opt = document.createElement('option');
         opt.value = p;
-        opt.textContent = p;
-        sel.appendChild(opt);
+        dl.appendChild(opt);
     });
-
-    // Restore previous selection if still valid
-    if (currentVal) sel.value = currentVal;
+    document.body.appendChild(dl);
 }
 
 // Minimal HTML-attribute escaper for building <option> markup client-side
@@ -1067,10 +1076,12 @@ function buildSuggestionDatalists(suggestions) {
 
 function buildVehicleDatalist(vehicles) {
     vehicleMap.clear();
-    var sel = document.getElementById('tempo-no');
-    if (!sel) return;
 
-    sel.innerHTML = '<option value="">— Select Tempo —</option>';
+    var old = document.getElementById('dl-tempo');
+    if (old) old.remove();
+    var dl = document.createElement('datalist');
+    dl.id = 'dl-tempo';
+
     vehicles.forEach(function (v) {
         vehicleMap.set(v.tempoNo.toUpperCase(), {
             driverName:   v.driverName,
@@ -1078,9 +1089,9 @@ function buildVehicleDatalist(vehicles) {
         });
         var opt = document.createElement('option');
         opt.value = v.tempoNo;
-        opt.textContent = v.tempoNo;
-        sel.appendChild(opt);
+        dl.appendChild(opt);
     });
+    document.body.appendChild(dl);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1432,9 +1443,10 @@ function addItem() {
                 <tr class="brand-name-row">
                     <td class="brand-label">QUALITY</td>
                     <td colspan="3">
-                        <select class="item-brand" onchange="onBrandChange(this)" required>
-                            <option value="">— Select Quality —</option>
-                        </select>
+                        <input type="text" class="item-brand" placeholder="Type to search quality..."
+                            list="dl-brand" autocomplete="off" required
+                            oninput="this.value=this.value.toUpperCase();"
+                            onchange="onBrandChange(this);">
                     </td>
                 </tr>
                 <tr class="item-green-header">
@@ -1464,11 +1476,7 @@ function addItem() {
     container.appendChild(block);
     renumberItems();
 
-    // Populate Quality <select> with options from Item List
-    var brandSel = block.querySelector('.item-brand');
-    if (brandSel && typeof brandOptionsHtml !== 'undefined') {
-        brandSel.innerHTML = brandOptionsHtml;
-    }
+    // Quality input already wired to dl-brand datalist via list attribute
 
     addSubRow(idx, 1, null);
 }
@@ -2548,17 +2556,20 @@ function showOrderForm(order) {
         document.getElementById('ord-buyer').value             = order.buyerName || '';
         document.getElementById('ord-mob').value               = order.mob || '';
         document.getElementById('ord-review').value            = order.reviewOrder || '';
+        document.getElementById('ord-type').value              = order.orderType || '';
     } else {
         editingOrderNo = null;
         title.textContent = '📋 New Order';
         btn.textContent = '💾 Save Order';
         // Auto-assign next Order No from sheet (readonly)
-        var nextNo = (typeof allOrders !== 'undefined' && allOrders._nextOrderNo)
-            ? allOrders._nextOrderNo : '1';
         noInput.readOnly = true;
         noInput.style.background = '#f1f5f9';
-        noInput.setAttribute('data-next', nextNo);
-        noInput.value = nextNo;
+        noInput.value = 'Loading...';
+        // Always fetch fresh nextOrderNo from server (cached server-side for speed)
+        fetchNextOrderNo().then(function(nextNo) {
+            noInput.setAttribute('data-next', nextNo);
+            noInput.value = nextNo;
+        });
         document.getElementById('ord-date').valueAsDate = new Date();
         document.getElementById('ord-by').value = '';
         document.getElementById('ord-party').value = '';
@@ -2570,6 +2581,7 @@ function showOrderForm(order) {
         document.getElementById('ord-buyer').value = '';
         document.getElementById('ord-mob').value = '';
         document.getElementById('ord-review').value = '';
+        document.getElementById('ord-type').value = '';
         // Start with one empty quality row
         clearQualityRows();
         addQualityRow();
@@ -2594,7 +2606,7 @@ function addQualityRow(quality, item, qty) {
     div.innerHTML =
         '<div>' +
             '<label>Quality *</label>' +
-            '<input type="text" class="qr-quality" placeholder="Quality..." list="brand-datalist" autocomplete="off" ' +
+            '<input type="text" class="qr-quality" placeholder="Type to search quality..." list="dl-brand-order" autocomplete="off" ' +
             'value="' + escapeHtmlJs(quality || '') + '" oninput="this.value=this.value.toUpperCase()">' +
         '</div>' +
         '<div>' +
@@ -2705,7 +2717,8 @@ async function handleSaveOrder() {
         transporterName:    document.getElementById('ord-transporter').value,
         buyerName:          document.getElementById('ord-buyer').value,
         mob:                document.getElementById('ord-mob').value,
-        reviewOrder:        document.getElementById('ord-review').value
+        reviewOrder:        document.getElementById('ord-review').value,
+        orderType:          document.getElementById('ord-type').value
     });
 
     try {
@@ -2723,6 +2736,7 @@ async function handleSaveOrder() {
                 btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
                 hideOrderForm();
                 fetchAllOrders();
+                fetchNextOrderNo();
             }, 1000);
         } else {
             alert('Error: ' + (result.error || 'Unknown'));
@@ -3081,6 +3095,21 @@ function buildOrderFieldDatalists(suggestions) {
         });
         document.body.appendChild(dl);
     });
+}
+
+
+// ⚡ Fetch next order no (server uses CacheService — instant response)
+async function fetchNextOrderNo() {
+    try {
+        var url = withToken(APPS_SCRIPT_URL + '?action=listOrders');
+        var res = await fetch(url, { redirect: 'follow' });
+        var data = await res.json();
+        if (data.success && data.nextOrderNo) {
+            allOrders._nextOrderNo = data.nextOrderNo;
+            return data.nextOrderNo;
+        }
+    } catch(e) {}
+    return allOrders._nextOrderNo || '1';
 }
 
 </script>
