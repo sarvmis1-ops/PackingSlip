@@ -376,7 +376,7 @@
 
         <div class="form-group">
             <label>Party Name <span class="required-star">*</span></label>
-            <input type="text" id="party-name" placeholder="Type to search party..."
+            <input type="text" id="party-name" placeholder="Type to search party..." onblur="validateDropdown(this, partyMap)"
                 list="dl-party" autocomplete="off" required
                 oninput="this.value=this.value.toUpperCase();"
                 onchange="onPartyNameChange(this)"
@@ -411,7 +411,7 @@
         <div class="card-title">🚚 Dispatch Details</div>
         <div class="form-group">
             <label>Tempo No <span class="required-star">*</span></label>
-            <input type="text" id="tempo-no" placeholder="Type to search tempo..."
+            <input type="text" id="tempo-no" placeholder="Type to search tempo..." onblur="validateDropdown(this, vehicleMap)"
                 list="dl-tempo" autocomplete="off" required
                 oninput="this.value=this.value.toUpperCase();"
                 onchange="onTempoChange(this)"
@@ -653,7 +653,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye7FdKii3NtGE5qgpahDJZ7wryqET6OmwxUE8Rrled7JRrZ-URcRPsqPMCY1Sk7tk/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjU9RWEZGe6dX3CbJl_buScYSslqANcI9k1pUCD7QpwQziozTl1kao2XwCwjRCAQbD/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -976,6 +976,9 @@ function onOrderIdChange(selectEl) {
 
     if (!orderId) {
         if (infoDiv) { infoDiv.style.display = 'none'; infoDiv.innerHTML = ''; }
+        // Unlock Quality when no order selected
+        var brandEl = block.querySelector('.item-brand');
+        if (brandEl) { brandEl.readOnly = false; brandEl.style.background = ''; brandEl.style.fontWeight = ''; }
         return;
     }
 
@@ -995,11 +998,14 @@ function onOrderIdChange(selectEl) {
         }
     }
 
-    // ── Auto-fill Quality ──
+    // ── Auto-fill Quality (locked — read-only when order selected) ──
     const brandInput = block.querySelector('.item-brand');
     if (brandInput) {
         brandInput.value = order.brand;
-        onBrandChange(brandInput); // reuse existing std-pcs auto-fill logic
+        brandInput.readOnly = true;
+        brandInput.style.background = '#e2e8f0';
+        brandInput.style.fontWeight = '700';
+        onBrandChange(brandInput);
     }
 
     calculateTotals();
@@ -1416,7 +1422,7 @@ function addItem() {
                 <tr class="order-id-row">
                     <td class="order-id-label">ORDER ID</td>
                     <td colspan="3">
-                        <select class="item-order-id" onchange="onOrderIdChange(this)">
+                        <select class="item-order-id" onchange="onOrderIdChange(this)" required>
                             ${orderIdOptionsHtml}
                         </select>
                         <div class="order-info" style="display:none;"></div>
@@ -1443,7 +1449,7 @@ function addItem() {
                 <tr class="brand-name-row">
                     <td class="brand-label">QUALITY</td>
                     <td colspan="3">
-                        <input type="text" class="item-brand" placeholder="Type to search quality..."
+                        <input type="text" class="item-brand" placeholder="Type to search quality..." onblur="validateDropdown(this, brandMap)"
                             list="dl-brand" autocomplete="off" required
                             oninput="this.value=this.value.toUpperCase();"
                             onchange="onBrandChange(this);">
@@ -1587,14 +1593,26 @@ function onWeightEnter(event, blockIdx, rowId) {
     if (event.key !== 'Enter') return;
     event.preventDefault();
 
-    const tbody   = document.getElementById('sub-body-' + blockIdx);
-    const allWt   = Array.from(document.querySelectorAll('.sub-wt')); // ALL weight inputs on page
-    const thisWt  = document.getElementById(rowId).querySelector('.sub-wt');
-    const curIdx  = allWt.indexOf(thisWt);
+    var tbody   = document.getElementById('sub-body-' + blockIdx);
+    var blockWts = Array.from(tbody.querySelectorAll('.sub-wt')); // weight inputs in THIS block only
+    var thisWt  = document.getElementById(rowId).querySelector('.sub-wt');
+    var curIdx  = blockWts.indexOf(thisWt);
 
-    if (curIdx >= 0 && curIdx < allWt.length - 1) {
-        allWt[curIdx + 1].focus();
-        allWt[curIdx + 1].select();
+    // If last weight in this block → add new row (copies last row data)
+    if (curIdx >= blockWts.length - 1) {
+        var lastRow = tbody.querySelector('.sub-row:last-child');
+        var lastQty = lastRow ? lastRow.querySelector('.sub-qty').value : '';
+        addSubRow(blockIdx, lastQty || null, null);
+        // Focus the new weight input
+        setTimeout(function() {
+            var newWts = tbody.querySelectorAll('.sub-wt');
+            var newLast = newWts[newWts.length - 1];
+            if (newLast) { newLast.focus(); newLast.select(); }
+        }, 50);
+    } else {
+        // Not last → focus next weight in same block
+        blockWts[curIdx + 1].focus();
+        blockWts[curIdx + 1].select();
     }
 }
 
@@ -2506,7 +2524,7 @@ function renderOrderList() {
                     '<span class="od-lbl">Review Time</span><span class="od-val">' + escapeHtmlJs(o.reviewTime || '-') + '</span>' +
                 '</div>' +
                 '<div class="order-actions">' +
-                    '<button type="button" class="btn-edit" onclick="event.stopPropagation();editOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">✏️ Edit</button>' +
+                    (o.status === 'COMPLETED' ? '<span style="color:#10b981;font-size:11px;font-weight:700;">✅ Completed</span>' : '<button type="button" class="btn-edit" onclick="event.stopPropagation();editOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">✏️ Edit</button>') +
                     '<button type="button" class="btn-delete" onclick="event.stopPropagation();handleDeleteOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">🗑 Delete</button>' +
                 '</div>' +
             '</div>';
@@ -3110,6 +3128,23 @@ async function fetchNextOrderNo() {
         }
     } catch(e) {}
     return allOrders._nextOrderNo || '1';
+}
+
+
+// ══════════════════════════════════════
+// 🔒 VALIDATE DROPDOWN — rejects values not in the allowed map
+// Used for Party Name, Quality, Tempo No
+// ══════════════════════════════════════
+function validateDropdown(input, validMap) {
+    var val = (input.value || '').trim().toUpperCase();
+    if (!val) return; // empty is OK (handled by required attribute)
+    if (!validMap.has(val)) {
+        input.value = '';
+        input.style.transition = 'background 0.3s';
+        input.style.background = '#fee2e2'; // red flash
+        setTimeout(function() { input.style.background = ''; }, 1200);
+        input.focus();
+    }
 }
 
 </script>
