@@ -206,6 +206,12 @@
         /* ── Order Panel ── */
         #order-panel { display: none; }
         #order-pending-panel { display: none; }
+        #vehicle-panel { display: none; }
+        .veh-table { width:100%; border-collapse:collapse; font-size:11px; }
+        .veh-table th { background:#1e293b; color:#fff; padding:6px 8px; text-align:left; font-size:11px; }
+        .veh-table td { padding:5px 8px; border-bottom:1px solid var(--border); }
+        .veh-table tr:hover { background:#f1f5f9; }
+        .veh-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
         .pending-table { width: 100%; border-collapse: collapse; font-size: 10px; }
         .pending-table th { background: #1e293b; color: #fff; padding: 5px 6px; text-align: left; font-size: 10px; position: sticky; top: 0; white-space: nowrap; }
         .pending-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -319,6 +325,7 @@
     <div class="actions">
         <button type="button" id="verifyNavBtn" style="display:none;" onclick="showVerificationPanel()">🔍 Verify</button>
         <button type="button" id="orderNavBtn" onclick="showOrderPanel()">📋 Orders</button>
+            <button id="vehicleNavBtn" type="button" onclick="showVehiclePanel()" style="display:none;">🚛 Vehicles</button>
             <button id="pendingNavBtn" type="button" onclick="showPendingPanel()" style="display:none;">📋 Pending</button>
             <button id="reportsNavBtn" type="button" onclick="showReportsPanel()" style="display:none;">📊 Reports</button>
         <button type="button" id="formNavBtn" style="display:none;" onclick="showPackingForm()">📦 Packing</button>
@@ -539,6 +546,46 @@
     <div id="report-loading" style="text-align:center;padding:30px;color:var(--text-muted);">📊 Loading reports...</div>
 </div>
 
+<!-- 🚛 Vehicle Management Panel -->
+<div class="container" id="vehicle-panel">
+    <div class="card">
+        <div class="card-title">🚛 Vehicle / Tempo Management</div>
+        <div id="veh-form-container">
+            <div class="veh-form-grid">
+                <div class="form-group">
+                    <label>Tempo No <span class="required-star">*</span></label>
+                    <input type="text" id="veh-tempo" placeholder="e.g. HR-06-AB-1234" oninput="this.value=this.value.toUpperCase();" required>
+                </div>
+                <div class="form-group">
+                    <label>TPT / Driver Name <span class="required-star">*</span></label>
+                    <input type="text" id="veh-driver" placeholder="Driver Full Name" oninput="this.value=this.value.toUpperCase();" required>
+                </div>
+                <div class="form-group">
+                    <label>Driver Mob.</label>
+                    <input type="tel" id="veh-mobile" placeholder="10-digit mobile">
+                </div>
+                <div class="form-group">
+                    <label>Other Details</label>
+                    <input type="text" id="veh-other" placeholder="Transport details" oninput="this.value=this.value.toUpperCase();">
+                </div>
+            </div>
+            <input type="hidden" id="veh-edit-orig">
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button type="button" id="veh-save-btn" onclick="handleSaveVehicle()"
+                    style="flex:1;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+                    ＋ Add Tempo
+                </button>
+                <button type="button" id="veh-cancel-btn" onclick="cancelVehicleEdit()" style="display:none;padding:10px;background:#94a3b8;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+                    ✖ Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card" style="padding:0;">
+        <div id="veh-list-container" style="overflow-x:auto;"></div>
+    </div>
+</div>
+
 <!-- 📋 Order Pending Panel -->
 <div class="container" id="order-pending-panel">
     <div class="card">
@@ -546,6 +593,9 @@
         <div class="pending-filter-bar">
             <select id="pf-party" onchange="onPfPartyChange();renderPendingTable();">
                 <option value="">All Parties</option>
+            </select>
+            <select id="pf-subdealer" onchange="renderPendingTable()">
+                <option value="">All Sub Dealers</option>
             </select>
             <select id="pf-status" onchange="renderPendingTable()">
                 <option value="">All Status</option>
@@ -706,7 +756,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrWHXrOzs7kIz0bRzZZTze-M-pY_mmfT0LQGjoAhvDxNd69GVL8J-hOxAQlIp2h96q/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxn49gdzNFJb7mjjHaInxdJoss1oSIHNeuTQ18do8JFk4erlZC0BwdhNUGrlKoA-SwT/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -761,10 +811,13 @@ function clearSession(showError) {
     session = null;
     localStorage.removeItem('packingAppSession');
     document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('vehicle-panel').style.display = 'none';
     document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('vehicle-panel').style.display = 'none';
     document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('vehicle-panel').style.display = 'none';
     document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('userBar').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
@@ -853,6 +906,7 @@ function enterApp() {
     var canOrders = session.role !== 'DATA_ENTRY';
     document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
     document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
+    document.getElementById('vehicleNavBtn').style.display = '';  // ALL roles can manage vehicles
 
     // Reports panel: ADMIN only
     document.getElementById('reportsNavBtn').style.display =
@@ -865,6 +919,7 @@ function showPackingForm() {
     document.getElementById('verification-panel').style.display = 'none';
     document.getElementById('order-panel').style.display = 'none';
     document.getElementById('reports-panel').style.display = 'none';
+    document.getElementById('vehicle-panel').style.display = 'none';
     document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('packing-slip-form').style.display = '';
     document.getElementById('formNavBtn').style.display = 'none';
@@ -1649,30 +1704,33 @@ function renumberSubRows(blockIdx) {
 // ✅ Change 5: ENTER on Weight → move cursor to next weight input
 // ══════════════════════════════════════
 function onWeightEnter(event, blockIdx, rowId) {
-    if (event.key !== 'Enter') return;
-    event.preventDefault();
+    // Handle Enter key AND Tab key (mobile "Next" button sends Tab)
+    if (event.key !== 'Enter' && event.key !== 'Tab') return;
 
-    var tbody   = document.getElementById('sub-body-' + blockIdx);
-    var blockWts = Array.from(tbody.querySelectorAll('.sub-wt')); // weight inputs in THIS block only
-    var thisWt  = document.getElementById(rowId).querySelector('.sub-wt');
-    var curIdx  = blockWts.indexOf(thisWt);
+    var tbody    = document.getElementById('sub-body-' + blockIdx);
+    var blockWts = Array.from(tbody.querySelectorAll('.sub-wt'));
+    var thisWt   = document.getElementById(rowId).querySelector('.sub-wt');
+    var curIdx   = blockWts.indexOf(thisWt);
+    var isLast   = curIdx >= blockWts.length - 1;
 
-    // If last weight in this block → add new row (copies last row data)
-    if (curIdx >= blockWts.length - 1) {
+    if (isLast) {
+        // Last weight in block → add new row (copies last row qty)
+        event.preventDefault();
         var lastRow = tbody.querySelector('.sub-row:last-child');
         var lastQty = lastRow ? lastRow.querySelector('.sub-qty').value : '';
         addSubRow(blockIdx, lastQty || null, null);
-        // Focus the new weight input
         setTimeout(function() {
             var newWts = tbody.querySelectorAll('.sub-wt');
             var newLast = newWts[newWts.length - 1];
             if (newLast) { newLast.focus(); newLast.select(); }
         }, 50);
-    } else {
-        // Not last → focus next weight in same block
+    } else if (event.key === 'Enter') {
+        // Enter on non-last → focus next weight in same block
+        event.preventDefault();
         blockWts[curIdx + 1].focus();
         blockWts[curIdx + 1].select();
     }
+    // Tab on non-last → browser default (moves to next field naturally)
 }
 
 // ══════════════════════════════════════
@@ -2284,7 +2342,8 @@ function renderVerificationList() {
                 '<th style="' + tds + 'text-align:center;">Pcs</th>' +
                 '<th style="' + tds + 'text-align:right;">Total Wt (Kg)</th>' +
                 '<th style="' + tds + 'text-align:center;">Order ID</th>' +
-                '<th style="' + tds + 'text-align:center;width:70px;">Rate</th></tr>';
+                '<th style="' + tds + 'text-align:center;width:70px;">Rate</th>' +
+                '<th style="' + tds + 'text-align:center;width:60px;">Disc%</th></tr>';
             var sumQty = 0, sumPcs = 0, sumWt = 0;
             tbKeys.forEach(function (k) {
                 var item = tb[k];
@@ -2304,6 +2363,11 @@ function renderVerificationList() {
                     '<input type="number" class="rate-input" data-key="' + key + '" data-quality="' + escapeHtmlJs(k) + '" ' +
                     'value="' + (existingRates[k] || '') + '" placeholder="₹" step="0.01" ' +
                     'onclick="event.stopPropagation()" style="width:60px;padding:3px;text-align:center;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;">' +
+                    '</td>' +
+                    '<td style="' + tds + 'text-align:center;">' +
+                    '<input type="number" class="disc-input" data-key="' + key + '" data-quality="' + escapeHtmlJs(k) + '" ' +
+                    'value="' + (existingRates[k + '_disc'] || '') + '" placeholder="%" step="0.01" ' +
+                    'onclick="event.stopPropagation()" style="width:50px;padding:3px;text-align:center;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;">' +
                     '</td></tr>';
             });
             breakdownHtml += '<tr style="background:#fef3c7;font-weight:700;">' +
@@ -2312,6 +2376,7 @@ function renderVerificationList() {
                 '<td style="' + tds + 'text-align:center;">' + sumQty + '</td>' +
                 '<td style="' + tds + 'text-align:center;">' + sumPcs + '</td>' +
                 '<td style="' + tds + 'text-align:right;">' + sumWt.toFixed(2) + '</td>' +
+                '<td style="' + tds + '"></td>' +
                 '<td style="' + tds + '"></td>' +
                 '<td style="' + tds + '"></td></tr>';
             breakdownHtml += '</table>';
@@ -3109,11 +3174,17 @@ function renderReports(r) {
 async function saveRates(key) {
     // Collect all rate inputs for this slip
     var rateInputs = document.querySelectorAll('.rate-input[data-key="' + key + '"]');
+    var discInputs = document.querySelectorAll('.disc-input[data-key="' + key + '"]');
     var ratesObj = {};
     rateInputs.forEach(function (inp) {
         var qualityKey = inp.getAttribute('data-quality');
         var val = inp.value.trim();
         if (val) ratesObj[qualityKey] = Number(val) || 0;
+    });
+    discInputs.forEach(function (inp) {
+        var qualityKey = inp.getAttribute('data-quality');
+        var val = inp.value.trim();
+        if (val) ratesObj[qualityKey + '_disc'] = Number(val) || 0;
     });
 
     var parts = key.split('__');
@@ -3245,6 +3316,15 @@ function buildPendingFilters() {
         partySel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(parties[k]) + '</option>';
     });
 
+    // Sub Dealer dropdown
+    var sdSel = document.getElementById('pf-subdealer');
+    var subDealers = {};
+    allOrders.forEach(function(o) { if (o.subDealerName) subDealers[o.subDealerName.toUpperCase()] = o.subDealerName; });
+    sdSel.innerHTML = '<option value="">All Sub Dealers</option>';
+    Object.keys(subDealers).sort().forEach(function(k) {
+        sdSel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(subDealers[k]) + '</option>';
+    });
+
     // Quality dropdown (all — filtered by party on change)
     buildPfQualityDropdown();
 }
@@ -3278,6 +3358,7 @@ function getSelectedQualities() {
 
 function renderPendingTable() {
     var partyF   = document.getElementById('pf-party').value.toUpperCase();
+    var sdF      = document.getElementById('pf-subdealer').value.toUpperCase();
     var statusF  = document.getElementById('pf-status').value.toUpperCase();
     var typeF    = document.getElementById('pf-type').value.toUpperCase();
     var itemF    = document.getElementById('pf-item').value.toUpperCase();
@@ -3285,6 +3366,7 @@ function renderPendingTable() {
 
     var filtered = allOrders.filter(function(o) {
         if (partyF  && o.partyName.toUpperCase() !== partyF) return false;
+        if (sdF     && o.subDealerName.toUpperCase() !== sdF) return false;
         if (statusF && o.status.toUpperCase() !== statusF) return false;
         if (typeF   && o.orderType.toUpperCase() !== typeF) return false;
         if (itemF   && o.item.toUpperCase() !== itemF) return false;
@@ -3338,6 +3420,156 @@ function renderPendingTable() {
         '<td class="num">' + totPacked.toLocaleString() + '</td>' +
         '<td class="num">' + totPending.toLocaleString() + '</td>' +
         '</tr></tbody></table>';
+}
+
+
+// ══════════════════════════════════════════
+// 🚛 VEHICLE MANAGEMENT PANEL
+// ══════════════════════════════════════════
+var vehicleList = []; // cached list from server
+
+function showVehiclePanel() {
+    document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('order-pending-panel').style.display = 'none';
+    document.getElementById('reports-panel').style.display = 'none';
+    document.getElementById('vehicle-panel').style.display = 'block';
+    document.getElementById('formNavBtn').style.display = '';
+    document.getElementById('vehicleNavBtn').style.display = 'none';
+    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
+    var canOrders = session.role !== 'DATA_ENTRY';
+    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
+    document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
+    document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
+    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
+    fetchVehicleList();
+}
+
+async function fetchVehicleList() {
+    document.getElementById('veh-list-container').innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Loading...</p>';
+    try {
+        var url = withToken(APPS_SCRIPT_URL + '?t=' + Date.now());
+        var res = await fetch(url, { redirect: 'follow' });
+        var data = await res.json();
+        if (handleAuthFailure(data)) return;
+        if (data.vehicles) {
+            vehicleList = data.vehicles;
+            renderVehicleList();
+            // Also refresh the tempo datalist for the packing form
+            buildVehicleDatalist(vehicleList);
+        }
+    } catch(e) {
+        document.getElementById('veh-list-container').innerHTML = '<p style="text-align:center;color:#ef4444;">Network error!</p>';
+    }
+}
+
+function renderVehicleList() {
+    var container = document.getElementById('veh-list-container');
+    if (!vehicleList.length) {
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">No vehicles saved yet.</p>';
+        return;
+    }
+    container.innerHTML =
+        '<table class="veh-table"><thead><tr>' +
+        '<th>Tempo No</th><th>Driver Name</th><th>Mobile</th><th>Other Details</th><th style="width:90px;">Actions</th>' +
+        '</tr></thead><tbody>' +
+        vehicleList.map(function(v) {
+            return '<tr>' +
+                '<td style="font-weight:700;color:var(--primary);">' + escapeHtmlJs(v.tempoNo) + '</td>' +
+                '<td>' + escapeHtmlJs(v.driverName) + '</td>' +
+                '<td>' + escapeHtmlJs(v.driverMobile || '-') + '</td>' +
+                '<td>' + escapeHtmlJs(v.otherDetails || '-') + '</td>' +
+                '<td style="white-space:nowrap;">' +
+                    '<button onclick="editVehicle(\'' + escapeHtmlJs(v.tempoNo) + '\')" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;cursor:pointer;margin-right:4px;">✏️</button>' +
+                    '<button onclick="handleDeleteVehicle(\'' + escapeHtmlJs(v.tempoNo) + '\')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:4px 8px;font-size:10px;cursor:pointer;">🗑</button>' +
+                '</td></tr>';
+        }).join('') +
+        '</tbody></table>';
+}
+
+function editVehicle(tempoNo) {
+    var v = vehicleList.find(function(x) { return x.tempoNo === tempoNo; });
+    if (!v) return;
+    document.getElementById('veh-tempo').value  = v.tempoNo;
+    document.getElementById('veh-driver').value = v.driverName;
+    document.getElementById('veh-mobile').value = v.driverMobile || '';
+    document.getElementById('veh-other').value  = v.otherDetails || '';
+    document.getElementById('veh-edit-orig').value = v.tempoNo;
+    document.getElementById('veh-save-btn').textContent = '💾 Update Tempo';
+    document.getElementById('veh-cancel-btn').style.display = '';
+}
+
+function cancelVehicleEdit() {
+    document.getElementById('veh-tempo').value = '';
+    document.getElementById('veh-driver').value = '';
+    document.getElementById('veh-mobile').value = '';
+    document.getElementById('veh-other').value = '';
+    document.getElementById('veh-edit-orig').value = '';
+    document.getElementById('veh-save-btn').textContent = '＋ Add Tempo';
+    document.getElementById('veh-cancel-btn').style.display = 'none';
+}
+
+async function handleSaveVehicle() {
+    var tempoNo = document.getElementById('veh-tempo').value.trim();
+    var driverName = document.getElementById('veh-driver').value.trim();
+    if (!tempoNo) { alert('Tempo No zaroori hai!'); return; }
+    if (!driverName) { alert('Driver Name zaroori hai!'); return; }
+
+    var origTempoNo = document.getElementById('veh-edit-orig').value.trim();
+    var isEdit = !!origTempoNo;
+
+    var btn = document.getElementById('veh-save-btn');
+    btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+    var payload = withAuthPayload({
+        action:       isEdit ? 'updateVehicle' : 'saveVehicle',
+        tempoNo:      tempoNo,
+        driverName:   driverName,
+        driverMobile: document.getElementById('veh-mobile').value.trim(),
+        otherDetails: document.getElementById('veh-other').value.trim(),
+        origTempoNo:  origTempoNo
+    });
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+        if (result.success) {
+            cancelVehicleEdit();
+            fetchVehicleList();
+        } else {
+            alert('Error: ' + (result.error || 'Unknown'));
+        }
+    } catch(e) {
+        alert('Network error!');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = isEdit ? '💾 Update Tempo' : '＋ Add Tempo';
+    }
+}
+
+async function handleDeleteVehicle(tempoNo) {
+    if (!confirm('Delete tempo "' + tempoNo + '"?')) return;
+    try {
+        var payload = withAuthPayload({ action: 'deleteVehicle', tempoNo: tempoNo });
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (result.success) fetchVehicleList();
+        else alert('Error: ' + (result.error || 'Unknown'));
+    } catch(e) { alert('Network error!'); }
 }
 
 </script>
