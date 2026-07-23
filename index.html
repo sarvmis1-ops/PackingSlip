@@ -205,6 +205,15 @@
 
         /* ── Order Panel ── */
         #order-panel { display: none; }
+        #order-pending-panel { display: none; }
+        .pending-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        .pending-table th { background: #1e293b; color: #fff; padding: 5px 6px; text-align: left; font-size: 10px; position: sticky; top: 0; white-space: nowrap; }
+        .pending-table td { padding: 4px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .pending-table tr:hover { background: #f1f5f9; }
+        .pending-table .num { text-align: right; font-weight: 600; }
+        .pending-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+        .pending-filter-bar select, .pending-filter-bar input { flex: 1; min-width: 100px; padding: 7px; font-size: 11px; border: 1.5px solid var(--border); border-radius: 8px; }
+        .pf-count { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
         #reports-panel { display: none; }
         .report-card { background: var(--surface); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .report-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--primary); }
@@ -310,6 +319,7 @@
     <div class="actions">
         <button type="button" id="verifyNavBtn" style="display:none;" onclick="showVerificationPanel()">🔍 Verify</button>
         <button type="button" id="orderNavBtn" onclick="showOrderPanel()">📋 Orders</button>
+            <button id="pendingNavBtn" type="button" onclick="showPendingPanel()" style="display:none;">📋 Pending</button>
             <button id="reportsNavBtn" type="button" onclick="showReportsPanel()" style="display:none;">📊 Reports</button>
         <button type="button" id="formNavBtn" style="display:none;" onclick="showPackingForm()">📦 Packing</button>
         <button type="button" class="logout-btn" onclick="handleLogout()">Logout</button>
@@ -529,6 +539,49 @@
     <div id="report-loading" style="text-align:center;padding:30px;color:var(--text-muted);">📊 Loading reports...</div>
 </div>
 
+<!-- 📋 Order Pending Panel -->
+<div class="container" id="order-pending-panel">
+    <div class="card">
+        <div class="card-title">📋 Order — Pending Details</div>
+        <div class="pending-filter-bar">
+            <select id="pf-party" onchange="onPfPartyChange();renderPendingTable();">
+                <option value="">All Parties</option>
+            </select>
+            <select id="pf-status" onchange="renderPendingTable()">
+                <option value="">All Status</option>
+                <option value="PENDING">PENDING</option>
+                <option value="IN PROGRESS">IN PROGRESS</option>
+                <option value="COMPLETED">COMPLETED</option>
+            </select>
+            <select id="pf-type" onchange="renderPendingTable()">
+                <option value="">All Types</option>
+                <option value="BILL">Bill</option>
+                <option value="NB">NB</option>
+            </select>
+            <select id="pf-item" onchange="renderPendingTable()">
+                <option value="">All Items</option>
+                <option value="BORA">BORA</option>
+                <option value="BALE">BALE</option>
+                <option value="ROLL">ROLL</option>
+                <option value="PVC BAG">PVC BAG</option>
+                <option value="LOOSE PCS">LOOSE PCS</option>
+                <option value="BOX">BOX</option>
+                <option value="OTHER">OTHER</option>
+            </select>
+        </div>
+        <div class="pending-filter-bar">
+            <select id="pf-quality" multiple onchange="renderPendingTable()" style="min-height:36px;">
+                <option value="">All Qualities</option>
+            </select>
+            <span style="font-size:10px;color:var(--text-muted);align-self:center;">(Ctrl+click for multi-select)</span>
+        </div>
+        <div class="pf-count" id="pf-count"></div>
+    </div>
+    <div style="overflow-x:auto;">
+        <div id="pending-table-container"></div>
+    </div>
+</div>
+
 <div class="container" id="order-panel">
 
     <!-- Order Form (hidden by default) -->
@@ -653,7 +706,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjU9RWEZGe6dX3CbJl_buScYSslqANcI9k1pUCD7QpwQziozTl1kao2XwCwjRCAQbD/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrWHXrOzs7kIz0bRzZZTze-M-pY_mmfT0LQGjoAhvDxNd69GVL8J-hOxAQlIp2h96q/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -708,8 +761,11 @@ function clearSession(showError) {
     session = null;
     localStorage.removeItem('packingAppSession');
     document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('userBar').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
@@ -796,6 +852,7 @@ function enterApp() {
     // Orders panel: ADMIN + PACKING_INCHARGE only (hidden for DATA_ENTRY)
     var canOrders = session.role !== 'DATA_ENTRY';
     document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
+    document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
 
     // Reports panel: ADMIN only
     document.getElementById('reportsNavBtn').style.display =
@@ -808,6 +865,7 @@ function showPackingForm() {
     document.getElementById('verification-panel').style.display = 'none';
     document.getElementById('order-panel').style.display = 'none';
     document.getElementById('reports-panel').style.display = 'none';
+    document.getElementById('order-pending-panel').style.display = 'none';
     document.getElementById('packing-slip-form').style.display = '';
     document.getElementById('formNavBtn').style.display = 'none';
     var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
@@ -815,6 +873,7 @@ function showPackingForm() {
     document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
     document.getElementById('orderNavBtn').style.display  = canOrders ? '' : 'none';
     document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
     if (itemCounter === 0) addItem();
     if (!slipSyncInterval) startSlipNumberSync();
     startAutoSaveDraft();
@@ -2463,6 +2522,10 @@ async function fetchAllOrders() {
         if (data.nextOrderNo) allOrders._nextOrderNo = data.nextOrderNo;
         if (data.orderSuggestions) buildOrderFieldDatalists(data.orderSuggestions);
         renderOrderList();
+        // Refresh pending panel if visible
+        if (document.getElementById('order-pending-panel').style.display !== 'none') {
+            buildPendingFilters(); renderPendingTable();
+        }
     } catch (err) {
         list.innerHTML = '<p style="text-align:center;color:var(--error);padding:20px;">Network error!</p>';
     }
@@ -3145,6 +3208,136 @@ function validateDropdown(input, validMap) {
         setTimeout(function() { input.style.background = ''; }, 1200);
         input.focus();
     }
+}
+
+
+// ══════════════════════════════════════════
+// 📋 ORDER PENDING PANEL
+// ══════════════════════════════════════════
+function showPendingPanel() {
+    document.getElementById('packing-slip-form').style.display = 'none';
+    document.getElementById('verification-panel').style.display = 'none';
+    document.getElementById('order-panel').style.display = 'none';
+    document.getElementById('reports-panel').style.display = 'none';
+    document.getElementById('order-pending-panel').style.display = 'block';
+    document.getElementById('formNavBtn').style.display = '';
+    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
+    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
+    document.getElementById('orderNavBtn').style.display = '';
+    document.getElementById('pendingNavBtn').style.display = 'none';
+    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
+    // Always fetch fresh order data when opening pending panel
+    document.getElementById('pending-table-container').innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Loading orders...</p>';
+    fetchAllOrders();
+    // fetchAllOrders calls renderOrderList which also triggers our pending build
+    setTimeout(function() { buildPendingFilters(); renderPendingTable(); }, 1500);
+}
+
+function buildPendingFilters() {
+    // Party dropdown
+    var partySel = document.getElementById('pf-party');
+    var parties = {};
+    allOrders.forEach(function(o) { if (o.partyName) parties[o.partyName.toUpperCase()] = o.partyName; });
+    partySel.innerHTML = '<option value="">All Parties</option>';
+    Object.keys(parties).sort().forEach(function(k) {
+        partySel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(parties[k]) + '</option>';
+    });
+
+    // Quality dropdown (all — filtered by party on change)
+    buildPfQualityDropdown();
+}
+
+function onPfPartyChange() {
+    buildPfQualityDropdown();
+}
+
+function buildPfQualityDropdown() {
+    var party = document.getElementById('pf-party').value.toUpperCase();
+    var qualSel = document.getElementById('pf-quality');
+    var qualities = {};
+    allOrders.forEach(function(o) {
+        if (party && o.partyName.toUpperCase() !== party) return;
+        if (o.quality) qualities[o.quality.toUpperCase()] = o.quality;
+    });
+    qualSel.innerHTML = '';
+    Object.keys(qualities).sort().forEach(function(k) {
+        qualSel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(qualities[k]) + '</option>';
+    });
+}
+
+function getSelectedQualities() {
+    var sel = document.getElementById('pf-quality');
+    var vals = [];
+    for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].selected) vals.push(sel.options[i].value.toUpperCase());
+    }
+    return vals;
+}
+
+function renderPendingTable() {
+    var partyF   = document.getElementById('pf-party').value.toUpperCase();
+    var statusF  = document.getElementById('pf-status').value.toUpperCase();
+    var typeF    = document.getElementById('pf-type').value.toUpperCase();
+    var itemF    = document.getElementById('pf-item').value.toUpperCase();
+    var qualFs   = getSelectedQualities();
+
+    var filtered = allOrders.filter(function(o) {
+        if (partyF  && o.partyName.toUpperCase() !== partyF) return false;
+        if (statusF && o.status.toUpperCase() !== statusF) return false;
+        if (typeF   && o.orderType.toUpperCase() !== typeF) return false;
+        if (itemF   && o.item.toUpperCase() !== itemF) return false;
+        if (qualFs.length && qualFs.indexOf(o.quality.toUpperCase()) === -1) return false;
+        return true;
+    });
+
+    // Count
+    document.getElementById('pf-count').textContent =
+        filtered.length + ' order' + (filtered.length !== 1 ? 's' : '') + ' (of ' + allOrders.length + ' total)';
+
+    var container = document.getElementById('pending-table-container');
+    if (!filtered.length) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">No matching orders found.</p>';
+        return;
+    }
+
+    // Totals
+    var totQty = 0, totPacked = 0, totPending = 0;
+
+    var rows = filtered.map(function(o) {
+        totQty += o.quantity; totPacked += (o.packed||0); totPending += o.pendingOrder;
+        var statusColor = o.status === 'PENDING' ? '#f59e0b' : o.status === 'COMPLETED' ? '#10b981' : o.status === 'IN PROGRESS' ? '#2563eb' : '#6b7280';
+        return '<tr>' +
+            '<td>' + escapeHtmlJs(o.orderType || '-') + '</td>' +
+            '<td>' + escapeHtmlJs(o.reviewOrder || '-') + '</td>' +
+            '<td style="font-weight:700;color:var(--primary);">' + escapeHtmlJs(o.orderNo) + '</td>' +
+            '<td>' + escapeHtmlJs(o.orderDate) + '</td>' +
+            '<td>' + escapeHtmlJs(o.orderBy || '-') + '</td>' +
+            '<td style="font-weight:600;">' + escapeHtmlJs(o.partyName) + '</td>' +
+            '<td>' + escapeHtmlJs(o.subDealerName || '-') + '</td>' +
+            '<td>' + escapeHtmlJs(o.transportType || '-') + '</td>' +
+            '<td>' + escapeHtmlJs(o.address || '-') + '</td>' +
+            '<td style="font-weight:600;">' + escapeHtmlJs(o.quality) + '</td>' +
+            '<td>' + escapeHtmlJs(o.item) + '</td>' +
+            '<td class="num">' + o.quantity + '</td>' +
+            '<td class="num" style="color:#2563eb;">' + (o.packed||0) + '</td>' +
+            '<td class="num" style="color:' + (o.pendingOrder > 0 ? '#ef4444' : '#10b981') + ';font-weight:700;">' + o.pendingOrder + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+        '<table class="pending-table"><thead><tr>' +
+        '<th>Order Type</th><th>Review</th><th>Order No</th><th>Date</th><th>Order By</th>' +
+        '<th>Party Name</th><th>Sub Dealer</th><th>Transport</th><th>Address</th>' +
+        '<th>Quality</th><th>Item</th><th class="num">Quantity</th><th class="num">Packed</th><th class="num">Pending</th>' +
+        '</tr></thead><tbody>' + rows +
+        '<tr style="background:#fef3c7;font-weight:700;">' +
+        '<td colspan="11">TOTAL</td>' +
+        '<td class="num">' + totQty.toLocaleString() + '</td>' +
+        '<td class="num">' + totPacked.toLocaleString() + '</td>' +
+        '<td class="num">' + totPending.toLocaleString() + '</td>' +
+        '</tr></tbody></table>';
 }
 
 </script>
