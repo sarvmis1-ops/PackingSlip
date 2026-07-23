@@ -756,7 +756,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxn49gdzNFJb7mjjHaInxdJoss1oSIHNeuTQ18do8JFk4erlZC0BwdhNUGrlKoA-SwT/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsW11npHht9Kdk6KHqubHabhjP2xheIlN3guEHGc1awUUQulVBu2qE2cLgPVPDnxLb/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -916,46 +916,49 @@ function enterApp() {
 }
 
 function showPackingForm() {
-    document.getElementById('verification-panel').style.display = 'none';
-    document.getElementById('order-panel').style.display = 'none';
-    document.getElementById('reports-panel').style.display = 'none';
-    document.getElementById('vehicle-panel').style.display = 'none';
-    document.getElementById('order-pending-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('packing-slip-form').style.display = '';
     document.getElementById('formNavBtn').style.display = 'none';
     var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
     var canOrders = session.role !== 'DATA_ENTRY';
     document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
     document.getElementById('orderNavBtn').style.display  = canOrders ? '' : 'none';
+    document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
+    document.getElementById('vehicleNavBtn').style.display = '';
     document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    // Ensure date is always set (safety for drafts loaded on different day)
+    if (!document.getElementById('date-today').value) {
+        document.getElementById('date-today').valueAsDate = new Date();
+    }
     if (itemCounter === 0) addItem();
     if (!slipSyncInterval) startSlipNumberSync();
     startAutoSaveDraft();
 }
 
 function showVerificationPanel() {
-    document.getElementById('packing-slip-form').style.display = 'none';
-    document.getElementById('order-panel').style.display = 'none';
-    document.getElementById('reports-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('verification-panel').style.display = 'block';
     document.getElementById('formNavBtn').style.display = '';
     document.getElementById('verifyNavBtn').style.display = 'none';
-    document.getElementById('orderNavBtn').style.display = '';
+    document.getElementById('orderNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    document.getElementById('vehicleNavBtn').style.display = '';
+    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
     fetchVerificationSlips();
 }
 
 function showOrderPanel() {
-    document.getElementById('packing-slip-form').style.display = 'none';
-    document.getElementById('verification-panel').style.display = 'none';
-    document.getElementById('reports-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('order-panel').style.display = 'block';
     document.getElementById('formNavBtn').style.display = '';
     var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
     document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
     document.getElementById('orderNavBtn').style.display = 'none';
+    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    document.getElementById('vehicleNavBtn').style.display = '';
+    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
     fetchAllOrders();
@@ -2159,7 +2162,7 @@ function buildFormPayload() {
     return {
         packingType: document.getElementById('packing-type').value,
         header: {
-            date:             document.getElementById('date-today').value,
+            date:             document.getElementById('date-today').value || new Date().toISOString().split('T')[0],
             partyName:        document.getElementById('party-name').value,
             subPartyName:     document.getElementById('sub-party-name').value,
             thirdPartyName:   document.getElementById('third-party-name').value,
@@ -2188,6 +2191,8 @@ function populateFormFromDraft(data, draftId) {
 
     // Header fields
     var h = data.header || {};
+    // Restore date if saved in draft, otherwise keep today's date
+    if (h.date) document.getElementById('date-today').value = h.date;
     document.getElementById('party-name').value       = h.partyName       || '';
     document.getElementById('sub-party-name').value   = h.subPartyName    || '';
     document.getElementById('third-party-name').value = h.thirdPartyName  || '';
@@ -2928,13 +2933,14 @@ async function handleDeleteOrder(orderNo) {
 // 📊 REPORTS PANEL (Admin only)
 // ══════════════════════════════════════════════
 function showReportsPanel() {
-    document.getElementById('packing-slip-form').style.display = 'none';
-    document.getElementById('verification-panel').style.display = 'none';
-    document.getElementById('order-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('reports-panel').style.display = 'block';
     document.getElementById('formNavBtn').style.display = '';
-    document.getElementById('verifyNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display  = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
+    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
+    document.getElementById('orderNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
+    document.getElementById('vehicleNavBtn').style.display = '';
     document.getElementById('reportsNavBtn').style.display = 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
@@ -3286,16 +3292,14 @@ function validateDropdown(input, validMap) {
 // 📋 ORDER PENDING PANEL
 // ══════════════════════════════════════════
 function showPendingPanel() {
-    document.getElementById('packing-slip-form').style.display = 'none';
-    document.getElementById('verification-panel').style.display = 'none';
-    document.getElementById('order-panel').style.display = 'none';
-    document.getElementById('reports-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('order-pending-panel').style.display = 'block';
     document.getElementById('formNavBtn').style.display = '';
     var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
     document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display = '';
+    document.getElementById('orderNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
     document.getElementById('pendingNavBtn').style.display = 'none';
+    document.getElementById('vehicleNavBtn').style.display = '';
     document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
@@ -3429,19 +3433,15 @@ function renderPendingTable() {
 var vehicleList = []; // cached list from server
 
 function showVehiclePanel() {
-    document.getElementById('packing-slip-form').style.display = 'none';
-    document.getElementById('verification-panel').style.display = 'none';
-    document.getElementById('order-panel').style.display = 'none';
-    document.getElementById('order-pending-panel').style.display = 'none';
-    document.getElementById('reports-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('vehicle-panel').style.display = 'block';
     document.getElementById('formNavBtn').style.display = '';
-    document.getElementById('vehicleNavBtn').style.display = 'none';
     var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
     var canOrders = session.role !== 'DATA_ENTRY';
     document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
     document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
     document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
+    document.getElementById('vehicleNavBtn').style.display = 'none';
     document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
@@ -3570,6 +3570,26 @@ async function handleDeleteVehicle(tempoNo) {
         if (result.success) fetchVehicleList();
         else alert('Error: ' + (result.error || 'Unknown'));
     } catch(e) { alert('Network error!'); }
+}
+
+
+// ══════════════════════════════════════
+// 🔒 HIDE ALL PANELS — called before showing any panel
+// Single source of truth — add new panels here only
+// ══════════════════════════════════════
+function hideAllPanels() {
+    var panels = [
+        'packing-slip-form',
+        'verification-panel',
+        'order-panel',
+        'order-pending-panel',
+        'reports-panel',
+        'vehicle-panel'
+    ];
+    panels.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
 }
 
 </script>
