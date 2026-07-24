@@ -207,6 +207,18 @@
         #order-panel { display: none; }
         #order-pending-panel { display: none; }
         #vehicle-panel { display: none; }
+        #pack-orders-panel { display: none; }
+        .po-filter { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+        .po-filter select { padding:8px; font-size:13px; border:1.5px solid var(--border); border-radius:8px; font-weight:600; }
+        .po-table { width:100%; border-collapse:collapse; font-size:12px; }
+        .po-table th { background:#1e293b; color:#fff; padding:6px 8px; text-align:left; font-size:11px; position:sticky; top:0; }
+        .po-table td { padding:6px 8px; border-bottom:1px solid var(--border); }
+        .po-table tr.selected-row { background:#dbeafe; }
+        .po-qty-input { width:65px; padding:5px; text-align:center; border:1.5px solid #86efac; border-radius:6px; font-size:13px; font-weight:700; }
+        .po-check { width:20px; height:20px; accent-color:var(--primary); }
+        .po-create-btn { width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),#7c3aed); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; margin-top:10px; }
+        .po-create-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .locked-indicator { background:#fef3c7; color:#b45309; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:700; margin-bottom:8px; text-align:center; }
         .veh-table { width:100%; border-collapse:collapse; font-size:11px; }
         .veh-table th { background:#1e293b; color:#fff; padding:6px 8px; text-align:left; font-size:11px; }
         .veh-table td { padding:5px 8px; border-bottom:1px solid var(--border); }
@@ -325,6 +337,7 @@
     <div class="actions">
         <button type="button" id="verifyNavBtn" style="display:none;" onclick="showVerificationPanel()">🔍 Verify</button>
         <button type="button" id="orderNavBtn" onclick="showOrderPanel()">📋 Orders</button>
+            <button id="packOrdersNavBtn" type="button" onclick="showPackOrdersPanel()" style="display:none;">📦 Quick Pack</button>
             <button id="vehicleNavBtn" type="button" onclick="showVehiclePanel()" style="display:none;">🚛 Vehicles</button>
             <button id="pendingNavBtn" type="button" onclick="showPendingPanel()" style="display:none;">📋 Pending</button>
             <button id="reportsNavBtn" type="button" onclick="showReportsPanel()" style="display:none;">📊 Reports</button>
@@ -546,6 +559,38 @@
     <div id="report-loading" style="text-align:center;padding:30px;color:var(--text-muted);">📊 Loading reports...</div>
 </div>
 
+<!-- 📦 Pack Orders Panel (Mobile Mode) -->
+<div class="container" id="pack-orders-panel">
+    <div class="card">
+        <div class="card-title">📦 Quick Pack — Select Pending Orders</div>
+        <div class="po-filter">
+            <select id="po-party" onchange="onPoPartyChange()">
+                <option value="">— Select Party —</option>
+            </select>
+            <select id="po-subdealer" onchange="renderPackOrderTable()">
+                <option value="">— All Sub Dealers —</option>
+            </select>
+        </div>
+        <div style="margin-bottom:8px;">
+            <label style="font-size:11px;font-weight:700;color:var(--primary);">👤 Assign Draft To (Data Entry User) <span class="required-star">*</span></label>
+            <select id="po-assign-user" style="width:100%;padding:8px;font-size:13px;border:1.5px solid #7c3aed;border-radius:8px;font-weight:600;background:#faf5ff;">
+                <option value="">— Select User —</option>
+            </select>
+        </div>
+        <div id="po-count" style="font-size:11px;color:var(--text-muted);margin-bottom:6px;"></div>
+    </div>
+    <div style="overflow-x:auto;">
+        <div id="po-table-container"></div>
+    </div>
+    <button type="button" class="po-create-btn" id="po-create-btn" onclick="createPackingDraft()" disabled>
+        📝 Create Packing Slip Draft
+    </button>
+    <div class="card" style="margin-top:10px;">
+        <div class="card-title">📋 Assigned Drafts</div>
+        <div id="po-assigned-drafts" style="font-size:12px;color:var(--text-muted);">Loading...</div>
+    </div>
+</div>
+
 <!-- 🚛 Vehicle Management Panel -->
 <div class="container" id="vehicle-panel">
     <div class="card">
@@ -756,7 +801,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwsW11npHht9Kdk6KHqubHabhjP2xheIlN3guEHGc1awUUQulVBu2qE2cLgPVPDnxLb/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHTzKystVJKXLaidSnPJ_mzeeT4zH3JKiVvJiQANdqJvbb70afhqWUEIlEDR5BnzdS/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -893,40 +938,15 @@ function enterApp() {
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('userBar').style.display = 'flex';
     document.getElementById('userBarName').textContent = session.fullName;
-
-    // Role display label
     var roleLabels = { 'ADMIN': '(Admin)', 'PACKING_INCHARGE': '(Packing Incharge)', 'DATA_ENTRY': '(Data Entry)' };
     document.getElementById('userBarRole').textContent = roleLabels[session.role] || '(' + session.role + ')';
-
-    // Verification panel: ADMIN + PACKING_INCHARGE only
-    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
-    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-
-    // Orders panel: ADMIN + PACKING_INCHARGE only (hidden for DATA_ENTRY)
-    var canOrders = session.role !== 'DATA_ENTRY';
-    document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
-    document.getElementById('vehicleNavBtn').style.display = '';  // ALL roles can manage vehicles
-
-    // Reports panel: ADMIN only
-    document.getElementById('reportsNavBtn').style.display =
-        session.role === 'ADMIN' ? '' : 'none';
-
     showPackingForm();
 }
 
 function showPackingForm() {
     hideAllPanels();
     document.getElementById('packing-slip-form').style.display = '';
-    document.getElementById('formNavBtn').style.display = 'none';
-    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
-    var canOrders = session.role !== 'DATA_ENTRY';
-    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display  = canOrders ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
-    document.getElementById('vehicleNavBtn').style.display = '';
-    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
-    // Ensure date is always set (safety for drafts loaded on different day)
+    updateNavButtons('packing-slip-form');
     if (!document.getElementById('date-today').value) {
         document.getElementById('date-today').valueAsDate = new Date();
     }
@@ -938,12 +958,7 @@ function showPackingForm() {
 function showVerificationPanel() {
     hideAllPanels();
     document.getElementById('verification-panel').style.display = 'block';
-    document.getElementById('formNavBtn').style.display = '';
-    document.getElementById('verifyNavBtn').style.display = 'none';
-    document.getElementById('orderNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
-    document.getElementById('vehicleNavBtn').style.display = '';
-    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    updateNavButtons('verification-panel');
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
     fetchVerificationSlips();
@@ -952,16 +967,10 @@ function showVerificationPanel() {
 function showOrderPanel() {
     hideAllPanels();
     document.getElementById('order-panel').style.display = 'block';
-    document.getElementById('formNavBtn').style.display = '';
-    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
-    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display = 'none';
-    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
-    document.getElementById('vehicleNavBtn').style.display = '';
-    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    updateNavButtons('order-panel');
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
-    fetchAllOrders();
+    ensureAppData().then(function(){ renderOrderList(); });
 }
 
 // Helper: append the current session token as a URL query param
@@ -1300,6 +1309,7 @@ async function fetchSlipNumber(isInitial) {
             buildDraftDropdown(data.drafts || []);
             buildSuggestionDatalists(data.suggestions || null);
             buildOrderIdDropdown(data.pendingOrders || []);
+            if (data.dataEntryUsers) { dataEntryUsers = data.dataEntryUsers; buildAssignUserDropdown(); }
         }
 
         const newNo = data.nextSlipNo || '';
@@ -1504,14 +1514,22 @@ function onPartyNameChange(input) {
     });
     orderIdOptionsHtml = opts.join('');
 
-    // Update all Order ID selects currently visible on-screen
+    // Update all Order ID selects — preserve draft-loaded values
     document.querySelectorAll('.item-order-id').forEach(function (sel) {
         var current = sel.value;
         sel.innerHTML = orderIdOptionsHtml;
-        // Preserve selection only if the order still belongs to this party
-        if (current && orderMap.has(current)) {
-            var order = orderMap.get(current);
-            if (!partyName || order.partyName === partyName) sel.value = current;
+        if (current) {
+            sel.value = current;
+            // If current value not in filtered list, add it as a custom option
+            if (!sel.value) {
+                var label = current;
+                if (orderMap.has(current)) {
+                    var o = orderMap.get(current);
+                    label = current + ' (' + (o.brand||'') + ')';
+                }
+                sel.innerHTML += '<option value="' + escapeHtmlAttr(current) + '" selected>' + escapeHtmlJs(label) + '</option>';
+                sel.value = current;
+            }
         }
     });
 }
@@ -2099,7 +2117,7 @@ async function onDraftSelect() {
         if (handleAuthFailure(result)) return;
 
         if (result.success && result.formData) {
-            populateFormFromDraft(result.formData, draftId);
+            populateFormFromDraft(result.formData, draftId, result.draftType || '');
         } else {
             alert('Draft load failed: ' + (result.error || 'Unknown'));
         }
@@ -2180,7 +2198,7 @@ function buildFormPayload() {
 }
 
 // ── POPULATE FORM from loaded draft JSON ──
-function populateFormFromDraft(data, draftId) {
+function populateFormFromDraft(data, draftId, draftType) {
     currentDraftId = draftId;
 
     // Set packing type first (triggers slip no refresh)
@@ -2252,6 +2270,18 @@ function populateFormFromDraft(data, draftId) {
     var slipField = document.getElementById('slip-sr-no');
     slipField.value = '📝 Draft ' + draftId + ' loaded';
     slipField.style.color = '#7c3aed';
+
+    // Auto-update Order ID dropdowns for the filled Party Name
+    var partyEl = document.getElementById('party-name');
+    if (partyEl && partyEl.value) {
+        onPartyNameChange(partyEl);
+    }
+
+    // 🔒 Lock ONLY ASSIGNED drafts for DATA_ENTRY (from Quick Pack)
+    // OWN drafts (self-created) remain fully editable
+    if (session && session.role === 'DATA_ENTRY' && draftType === 'ASSIGNED') {
+        lockPackingForm();
+    }
 }
 
 // ══════════════════════════════════════════════════════
@@ -2575,6 +2605,7 @@ async function submitVerificationStage(key, stage) {
 // 📋 ORDER COLLECTION PANEL
 // ══════════════════════════════════════════════════════
 let allOrders = [];
+var dataEntryUsers = [];
 let editingOrderNo = null;
 
 async function fetchAllOrders() {
@@ -2935,13 +2966,7 @@ async function handleDeleteOrder(orderNo) {
 function showReportsPanel() {
     hideAllPanels();
     document.getElementById('reports-panel').style.display = 'block';
-    document.getElementById('formNavBtn').style.display = '';
-    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
-    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
-    document.getElementById('vehicleNavBtn').style.display = '';
-    document.getElementById('reportsNavBtn').style.display = 'none';
+    updateNavButtons('reports-panel');
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
     fetchReports();
@@ -3294,20 +3319,11 @@ function validateDropdown(input, validMap) {
 function showPendingPanel() {
     hideAllPanels();
     document.getElementById('order-pending-panel').style.display = 'block';
-    document.getElementById('formNavBtn').style.display = '';
-    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
-    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display = session.role !== 'DATA_ENTRY' ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = 'none';
-    document.getElementById('vehicleNavBtn').style.display = '';
-    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    updateNavButtons('order-pending-panel');
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
-    // Always fetch fresh order data when opening pending panel
-    document.getElementById('pending-table-container').innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Loading orders...</p>';
-    fetchAllOrders();
-    // fetchAllOrders calls renderOrderList which also triggers our pending build
-    setTimeout(function() { buildPendingFilters(); renderPendingTable(); }, 1500);
+    document.getElementById('pending-table-container').innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Loading...</p>';
+    ensureAppData().then(function(){ buildPendingFilters(); renderPendingTable(); });
 }
 
 function buildPendingFilters() {
@@ -3435,14 +3451,7 @@ var vehicleList = []; // cached list from server
 function showVehiclePanel() {
     hideAllPanels();
     document.getElementById('vehicle-panel').style.display = 'block';
-    document.getElementById('formNavBtn').style.display = '';
-    var canVerify = session.role === 'PACKING_INCHARGE' || session.role === 'ADMIN';
-    var canOrders = session.role !== 'DATA_ENTRY';
-    document.getElementById('verifyNavBtn').style.display = canVerify ? '' : 'none';
-    document.getElementById('orderNavBtn').style.display = canOrders ? '' : 'none';
-    document.getElementById('pendingNavBtn').style.display = canOrders ? '' : 'none';
-    document.getElementById('vehicleNavBtn').style.display = 'none';
-    document.getElementById('reportsNavBtn').style.display = session.role === 'ADMIN' ? '' : 'none';
+    updateNavButtons('vehicle-panel');
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
     fetchVehicleList();
@@ -3578,18 +3587,564 @@ async function handleDeleteVehicle(tempoNo) {
 // Single source of truth — add new panels here only
 // ══════════════════════════════════════
 function hideAllPanels() {
-    var panels = [
-        'packing-slip-form',
-        'verification-panel',
-        'order-panel',
-        'order-pending-panel',
-        'reports-panel',
-        'vehicle-panel'
-    ];
-    panels.forEach(function(id) {
+    ['packing-slip-form','verification-panel','order-panel',
+     'order-pending-panel','reports-panel','vehicle-panel','pack-orders-panel'
+    ].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
+}
+
+// 🧭 CENTRALIZED NAV — sets ALL button visibility based on active panel + role
+function updateNavButtons(activePanel) {
+    var r = session ? session.role : '';
+    var canVerify  = r === 'PACKING_INCHARGE' || r === 'ADMIN';
+    var canOrders  = r !== 'DATA_ENTRY';
+    var canPack    = r === 'PACKING_INCHARGE' || r === 'ADMIN';
+    var canReports = r === 'ADMIN';
+
+    var btnMap = {
+        'formNavBtn':       activePanel !== 'packing-slip-form',
+        'verifyNavBtn':     canVerify && activePanel !== 'verification-panel',
+        'orderNavBtn':      canOrders && activePanel !== 'order-panel',
+        'pendingNavBtn':    canOrders && activePanel !== 'order-pending-panel',
+        'vehicleNavBtn':    activePanel !== 'vehicle-panel',
+        'packOrdersNavBtn': canPack && activePanel !== 'pack-orders-panel',
+        'reportsNavBtn':    canReports && activePanel !== 'reports-panel'
+    };
+
+    Object.keys(btnMap).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = btnMap[id] ? '' : 'none';
+    });
+}
+
+// ⚡ CENTRALIZED DATA STORE — fetch once, use everywhere
+var appData = {
+    orders: null,
+    dataEntryUsers: null,
+    lastFetch: 0
+};
+
+async function ensureAppData() {
+    // Refresh if stale (older than 30 seconds) or never fetched
+    if (appData.orders && (Date.now() - appData.lastFetch < 30000)) return;
+
+    try {
+        var url = withToken(APPS_SCRIPT_URL + '?action=listOrders&t=' + Date.now());
+        var res = await fetch(url, { redirect: 'follow' });
+        var data = await res.json();
+        if (handleAuthFailure(data)) return;
+        if (data.success) {
+            allOrders = data.orders || [];
+            if (data.nextOrderNo) allOrders._nextOrderNo = data.nextOrderNo;
+            if (data.orderSuggestions) buildOrderFieldDatalists(data.orderSuggestions);
+            appData.orders = allOrders;
+            appData.lastFetch = Date.now();
+        }
+    } catch(e) {}
+
+    // Also fetch users if needed
+    if (!appData.dataEntryUsers) {
+        try {
+            var url2 = withToken(APPS_SCRIPT_URL + '?t=' + Date.now());
+            var res2 = await fetch(url2, { redirect: 'follow' });
+            var data2 = await res2.json();
+            if (data2.dataEntryUsers) {
+                dataEntryUsers = data2.dataEntryUsers;
+                appData.dataEntryUsers = dataEntryUsers;
+                buildAssignUserDropdown();
+            }
+        } catch(e) {}
+    }
+}
+
+
+// ══════════════════════════════════════════
+// 📦 QUICK PACK — Mobile Mode
+// Select pending orders → auto-create packing draft
+// ══════════════════════════════════════════
+// Fetch DATA_ENTRY users directly if not loaded from initial doGet
+async function fetchDataEntryUsers() {
+    try {
+        var url = withToken(APPS_SCRIPT_URL + '?t=' + Date.now());
+        var res = await fetch(url, { redirect: 'follow' });
+        var data = await res.json();
+        if (data.dataEntryUsers && data.dataEntryUsers.length) {
+            dataEntryUsers = data.dataEntryUsers;
+            buildAssignUserDropdown();
+        }
+    } catch(e) {}
+}
+
+function buildAssignUserDropdown() {
+    var sel = document.getElementById('po-assign-user');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Select User —</option>';
+    dataEntryUsers.forEach(function(u) {
+        sel.innerHTML += '<option value="' + escapeHtmlAttr(u.username) + '">' +
+            escapeHtmlJs(u.fullName) + ' (' + escapeHtmlJs(u.username) + ')</option>';
+    });
+}
+
+function showPackOrdersPanel() {
+    hideAllPanels();
+    document.getElementById('pack-orders-panel').style.display = 'block';
+    updateNavButtons('pack-orders-panel');
+    if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
+    stopAutoSaveDraft();
+    // Load data without page reload
+    ensureAppData().then(function() {
+        buildPoFilters();
+        if (dataEntryUsers.length) buildAssignUserDropdown();
+    });
+    fetchAssignedDrafts();
+}
+
+function buildPoFilters() {
+    var partySel = document.getElementById('po-party');
+    var parties = {};
+    allOrders.forEach(function(o) {
+        if (o.pendingOrder > 0 && o.partyName) parties[o.partyName.toUpperCase()] = o.partyName;
+    });
+    partySel.innerHTML = '<option value="">— Select Party —</option>';
+    Object.keys(parties).sort().forEach(function(k) {
+        partySel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(parties[k]) + '</option>';
+    });
+    document.getElementById('po-subdealer').innerHTML = '<option value="">— All Sub Dealers —</option>';
+    document.getElementById('po-table-container').innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Select a Party to see pending orders</p>';
+    document.getElementById('po-create-btn').disabled = true;
+}
+
+function onPoPartyChange() {
+    var party = document.getElementById('po-party').value.toUpperCase();
+    var sdSel = document.getElementById('po-subdealer');
+    var sds = {};
+    allOrders.forEach(function(o) {
+        if (o.pendingOrder > 0 && o.partyName.toUpperCase() === party && o.subDealerName) {
+            sds[o.subDealerName.toUpperCase()] = o.subDealerName;
+        }
+    });
+    sdSel.innerHTML = '<option value="">— All Sub Dealers —</option>';
+    Object.keys(sds).sort().forEach(function(k) {
+        sdSel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(sds[k]) + '</option>';
+    });
+    renderPackOrderTable();
+}
+
+function renderPackOrderTable() {
+    var party = document.getElementById('po-party').value.toUpperCase();
+    var sd    = document.getElementById('po-subdealer').value.toUpperCase();
+    var container = document.getElementById('po-table-container');
+    var btn = document.getElementById('po-create-btn');
+
+    if (!party) {
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">Select a Party first</p>';
+        btn.disabled = true;
+        return;
+    }
+
+    var pending = allOrders.filter(function(o) {
+        if (o.pendingOrder <= 0) return false;
+        if (o.partyName.toUpperCase() !== party) return false;
+        if (sd && o.subDealerName.toUpperCase() !== sd) return false;
+        return true;
+    });
+
+    document.getElementById('po-count').textContent = pending.length + ' pending order' + (pending.length !== 1 ? 's' : '');
+
+    if (!pending.length) {
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-muted);">No pending orders for this party</p>';
+        btn.disabled = true;
+        return;
+    }
+
+    container.innerHTML =
+        '<table class="po-table"><thead><tr>' +
+        '<th style="width:30px;"><input type="checkbox" class="po-check" onchange="poToggleAll(this)"></th>' +
+        '<th>Order ID</th><th>Quality</th><th>Item</th><th class="num">Pending</th><th style="width:80px;">Pack Qty</th>' +
+        '</tr></thead><tbody>' +
+        pending.map(function(o, i) {
+            return '<tr id="po-row-' + i + '">' +
+                '<td><input type="checkbox" class="po-check po-row-check" data-idx="' + i + '" ' +
+                    'data-order-no="' + escapeHtmlAttr(o.orderNo) + '" ' +
+                    'data-quality="' + escapeHtmlAttr(o.quality) + '" ' +
+                    'data-item="' + escapeHtmlAttr(o.item) + '" ' +
+                    'data-pending="' + o.pendingOrder + '" ' +
+                    'data-address="' + escapeHtmlAttr(o.address || '') + '" ' +
+                    'data-subdealer="' + escapeHtmlAttr(o.subDealerName || '') + '" ' +
+                    'onchange="poRowToggle(this)"></td>' +
+                '<td style="font-weight:700;color:var(--primary);">' + escapeHtmlJs(o.orderNo) + '</td>' +
+                '<td style="font-weight:600;">' + escapeHtmlJs(o.quality) + '</td>' +
+                '<td>' + escapeHtmlJs(o.item) + '</td>' +
+                '<td class="num" style="color:#ef4444;font-weight:700;">' + o.pendingOrder + '</td>' +
+                '<td><input type="number" class="po-qty-input" data-idx="' + i + '" ' +
+                    'value="' + o.pendingOrder + '" min="1" max="' + o.pendingOrder + '" ' +
+                    'onchange="poClampQty(this,' + o.pendingOrder + ')"></td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody></table>';
+    btn.disabled = true; // user must check at least one row
+}
+
+function poToggleAll(masterCb) {
+    document.querySelectorAll('.po-row-check').forEach(function(cb) {
+        cb.checked = masterCb.checked;
+        poRowToggle(cb);
+    });
+}
+
+function poRowToggle(cb) {
+    var row = document.getElementById('po-row-' + cb.getAttribute('data-idx'));
+    if (row) row.className = cb.checked ? 'selected-row' : '';
+    // Enable/disable create button based on any checked
+    var anyChecked = document.querySelectorAll('.po-row-check:checked').length > 0;
+    document.getElementById('po-create-btn').disabled = !anyChecked;
+}
+
+function poClampQty(input, maxQty) {
+    var val = parseInt(input.value, 10);
+    if (isNaN(val) || val < 1) input.value = 1;
+    if (val > maxQty) input.value = maxQty; // can only decrease
+}
+
+// ══════════════════════════════════════════
+// 📝 CREATE PACKING DRAFT from selected orders
+// ══════════════════════════════════════════
+async function createPackingDraft() {
+    var assignUser = document.getElementById('po-assign-user').value;
+    if (!assignUser) { alert('Assign To user select karein!'); document.getElementById('po-assign-user').focus(); return; }
+
+    var checked = document.querySelectorAll('.po-row-check:checked');
+    if (!checked.length) { alert('Select at least one order!'); return; }
+
+    var partyName  = document.getElementById('po-party').value;
+    var subDealer  = document.getElementById('po-subdealer').value || '';
+    var address    = '';
+
+    // Build items array from selected rows
+    var items = [];
+    checked.forEach(function(cb) {
+        var idx = cb.getAttribute('data-idx');
+        var qtyInput = document.querySelector('.po-qty-input[data-idx="' + idx + '"]');
+        var packQty = parseInt(qtyInput.value, 10) || 0;
+        if (packQty <= 0) return;
+
+        if (!address) address = cb.getAttribute('data-address') || '';
+        if (!subDealer) subDealer = cb.getAttribute('data-subdealer') || '';
+
+        items.push({
+            orderId:  cb.getAttribute('data-order-no'),
+            brand:    cb.getAttribute('data-quality'),
+            type:     cb.getAttribute('data-item'),
+            packQty:  packQty
+        });
+    });
+
+    if (!items.length) { alert('No valid quantities!'); return; }
+
+    var btn = document.getElementById('po-create-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Creating Draft...';
+
+    // Build draft payload matching the packing form structure
+    var draftData = {
+        header: {
+            date: new Date().toISOString().split('T')[0],
+            invoiceNo: '',
+            partyName: partyName,
+            subPartyName: subDealer || partyName,
+            thirdPartyName: address,
+            privateMarka: '',
+            contractorName: ''
+        },
+        dispatch: {
+            tempoNo: '',
+            driverName: '',
+            driverMobile: '',
+            supervisorName: ''
+        },
+        items: items.map(function(it, idx) {
+            // Build sub-rows: one sub-row per pack qty unit
+            var stdPcs = brandMap.has(it.brand.toUpperCase()) ? brandMap.get(it.brand.toUpperCase()) : 0;
+            var subRows = [];
+            var isBagType = it.type.toUpperCase().indexOf('BAG') >= 0;
+            if (isBagType) {
+                // BAG types: only 1 SR row with full quantity (user can add more after loading)
+                subRows.push({ sr: 1, qty: it.packQty, wt: '' });
+            } else {
+                for (var s = 1; s <= it.packQty; s++) {
+                    subRows.push({ sr: s, qty: stdPcs || '', wt: '' });
+                }
+            }
+            return {
+                orderId: it.orderId,
+                brand: it.brand,
+                type: it.type,
+                stdPcs: brandMap.has(it.brand.toUpperCase()) ? brandMap.get(it.brand.toUpperCase()) : 0,
+                subRows: subRows
+            };
+        }),
+        packingType: 'Billed',
+        lockedDraft: true  // Flag: this draft is auto-generated and locked
+    };
+
+    // Save via existing draft API
+    var payload = withAuthPayload({
+        action:     'saveDraft',
+        draftId:    '',
+        packingType: draftData.packingType,
+        partyName:  partyName,
+        header:     draftData.header,
+        dispatch:   draftData.dispatch,
+        items:      draftData.items,
+        lockedDraft: true
+    });
+    // The draft JSON needs to be the full formData blob
+    payload.formData = JSON.stringify(draftData);
+    payload.assignToUser = assignUser; // Save draft under this DATA_ENTRY user
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+        if (result.success) {
+            alert('✅ Draft created: ' + result.draftId + '\nAssigned to: ' + assignUser + '\nParty: ' + partyName + '\nItems: ' + items.length + '\n\nUser will see this draft in their Packing Form.');
+            btn.textContent = '✅ Draft Created!';
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.textContent = '📝 Create Packing Slip Draft';
+            }, 2000);
+        } else {
+            alert('Error: ' + (result.error || 'Unknown'));
+            btn.disabled = false;
+            btn.textContent = '📝 Create Packing Slip Draft';
+        }
+    } catch(e) {
+        alert('Network error!');
+        btn.disabled = false;
+        btn.textContent = '📝 Create Packing Slip Draft';
+    }
+}
+
+
+// ══════════════════════════════════════════
+// 🔒 LOCK/UNLOCK PACKING FORM (for Quick Pack drafts)
+// ══════════════════════════════════════════
+var isFormLocked = false;
+
+function lockPackingForm() {
+    isFormLocked = true;
+    var form = document.getElementById('packing-slip-form');
+    if (!form) return;
+
+    // Show lock indicator
+    var oldIndicator = document.getElementById('lock-indicator');
+    if (oldIndicator) oldIndicator.remove();
+    var indicator = document.createElement('div');
+    indicator.className = 'locked-indicator';
+    indicator.id = 'lock-indicator';
+    indicator.textContent = '🔒 Draft Loaded — Only Dispatch & Weights editable';
+    form.insertBefore(indicator, form.firstChild);
+
+    // LOCK these fields (grey, no interaction)
+    var lockIds = ['party-name', 'ship-to', 'delivery-address', 'date-today', 'slip-sr-no'];
+    lockIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.readOnly = true; el.style.background = '#e2e8f0'; el.style.pointerEvents = 'none'; }
+    });
+
+    // EDITABLE: private-marka, contractor-name (explicitly NOT locked)
+    // These stay editable — do nothing to them
+
+    // Lock all order-id selects, brand inputs, item-type selects
+    form.querySelectorAll('.item-order-id').forEach(function(sel) {
+        sel.disabled = true; sel.style.background = '#e2e8f0';
+    });
+    form.querySelectorAll('.item-brand').forEach(function(inp) {
+        inp.readOnly = true; inp.style.background = '#e2e8f0'; inp.style.pointerEvents = 'none';
+    });
+    form.querySelectorAll('.item-type').forEach(function(sel) {
+        sel.disabled = true; sel.style.background = '#e2e8f0';
+    });
+
+    // Qty fields stay EDITABLE for DATA_ENTRY (they may need to adjust)
+
+    // Lock packing type radio
+    form.querySelectorAll('input[name="packingType"]').forEach(function(inp) {
+        inp.disabled = true;
+    });
+
+    // Hide/disable add/remove buttons (actual classes from templates)
+    form.querySelectorAll('.del-item-btn, .btn-del-row, .add-row-btn').forEach(function(btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.3';
+        btn.style.pointerEvents = 'none';
+    });
+
+    // Hide all remove buttons for items and sub-rows
+
+
+    // Disable "+Add New Item Block" button
+    form.querySelectorAll('.add-item-btn, [onclick*="addItem"]').forEach(function(btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.3';
+        btn.style.pointerEvents = 'none';
+    });
+
+    // EDITABLE fields (remain untouched):
+    // private-marka, contractor-name, tempo-no, driver-name, driver-mobile,
+    // supervisor-name, .sub-wt (weight inputs), Finish button
+}
+
+function unlockPackingForm() {
+    isFormLocked = false;
+    // Re-enable remove buttons
+    var form = document.getElementById('packing-slip-form');
+    if (form) {
+    form.querySelectorAll('.del-item-btn, .btn-del-row').forEach(function(btn) {
+        btn.disabled = false; btn.style.opacity = ''; btn.style.pointerEvents = '';
+    });
+    form.querySelectorAll('.add-item-btn, [onclick*="addItem"]').forEach(function(btn) {
+        btn.disabled = false; btn.style.opacity = ''; btn.style.pointerEvents = '';
+    });
+    }
+    var indicator = document.getElementById('lock-indicator');
+    if (indicator) indicator.remove();
+
+    var form = document.getElementById('packing-slip-form');
+    if (!form) return;
+
+    var lockIds = ['party-name', 'ship-to', 'delivery-address'];
+    lockIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.readOnly = false; el.style.background = ''; el.style.pointerEvents = ''; }
+    });
+    form.querySelectorAll('.item-order-id').forEach(function(sel) {
+        sel.disabled = false; sel.style.background = '';
+    });
+    form.querySelectorAll('.item-brand').forEach(function(inp) {
+        inp.readOnly = false; inp.style.background = ''; inp.style.pointerEvents = '';
+    });
+}
+
+
+// ══════════════════════════════════════════
+// 📋 ASSIGNED DRAFTS — show in Quick Pack panel
+// ══════════════════════════════════════════
+async function fetchAssignedDrafts() {
+    var container = document.getElementById('po-assigned-drafts');
+    if (!container) return;
+    container.innerHTML = '<span style="color:var(--text-muted);">Loading drafts...</span>';
+
+    try {
+        // Fetch drafts for ALL data entry users
+        var url = withToken(APPS_SCRIPT_URL + '?action=listAllQuickPackDrafts&t=' + Date.now());
+        var res = await fetch(url, { redirect: 'follow' });
+        var data = await res.json();
+        if (handleAuthFailure(data)) return;
+
+        var drafts = data.quickPackDrafts || [];
+        renderAssignedDrafts(drafts);
+    } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Error loading drafts</span>';
+    }
+}
+
+function renderAssignedDrafts(drafts) {
+    var container = document.getElementById('po-assigned-drafts');
+    if (!drafts.length) {
+        container.innerHTML = '<p style="color:var(--text-muted);text-align:center;">No assigned drafts yet</p>';
+        return;
+    }
+
+    container.innerHTML =
+        '<table style="width:100%;border-collapse:collapse;font-size:11px;">' +
+        '<tr style="background:#f1f5f9;"><th style="padding:4px 6px;text-align:left;">Draft ID</th>' +
+        '<th style="padding:4px 6px;">Assigned To</th><th style="padding:4px 6px;">Party</th>' +
+        '<th style="padding:4px 6px;">Saved</th><th style="padding:4px 6px;">Actions</th></tr>' +
+        drafts.map(function(d) {
+            return '<tr style="border-bottom:1px solid var(--border);">' +
+                '<td style="padding:4px 6px;font-weight:700;color:var(--primary);">' + escapeHtmlJs(d.draftId) + '</td>' +
+                '<td style="padding:4px 6px;font-weight:600;">' + escapeHtmlJs(d.username || '-') + '</td>' +
+                '<td style="padding:4px 6px;">' + escapeHtmlJs(d.partyName || '-') + '</td>' +
+                '<td style="padding:4px 6px;font-size:10px;">' + escapeHtmlJs(d.savedAt || '') + '</td>' +
+                '<td style="padding:4px 6px;white-space:nowrap;">' +
+                    '<button onclick="loadDraftForEdit(\'' + escapeHtmlJs(d.draftId) + '\')" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;margin-right:3px;">✏️ Edit</button>' +
+                    '<button onclick="deleteAssignedDraft(\'' + escapeHtmlJs(d.draftId) + '\')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;">🗑</button>' +
+                '</td></tr>';
+        }).join('') +
+        '</table>';
+}
+
+async function loadDraftForEdit(draftId) {
+    // Switch to packing form and load the draft
+    showPackingForm();
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(withAuthPayload({ action: 'loadDraft', draftId: draftId })),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+        if (result.success && result.formData) {
+            populateFormFromDraft(result.formData, draftId);
+            // For INCHARGE/ADMIN editing, DON'T lock the form
+            unlockPackingForm();
+        } else {
+            alert('Error: ' + (result.error || 'Draft not found'));
+        }
+    } catch(e) {
+        alert('Network error!');
+    }
+}
+
+async function deleteAssignedDraft(draftId) {
+    if (!confirm('Delete draft "' + draftId + '"?')) return;
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(withAuthPayload({ action: 'deleteDraft', draftId: draftId })),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (result.success) fetchAssignedDrafts();
+        else alert('Error: ' + (result.error || 'Unknown'));
+    } catch(e) { alert('Network error!'); }
+}
+
+
+// ══════════════════════════════════════
+// 📋 AUTO-FILL QTY DOWN — fill same value to all rows below
+// Only fills EMPTY rows below the changed row
+// ══════════════════════════════════════
+function autoFillQtyDown(input, blockIdx) {
+    var val = input.value;
+    if (!val) return;
+
+    var tbody = document.getElementById('sub-body-' + blockIdx);
+    if (!tbody) return;
+
+    var allQty = Array.from(tbody.querySelectorAll('.sub-qty'));
+    var thisIdx = allQty.indexOf(input);
+    if (thisIdx < 0) return;
+
+    // Fill all rows BELOW this one (only if empty or zero)
+    for (var i = thisIdx + 1; i < allQty.length; i++) {
+        if (!allQty[i].value || allQty[i].value === '0' || allQty[i].value === '') {
+            allQty[i].value = val;
+        }
+    }
+    updateItemTotal(blockIdx);
+    debouncedCalculateTotals();
 }
 
 </script>
