@@ -801,7 +801,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHTzKystVJKXLaidSnPJ_mzeeT4zH3JKiVvJiQANdqJvbb70afhqWUEIlEDR5BnzdS/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXexiysHWb5HR6I3Jwysi2-5sDkC4DDXyMzppmHOT5ILJEzBH3v_hM9vTWt82LAhWy/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1121,6 +1121,14 @@ function onOrderIdChange(selectEl) {
                 typeMatched = true;
                 break;
             }
+        }
+    }
+
+    // ── Auto-fill Ship To from order sub-dealer ──
+    if (order.subDealerName) {
+        var shipToEl = document.getElementById('ship-to');
+        if (shipToEl && !shipToEl.value) {
+            shipToEl.value = order.subDealerName;
         }
     }
 
@@ -1725,33 +1733,31 @@ function renumberSubRows(blockIdx) {
 // ✅ Change 5: ENTER on Weight → move cursor to next weight input
 // ══════════════════════════════════════
 function onWeightEnter(event, blockIdx, rowId) {
-    // Handle Enter key AND Tab key (mobile "Next" button sends Tab)
     if (event.key !== 'Enter' && event.key !== 'Tab') return;
+    event.preventDefault();
 
-    var tbody    = document.getElementById('sub-body-' + blockIdx);
-    var blockWts = Array.from(tbody.querySelectorAll('.sub-wt'));
-    var thisWt   = document.getElementById(rowId).querySelector('.sub-wt');
-    var curIdx   = blockWts.indexOf(thisWt);
-    var isLast   = curIdx >= blockWts.length - 1;
+    var thisWt = document.getElementById(rowId).querySelector('.sub-wt');
 
-    if (isLast) {
-        // Last weight in block → add new row (copies last row qty)
-        event.preventDefault();
-        var lastRow = tbody.querySelector('.sub-row:last-child');
+    // Get ALL weight inputs on the entire page (across all blocks)
+    var allWts = Array.from(document.querySelectorAll('.sub-wt'));
+    var curIdx = allWts.indexOf(thisWt);
+
+    if (curIdx >= 0 && curIdx < allWts.length - 1) {
+        // Not the last weight on page → move cursor DOWN to next weight
+        allWts[curIdx + 1].focus();
+        allWts[curIdx + 1].select();
+    } else {
+        // Last weight on entire page → add new row in current block
+        var tbody = document.getElementById('sub-body-' + blockIdx);
+        var lastRow = tbody ? tbody.querySelector('.sub-row:last-child') : null;
         var lastQty = lastRow ? lastRow.querySelector('.sub-qty').value : '';
         addSubRow(blockIdx, lastQty || null, null);
         setTimeout(function() {
-            var newWts = tbody.querySelectorAll('.sub-wt');
+            var newWts = Array.from(document.querySelectorAll('.sub-wt'));
             var newLast = newWts[newWts.length - 1];
             if (newLast) { newLast.focus(); newLast.select(); }
         }, 50);
-    } else if (event.key === 'Enter') {
-        // Enter on non-last → focus next weight in same block
-        event.preventDefault();
-        blockWts[curIdx + 1].focus();
-        blockWts[curIdx + 1].select();
     }
-    // Tab on non-last → browser default (moves to next field naturally)
 }
 
 // ══════════════════════════════════════
@@ -3822,7 +3828,7 @@ async function createPackingDraft() {
     var subDealer  = document.getElementById('po-subdealer').value || '';
     var address    = '';
 
-    // Build items array from selected rows
+    // Build items array from selected rows — get sub-dealer from order data
     var items = [];
     checked.forEach(function(cb) {
         var idx = cb.getAttribute('data-idx');
@@ -3830,8 +3836,10 @@ async function createPackingDraft() {
         var packQty = parseInt(qtyInput.value, 10) || 0;
         if (packQty <= 0) return;
 
+        // Get address and sub-dealer from order data
         if (!address) address = cb.getAttribute('data-address') || '';
-        if (!subDealer) subDealer = cb.getAttribute('data-subdealer') || '';
+        var orderSubDealer = cb.getAttribute('data-subdealer') || '';
+        if (!subDealer && orderSubDealer) subDealer = orderSubDealer;
 
         items.push({
             orderId:  cb.getAttribute('data-order-no'),
