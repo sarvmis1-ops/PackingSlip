@@ -83,6 +83,7 @@
         /* Sub-rows: col order Sr | Qty | Wt | Actions */
         .sub-row td { text-align: center; background: #fff; }
         .sub-row td.sr-cell { font-weight: 700; color: #475569; background: #f8fafc; width: 30px; font-size: 12px; }
+        .sub-row td.marka-cell { background: #faf5ff; font-size: 10px; font-weight: 700; color: #7c3aed; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
         .sub-row input { border: 1px solid #d1d5db; border-radius: 5px; padding: 6px 3px; font-size: 13px; width: 100%; text-align: center; background: #fff; }
         .sub-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
 
@@ -462,6 +463,16 @@
             <input type="text" id="supervisor-name" placeholder="Supervisor Name"
                 oninput="convertToUpperCase(this)" required>
         </div>
+        <div class="form-group">
+            <label>Dispatch From</label>
+            <select id="dispatch-from" style="font-weight:600;">
+                <option value="">— Select —</option>
+                <option value="GROUND FLOOR">GROUND FLOOR</option>
+                <option value="FIRST FLOOR">FIRST FLOOR</option>
+                <option value="SECOND FLOOR">SECOND FLOOR</option>
+                <option value="GODOWN 3">GODOWN 3</option>
+            </select>
+        </div>
     </div>
 
     <!-- Item Details Card -->
@@ -687,7 +698,14 @@
                 <label>Order No <span class="required-star">*</span></label>
                 <input type="text" id="ord-no" placeholder="Auto from sheet..." readonly
                     style="background:#f1f5f9;font-weight:700;color:var(--primary);">
-                <span style="font-size:10px;color:var(--text-muted);">Auto-assigned per Quality row (e.g. 5, 5A, 5B)</span>
+            </div>
+            <div class="form-group">
+                <label>Order Type <span class="required-star">*</span></label>
+                <select id="ord-type" required>
+                    <option value="">Select Type</option>
+                    <option value="BILL">Bill</option>
+                    <option value="NB">NB</option>
+                </select>
             </div>
             <div class="form-group">
                 <label>Order Date</label>
@@ -709,6 +727,18 @@
                 <label>Address</label>
                 <input type="text" id="ord-address" placeholder="Address" list="dl-ord-address" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
+            <div class="form-group">
+                <label>Buyer Name</label>
+                <input type="text" id="ord-buyer" placeholder="Buyer Name" list="dl-ord-buyer" oninput="convertToUpperCase(this)" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Mob.</label>
+                <input type="tel" id="ord-mob" placeholder="Mobile No">
+            </div>
+            <div class="form-group">
+                <label>Private Marka</label>
+                <input type="text" id="ord-private-marka" placeholder="Private Marka" oninput="convertToUpperCase(this)">
+            </div>
         </div>
         <!-- Quality Rows (dynamic — one per quality) -->
         <div style="margin-bottom:8px;">
@@ -718,6 +748,9 @@
                 style="width:100%;background:#f0fdf4;color:#166534;border:1.5px dashed #86efac;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">
                 ＋ Add Another Quality
             </button>
+            <div id="ord-grand-total" style="margin-top:6px;padding:8px 12px;background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;font-size:14px;font-weight:800;color:#b45309;display:none;">
+                Grand Total Qty: <span id="ord-grand-total-val">0</span>
+            </div>
         </div>
         <div class="order-form-grid">
             <div class="form-group">
@@ -743,14 +776,6 @@
                 <input type="text" id="ord-transporter" placeholder="Transporter Name" list="dl-ord-transporter" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Buyer Name</label>
-                <input type="text" id="ord-buyer" placeholder="Buyer Name" list="dl-ord-buyer" oninput="convertToUpperCase(this)" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label>Mob.</label>
-                <input type="tel" id="ord-mob" placeholder="Mobile No">
-            </div>
-            <div class="form-group">
                 <label>Review Order</label>
                 <select id="ord-review">
                     <option value="">Select</option>
@@ -759,14 +784,6 @@
                     <option value="PARTIAL HOLD">PARTIAL HOLD</option>
                     <option value="STARTED">STARTED</option>
                     <option value="CANCEL">CANCEL</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Order Type <span class="required-star">*</span></label>
-                <select id="ord-type" required>
-                    <option value="">Select Type</option>
-                    <option value="BILL">Bill</option>
-                    <option value="NB">NB</option>
                 </select>
             </div>
         </div>
@@ -801,7 +818,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXexiysHWb5HR6I3Jwysi2-5sDkC4DDXyMzppmHOT5ILJEzBH3v_hM9vTWt82LAhWy/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9U8dtHN5dzx0uHF6nNuSps8_ORmebyHki0MDvULyoSO0guLke9CKRGw1o_MBHAEE5/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1124,9 +1141,16 @@ function onOrderIdChange(selectEl) {
         }
     }
 
+    // ── Auto-fill Private Marka from order ──
+    var markaDisplay = block.querySelector('.item-marka-val');
+    if (markaDisplay) {
+        markaDisplay.textContent = order.privateMarka || '-';
+        markaDisplay.setAttribute('data-marka', order.privateMarka || '');
+    }
+
     // ── Auto-fill Ship To from order sub-dealer ──
     if (order.subDealerName) {
-        var shipToEl = document.getElementById('ship-to');
+        var shipToEl = document.getElementById('sub-party-name');
         if (shipToEl && !shipToEl.value) {
             shipToEl.value = order.subDealerName;
         }
@@ -1600,7 +1624,7 @@ function addItem() {
                 </tr>
                 <tr class="item-green-header">
                     <td style="width:30px;text-align:center;">Sr.</td>
-                    <td style="text-align:center;">Quantity</td>
+                    <td style="text-align:center;">Qty</td>
                     <td style="text-align:center;">Weight (Kg)</td>
                     <td style="width:36px;text-align:center;">Del</td>
                 </tr>
@@ -1608,18 +1632,14 @@ function addItem() {
             <tbody class="sub-rows-body" id="sub-body-${idx}"></tbody>
             <tfoot>
                 <tr class="item-total-tr" id="item-total-${idx}">
-                    <td>Item Total</td>
-                    <td class="itotal-qty" style="text-align:center;">0</td>
-                    <td class="itotal-wt" style="text-align:center;">0.00</td>
+                    <td style="font-weight:700;">Total</td>
+                    <td class="itotal-qty" style="text-align:center;font-weight:700;">0</td>
+                    <td class="itotal-wt" style="text-align:center;font-weight:700;">0.00</td>
                     <td></td>
                 </tr>
             </tfoot>
         </table>
-        <div class="add-row-wrap">
-            <button type="button" class="add-row-btn" onclick="addRowCopyLast(${idx})">
-                ＋ Add Row &nbsp;<span style="font-size:10px;opacity:0.7;">(copies last row)</span>
-            </button>
-        </div>
+        <!-- Add Row via Enter/Next key only -->
     `;
 
     container.appendChild(block);
@@ -1653,6 +1673,7 @@ function addSubRow(blockIdx, qty, wt) {
             <input type="number" class="sub-qty" min="0" placeholder="0"
                 value="${qtyVal}"
                 oninput="updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
+                onchange="autoFillQtyDown(this, ${blockIdx})"
                 style="border-radius:5px;">
         </td>
         <td>
@@ -2198,7 +2219,8 @@ function buildFormPayload() {
             tempoNo:        document.getElementById('tempo-no').value,
             driverName:     document.getElementById('driver-name').value,
             driverMobile:   document.getElementById('driver-mobile').value,
-            supervisorName: document.getElementById('supervisor-name').value
+            supervisorName:   document.getElementById('supervisor-name').value,
+            dispatchFrom:     document.getElementById('dispatch-from').value
         }
     };
 }
@@ -2229,6 +2251,7 @@ function populateFormFromDraft(data, draftId, draftType) {
     document.getElementById('driver-name').value     = d.driverName     || '';
     document.getElementById('driver-mobile').value   = d.driverMobile   || '';
     document.getElementById('supervisor-name').value = d.supervisorName || '';
+    if (document.getElementById('dispatch-from')) document.getElementById('dispatch-from').value = d.dispatchFrom || '';
 
     // Rebuild item blocks from draft items
     var container = document.getElementById('items-container');
@@ -2250,6 +2273,12 @@ function populateFormFromDraft(data, draftId, draftType) {
         // Set type, brand, and order ID
         if (item.type)  block.querySelector('.item-type').value  = item.type;
         if (item.brand) block.querySelector('.item-brand').value = item.brand;
+        // Restore Private Marka display
+        var draftMarkaEl = block.querySelector('.item-marka-val');
+        if (draftMarkaEl && item.privateMarka) {
+            draftMarkaEl.textContent = item.privateMarka;
+            draftMarkaEl.setAttribute('data-marka', item.privateMarka);
+        }
         if (item.orderId) {
             var orderSel = block.querySelector('.item-order-id');
             if (orderSel) orderSel.value = item.orderId;
@@ -2744,6 +2773,7 @@ function showOrderForm(order) {
         document.getElementById('ord-buyer').value             = order.buyerName || '';
         document.getElementById('ord-mob').value               = order.mob || '';
         document.getElementById('ord-review').value            = order.reviewOrder || '';
+        document.getElementById('ord-private-marka').value      = order.privateMarka || '';
         document.getElementById('ord-type').value              = order.orderType || '';
     } else {
         editingOrderNo = null;
@@ -2769,6 +2799,7 @@ function showOrderForm(order) {
         document.getElementById('ord-buyer').value = '';
         document.getElementById('ord-mob').value = '';
         document.getElementById('ord-review').value = '';
+        document.getElementById('ord-private-marka').value = '';
         document.getElementById('ord-type').value = '';
         // Start with one empty quality row
         clearQualityRows();
@@ -2808,7 +2839,7 @@ function addQualityRow(quality, item, qty) {
         '</div>' +
         '<div>' +
             '<label>Qty *</label>' +
-            '<input type="number" class="qr-qty" min="1" placeholder="0" value="' + (qty || '') + '">' +
+            '<input type="number" class="qr-qty" min="1" placeholder="0" value="' + (qty || '') + '" oninput="updateOrdGrandTotal()">' +
         '</div>' +
         '<button type="button" class="btn-remove-quality" onclick="removeQualityRow(\'' + id + '\')" title="Remove">×</button>';
     container.appendChild(div);
@@ -2906,6 +2937,7 @@ async function handleSaveOrder() {
         buyerName:          document.getElementById('ord-buyer').value,
         mob:                document.getElementById('ord-mob').value,
         reviewOrder:        document.getElementById('ord-review').value,
+        privateMarka:       document.getElementById('ord-private-marka').value,
         orderType:          document.getElementById('ord-type').value
     });
 
@@ -3825,10 +3857,10 @@ async function createPackingDraft() {
     if (!checked.length) { alert('Select at least one order!'); return; }
 
     var partyName  = document.getElementById('po-party').value;
-    var subDealer  = document.getElementById('po-subdealer').value || '';
+    var subDealer  = '';
     var address    = '';
 
-    // Build items array from selected rows — get sub-dealer from order data
+    // Build items array — always get sub-dealer from first checked order
     var items = [];
     checked.forEach(function(cb) {
         var idx = cb.getAttribute('data-idx');
@@ -3836,7 +3868,7 @@ async function createPackingDraft() {
         var packQty = parseInt(qtyInput.value, 10) || 0;
         if (packQty <= 0) return;
 
-        // Get address and sub-dealer from order data
+        // Get address and sub-dealer from ORDER DATA (not filter dropdown)
         if (!address) address = cb.getAttribute('data-address') || '';
         var orderSubDealer = cb.getAttribute('data-subdealer') || '';
         if (!subDealer && orderSubDealer) subDealer = orderSubDealer;
@@ -3961,7 +3993,7 @@ function lockPackingForm() {
     form.insertBefore(indicator, form.firstChild);
 
     // LOCK these fields (grey, no interaction)
-    var lockIds = ['party-name', 'ship-to', 'delivery-address', 'date-today', 'slip-sr-no'];
+    var lockIds = ['party-name', 'sub-party-name', 'third-party-name', 'date-today', 'slip-sr-no'];
     lockIds.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) { el.readOnly = true; el.style.background = '#e2e8f0'; el.style.pointerEvents = 'none'; }
@@ -4028,7 +4060,7 @@ function unlockPackingForm() {
     var form = document.getElementById('packing-slip-form');
     if (!form) return;
 
-    var lockIds = ['party-name', 'ship-to', 'delivery-address'];
+    var lockIds = ['party-name', 'sub-party-name', 'third-party-name', 'date-today', 'slip-sr-no'];
     lockIds.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) { el.readOnly = false; el.style.background = ''; el.style.pointerEvents = ''; }
@@ -4153,6 +4185,23 @@ function autoFillQtyDown(input, blockIdx) {
     }
     updateItemTotal(blockIdx);
     debouncedCalculateTotals();
+}
+
+
+// ══════════════════════════════════════
+// 📊 LIVE GRAND TOTAL QUANTITY for Order form
+// ══════════════════════════════════════
+function updateOrdGrandTotal() {
+    var total = 0;
+    document.querySelectorAll('.qr-qty').forEach(function(inp) {
+        total += parseInt(inp.value, 10) || 0;
+    });
+    var el = document.getElementById('ord-grand-total');
+    var val = document.getElementById('ord-grand-total-val');
+    if (el && val) {
+        val.textContent = total.toLocaleString();
+        el.style.display = total > 0 ? 'block' : 'none';
+    }
 }
 
 </script>
