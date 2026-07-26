@@ -463,16 +463,6 @@
             <input type="text" id="supervisor-name" placeholder="Supervisor Name"
                 oninput="convertToUpperCase(this)" required>
         </div>
-        <div class="form-group">
-            <label>Dispatch From</label>
-            <select id="dispatch-from" style="font-weight:600;">
-                <option value="">— Select —</option>
-                <option value="GROUND FLOOR">GROUND FLOOR</option>
-                <option value="FIRST FLOOR">FIRST FLOOR</option>
-                <option value="SECOND FLOOR">SECOND FLOOR</option>
-                <option value="GODOWN 3">GODOWN 3</option>
-            </select>
-        </div>
     </div>
 
     <!-- Item Details Card -->
@@ -818,7 +808,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXp4YvS92Q613DuJHbmFsaxsxH8rq0qquj5C3oXRCGeX5mZqr_5Tlqwbd3l4ymbMQ/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwipFOViH05M4hzcseBKiZQyCBZuSWmx9IZh9YrEaVFR8mSp5LJ9XmmKgOul_upKIoi/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1627,6 +1617,18 @@ function addItem() {
                             onchange="onBrandChange(this);">
                     </td>
                 </tr>
+                <tr class="order-id-row">
+                    <td class="order-id-label" style="font-size:10px;font-weight:700;color:#065f46;">FROM <span class="required-star">*</span></td>
+                    <td colspan="3">
+                        <select class="item-dispatch-from" required style="border:1.5px solid #6ee7b7;border-radius:5px;padding:7px 8px;font-size:13px;font-weight:600;background:#fff;width:100%;">
+                            <option value="">— Dispatch From —</option>
+                            <option value="GROUND FLOOR">GROUND FLOOR</option>
+                            <option value="FIRST FLOOR">FIRST FLOOR</option>
+                            <option value="SECOND FLOOR">SECOND FLOOR</option>
+                            <option value="GODOWN 3">GODOWN 3</option>
+                        </select>
+                    </td>
+                </tr>
                 <tr class="item-green-header">
                     <td style="width:30px;text-align:center;">Sr.</td>
                     <td style="text-align:center;">Qty</td>
@@ -1644,7 +1646,9 @@ function addItem() {
                 </tr>
             </tfoot>
         </table>
-        <!-- Add Row via Enter/Next key only -->
+        <div class="add-row-wrap">
+            <button type="button" class="add-row-btn" onclick="addRowCopyLast(${idx})">＋ Add Row</button>
+        </div>
     `;
 
     container.appendChild(block);
@@ -1887,6 +1891,11 @@ function validateItems() {
             alert('Item ' + num + ': Quality required');
             b.querySelector('.item-brand').focus(); return false;
         }
+        var dfSel = b.querySelector('.item-dispatch-from');
+        if (!dfSel || !dfSel.value) {
+            alert('Item ' + num + ': Dispatch From select karna zaroori hai');
+            if (dfSel) dfSel.focus(); return false;
+        }
         if (!b.querySelectorAll('.sub-row').length) {
             alert('Item ' + num + ': At least one row required');
             return false;
@@ -1946,10 +1955,53 @@ function autoDownloadPdf(base64Data, fileName) {
 // ══════════════════════════════════════
 // MAIN: FINISH
 // ══════════════════════════════════════
+
+// 🧹 Auto-remove sub-rows with Weight = 0 before saving
+function removeZeroWeightRows() {
+    var removed = 0;
+    document.querySelectorAll('.item-block').forEach(function(block) {
+        var idx   = Number(block.dataset.idx);
+        var tbody = document.getElementById('sub-body-' + idx);
+        if (!tbody) return;
+
+        Array.from(tbody.querySelectorAll('.sub-row')).forEach(function(row) {
+            var wt = Number(row.querySelector('.sub-wt').value) || 0;
+            if (wt === 0) { row.remove(); removed++; }
+        });
+
+        renumberSubRows(idx);
+        updateItemTotal(idx);
+
+        // If block has no rows left after cleanup, remove entire block
+        if (tbody.querySelectorAll('.sub-row').length === 0) {
+            block.remove();
+        }
+    });
+
+    if (removed > 0) {
+        renumberItems();
+        calculateTotals();
+    }
+    return removed;
+}
+
 async function handleFinish() {
     const form = document.getElementById('packing-slip-form');
     if (!form.checkValidity()) { form.reportValidity(); return; }
     if (!validateItems()) return;
+
+    // 🧹 Auto-remove zero-weight rows before save
+    var removed = removeZeroWeightRows();
+    if (removed > 0) {
+        console.log('Auto-removed ' + removed + ' zero-weight row(s)');
+    }
+
+    // Check if any items remain after cleanup
+    if (document.querySelectorAll('.item-block').length === 0) {
+        alert('Sab rows ka weight 0 hai — kuch bhi save nahi ho sakta!');
+        addItem();
+        return;
+    }
 
     const btn = document.getElementById('finishBtn');
     btn.disabled = true;
@@ -2207,7 +2259,8 @@ function buildFormPayload() {
             });
         });
         var orderId = block.querySelector('.item-order-id') ? block.querySelector('.item-order-id').value : '';
-        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows, orderId: orderId });
+        var dispatchFrom = block.querySelector('.item-dispatch-from') ? block.querySelector('.item-dispatch-from').value : '';
+        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows, orderId: orderId, dispatchFrom: dispatchFrom });
     });
 
     return {
@@ -2225,8 +2278,7 @@ function buildFormPayload() {
             tempoNo:        document.getElementById('tempo-no').value,
             driverName:     document.getElementById('driver-name').value,
             driverMobile:   document.getElementById('driver-mobile').value,
-            supervisorName:   document.getElementById('supervisor-name').value,
-            dispatchFrom:     document.getElementById('dispatch-from').value
+            supervisorName:   document.getElementById('supervisor-name').value
         }
     };
 }
@@ -2257,7 +2309,6 @@ function populateFormFromDraft(data, draftId, draftType) {
     document.getElementById('driver-name').value     = d.driverName     || '';
     document.getElementById('driver-mobile').value   = d.driverMobile   || '';
     document.getElementById('supervisor-name').value = d.supervisorName || '';
-    if (document.getElementById('dispatch-from')) document.getElementById('dispatch-from').value = d.dispatchFrom || '';
 
     // Rebuild item blocks from draft items
     var container = document.getElementById('items-container');
@@ -2289,6 +2340,11 @@ function populateFormFromDraft(data, draftId, draftType) {
             var orderSel = block.querySelector('.item-order-id');
             if (orderSel) orderSel.value = item.orderId;
         }
+        // Restore per-item Dispatch From
+        if (item.dispatchFrom) {
+            var dfSel = block.querySelector('.item-dispatch-from');
+            if (dfSel) dfSel.value = item.dispatchFrom;
+        }
 
         // Rebuild sub-rows
         var tbody = document.getElementById('sub-body-' + idx);
@@ -2317,6 +2373,14 @@ function populateFormFromDraft(data, draftId, draftType) {
     if (partyEl && partyEl.value) {
         onPartyNameChange(partyEl);
     }
+
+    // ── Auto-fill Ship To + Delivery Address from each item's Order ID ──
+    // onPartyNameChange above rebuilds Order ID options; now trigger
+    // onOrderIdChange for each block that has an Order ID set — this fills
+    // Ship To, Delivery Address, Private Marka from live OrderSheet data.
+    document.querySelectorAll('.item-order-id').forEach(function(sel) {
+        if (sel.value) onOrderIdChange(sel);
+    });
 
     // 🔒 Lock ONLY ASSIGNED drafts for DATA_ENTRY (from Quick Pack)
     // OWN drafts (self-created) remain fully editable
@@ -2468,7 +2532,10 @@ function renderVerificationList() {
                 '<span class="vc-party">' + escapeHtmlJs(s.partyName) + '</span>' +
                 '<span class="vc-meta">' + s.totalWeight.toFixed(1) + 'Kg</span>' +
                 '<span class="vc-badges">' + preBadge + afterBadge + recvBadge + '</span>' +
-                (s.pdfLink ? '<a href="' + escapeHtmlJs(s.pdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:10px;color:#2563eb;text-decoration:none;margin-left:4px;">📄PDF</a>' : '') +
+                (s.pdfLink ? '<a href="' + escapeHtmlJs(s.pdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:9px;color:#2563eb;text-decoration:none;margin-left:3px;" title="Original Copy (1 page)">📄1P</a>' : '') +
+                (s.fullPdfLink ? '<a href="' + escapeHtmlJs(s.fullPdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:9px;color:#7c3aed;text-decoration:none;margin-left:2px;" title="Full 3-Copy PDF">📄3P</a>' : '') +
+                '<a href="javascript:void(0)" onclick="event.stopPropagation();sendSlipWhatsApp(\'' + escapeHtmlJs(s.packingType) + '\',\'' + escapeHtmlJs(s.slipNo) + '\', this)" ' +
+                    'style="font-size:13px;color:#25D366;text-decoration:none;margin-left:5px;display:inline-flex;align-items:center;" title="Send via WhatsApp">📲</a>' +
             '</div>';
 
         // Expanded body
@@ -2591,6 +2658,134 @@ function formatVerifyDate(iso) {
     var d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     return d.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+// ══════════════════════════════════════════════════════
+// 📲 WHATSAPP — Send slip summary + Original Copy PDF
+//
+// Flow:
+//   1. Build formatted message (date = DD-MMM-YYYY HH:MM)
+//   2. Fetch Original Copy PDF from backend (1 page only)
+//   3. Try navigator.share() to attach PDF as file (mobile)
+//   4. Fallback: wa.me/?text= with text-only message (desktop)
+// ══════════════════════════════════════════════════════
+function formatWaDate(dateStr) {
+    if (!dateStr) return '-';
+    var d = new Date(dateStr);
+    if (isNaN(d.getTime())) {
+        // Clean up raw string: remove "(GMT+0530 ...)" and "GMT+0530" text
+        return String(dateStr).replace(/\s*\(.*\)\s*$/,'').replace(/\s*GMT[+-]\d+\s*/g,' ').trim();
+    }
+    var dd = String(d.getDate()).padStart(2,'0');
+    var mmNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var yyyy = d.getFullYear();
+    var hh = String(d.getHours()).padStart(2,'0');
+    var min = String(d.getMinutes()).padStart(2,'0');
+    return dd + '-' + mmNames[d.getMonth()] + '-' + yyyy + ' ' + hh + ':' + min;
+}
+
+async function sendSlipWhatsApp(packingType, slipNo, btnEl) {
+    var slip = verifySlips.find(function(s) {
+        return s.packingType === packingType && s.slipNo === slipNo;
+    });
+    if (!slip) { alert('Slip not found!'); return; }
+
+    // Build type-wise breakdown for message
+    var tb = slip.typeBreakdown || {};
+    var tbKeys = Object.keys(tb);
+    var breakdownLines = '';
+    var totalPacks = 0;
+    if (tbKeys.length) {
+        tbKeys.forEach(function(k) {
+            var item = tb[k];
+            totalPacks += item.packCount;
+            breakdownLines += '▸ ' + (item.quality || '') + ' | ' + (item.type || '') +
+                ' | Packs: ' + item.packCount + ' | Pcs: ' + item.pcs +
+                ' | Wt: ' + item.wt.toFixed(2) + ' Kg\n';
+        });
+    }
+
+    var msg = '📦 *SARV INDIA HOME FURNISHING*\n' +
+        '━━━━━━━━━━━━━━━━━━━━━\n' +
+        '*Packing Slip:* ' + slip.slipNo + '\n' +
+        '*Type:* ' + slip.packingType + '\n' +
+        '*Date:* ' + formatWaDate(slip.date) + '\n' +
+        '*Party:* ' + slip.partyName + '\n' +
+        (slip.shipTo ? '*Ship To:* ' + slip.shipTo + '\n' : '') +
+        '━━━━━━━━━━━━━━━━━━━━━\n';
+
+    if (breakdownLines) {
+        msg += '*📋 Item Details:*\n' + breakdownLines;
+        msg += '━━━━━━━━━━━━━━━━━━━━━\n';
+    }
+
+    msg += '*Total Packs:* ' + totalPacks + '\n' +
+        '*Total Qty:* ' + slip.totalQty + ' pcs\n' +
+        '*Total Weight:* ' + slip.totalWeight.toFixed(2) + ' Kg';
+
+    // ── Try generating PDF and sharing as file attachment ──
+    try {
+        // Show loading state on the button
+        if (btnEl) { btnEl.style.opacity = '0.5'; btnEl.style.pointerEvents = 'none'; }
+
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(withAuthPayload({
+                action: 'getOriginalPdf',
+                packingType: packingType,
+                slipNo: slipNo
+            })),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+
+        if (btnEl) { btnEl.style.opacity = ''; btnEl.style.pointerEvents = ''; }
+
+        if (handleAuthFailure(result)) return;
+
+        if (result.success && result.pdfBase64) {
+            // Create PDF File from base64
+            var byteChars = atob(result.pdfBase64);
+            var byteArray = new Uint8Array(byteChars.length);
+            for (var i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+            var pdfBlob = new Blob([byteArray], { type: 'application/pdf' });
+            var fileName = result.pdfFileName || 'Packing_Slip_' + slipNo + '.pdf';
+            var pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+            // navigator.share with file (mobile Android/iOS)
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                await navigator.share({
+                    text: msg,
+                    files: [pdfFile]
+                });
+                return; // ✅ native share sheet opened — done
+            }
+
+            // Desktop fallback: auto-download PDF + open WhatsApp with text
+            var blobUrl = URL.createObjectURL(pdfBlob);
+            var a = document.createElement('a');
+            a.href = blobUrl; a.download = fileName;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 3000);
+
+            // Open WhatsApp with text (PDF already downloaded separately)
+            msg += '\n\n📄 _PDF downloaded — attach manually_';
+            var waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+            window.open(waUrl, '_blank');
+            return;
+        }
+    } catch (e) {
+        console.warn('PDF share failed, falling back to text:', e.message);
+        if (btnEl) { btnEl.style.opacity = ''; btnEl.style.pointerEvents = ''; }
+    }
+
+    // ── Final fallback: text-only WhatsApp (no PDF) ──
+    if (slip.pdfLink) {
+        msg += '\n\n📄 *PDF:*\n' + slip.pdfLink;
+    }
+    var waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    window.open(waUrl, '_blank');
 }
 
 async function submitVerificationStage(key, stage) {
@@ -2956,7 +3151,11 @@ async function handleSaveOrder() {
         if (handleAuthFailure(result)) return;
 
         if (result.success) {
-            btn.textContent = '✅ ' + (result.action === 'updated' ? 'Updated!' : 'Saved!');
+            var successMsg = result.action === 'updated' ? 'Updated!' : 'Saved!';
+            if (result.orderNos && result.orderNos.length > 1) {
+                successMsg += ' (' + result.orderNos.join(', ') + ')';
+            }
+            btn.textContent = '✅ ' + successMsg;
             setTimeout(function () {
                 btn.disabled = false;
                 btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
@@ -4050,32 +4249,37 @@ function lockPackingForm() {
 
 function unlockPackingForm() {
     isFormLocked = false;
-    // Re-enable remove buttons
     var form = document.getElementById('packing-slip-form');
-    if (form) {
-    form.querySelectorAll('.del-item-btn, .btn-del-row').forEach(function(btn) {
+    if (!form) return;
+
+    // Re-enable remove buttons + add-row buttons
+    form.querySelectorAll('.del-item-btn, .btn-del-row, .add-row-btn').forEach(function(btn) {
         btn.disabled = false; btn.style.opacity = ''; btn.style.pointerEvents = '';
     });
     form.querySelectorAll('.add-item-btn, [onclick*="addItem"]').forEach(function(btn) {
         btn.disabled = false; btn.style.opacity = ''; btn.style.pointerEvents = '';
     });
-    }
+
+    // Remove lock indicator
     var indicator = document.getElementById('lock-indicator');
     if (indicator) indicator.remove();
 
-    var form = document.getElementById('packing-slip-form');
-    if (!form) return;
-
+    // Unlock header fields
     var lockIds = ['party-name', 'sub-party-name', 'third-party-name', 'date-today', 'slip-sr-no'];
     lockIds.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) { el.readOnly = false; el.style.background = ''; el.style.pointerEvents = ''; }
     });
+
+    // Unlock per-item fields: order-id, brand, type
     form.querySelectorAll('.item-order-id').forEach(function(sel) {
         sel.disabled = false; sel.style.background = '';
     });
     form.querySelectorAll('.item-brand').forEach(function(inp) {
         inp.readOnly = false; inp.style.background = ''; inp.style.pointerEvents = '';
+    });
+    form.querySelectorAll('.item-type').forEach(function(sel) {
+        sel.disabled = false; sel.style.background = '';
     });
 }
 
