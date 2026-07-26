@@ -818,7 +818,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9U8dtHN5dzx0uHF6nNuSps8_ORmebyHki0MDvULyoSO0guLke9CKRGw1o_MBHAEE5/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXp4YvS92Q613DuJHbmFsaxsxH8rq0qquj5C3oXRCGeX5mZqr_5Tlqwbd3l4ymbMQ/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -872,15 +872,7 @@ function saveSessionToStorage(s) {
 function clearSession(showError) {
     session = null;
     localStorage.removeItem('packingAppSession');
-    document.getElementById('packing-slip-form').style.display = 'none';
-    document.getElementById('vehicle-panel').style.display = 'none';
-    document.getElementById('order-pending-panel').style.display = 'none';
-    document.getElementById('verification-panel').style.display = 'none';
-    document.getElementById('vehicle-panel').style.display = 'none';
-    document.getElementById('order-pending-panel').style.display = 'none';
-    document.getElementById('order-panel').style.display = 'none';
-    document.getElementById('vehicle-panel').style.display = 'none';
-    document.getElementById('order-pending-panel').style.display = 'none';
+    hideAllPanels();
     document.getElementById('userBar').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
@@ -1141,18 +1133,31 @@ function onOrderIdChange(selectEl) {
         }
     }
 
-    // ── Auto-fill Private Marka from order ──
-    var markaDisplay = block.querySelector('.item-marka-val');
-    if (markaDisplay) {
-        markaDisplay.textContent = order.privateMarka || '-';
-        markaDisplay.setAttribute('data-marka', order.privateMarka || '');
+    // ── Auto-fill Ship To + Delivery Address from Order ID data ──
+    var shipToEl       = document.getElementById('sub-party-name');
+    var deliveryAddrEl = document.getElementById('third-party-name');
+
+    if (order.shipTo && shipToEl) {
+        shipToEl.value = order.shipTo;
+        shipToEl.style.transition = 'background 0.3s';
+        shipToEl.style.background = '#bbf7d0';
+        setTimeout(function() { shipToEl.style.background = ''; }, 900);
+    }
+    if (order.deliveryAddr && deliveryAddrEl) {
+        deliveryAddrEl.value = order.deliveryAddr;
+        deliveryAddrEl.style.transition = 'background 0.3s';
+        deliveryAddrEl.style.background = '#bbf7d0';
+        setTimeout(function() { deliveryAddrEl.style.background = ''; }, 900);
     }
 
-    // ── Auto-fill Ship To from order sub-dealer ──
-    if (order.subDealerName) {
-        var shipToEl = document.getElementById('sub-party-name');
-        if (shipToEl && !shipToEl.value) {
-            shipToEl.value = order.subDealerName;
+    // ── Auto-fill Private Marka from order ──
+    if (order.privateMarka) {
+        var markaEl = document.getElementById('private-marka');
+        if (markaEl) {
+            markaEl.value = order.privateMarka;
+            markaEl.style.transition = 'background 0.3s';
+            markaEl.style.background = '#bbf7d0';
+            setTimeout(function() { markaEl.style.background = ''; }, 900);
         }
     }
 
@@ -1962,6 +1967,7 @@ async function handleFinish() {
     } catch (err) {
         setSavingStage('error', 'Network error! Internet check karein.');
         btn.disabled = false;
+        slipSyncPaused = false; // ▶️ Resume polling so slip number stays current
         return;
     }
 
