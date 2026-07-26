@@ -808,7 +808,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwipFOViH05M4hzcseBKiZQyCBZuSWmx9IZh9YrEaVFR8mSp5LJ9XmmKgOul_upKIoi/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxM3mfMba1YmES9m6Z1IfezGtu5__VPdCsociH9wHa6R309bOlWQOunjkPrCn5JDhHO/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1896,9 +1896,20 @@ function validateItems() {
             alert('Item ' + num + ': Dispatch From select karna zaroori hai');
             if (dfSel) dfSel.focus(); return false;
         }
-        if (!b.querySelectorAll('.sub-row').length) {
+        var subRows = b.querySelectorAll('.sub-row');
+        if (!subRows.length) {
             alert('Item ' + num + ': At least one row required');
             return false;
+        }
+        // ── Qty must be > 0 in every Sr row ──
+        for (let sr = 0; sr < subRows.length; sr++) {
+            var qtyInput = subRows[sr].querySelector('.sub-qty');
+            var qtyVal = Number(qtyInput ? qtyInput.value : 0) || 0;
+            if (qtyVal <= 0) {
+                alert('Item ' + num + ', Sr ' + (sr+1) + ': Qty 0 ya empty hai — Qty > 0 hona zaroori hai');
+                if (qtyInput) { qtyInput.focus(); qtyInput.select(); }
+                return false;
+            }
         }
     }
     return true;
