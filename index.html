@@ -424,17 +424,28 @@
             <input type="text" id="third-party-name" placeholder="Enter Delivery Address"
                 oninput="convertToUpperCase(this)">
         </div>
-        <!-- ✅ NEW: Private Marka -->
+        <!-- ✅ NEW: Dispatch To Standard Address -->
         <div class="form-group">
-            <label>Private Marka</label>
-            <input type="text" id="private-marka" placeholder="Enter Private Marka"
-                oninput="convertToUpperCase(this)">
+            <label>Dispatch To <span class="required-star">*</span></label>
+            <select id="dispatch-to" required style="font-weight:600;">
+                <option value="">— Select Dispatch To —</option>
+                <option value="PANIPAT">PANIPAT</option>
+                <option value="SUTANA">SUTANA</option>
+                <option value="KURAR">KURAR</option>
+                <option value="GADI LOAD">GADI LOAD</option>
+                <option value="SELF">SELF</option>
+                <option value="OTHER">OTHER</option>
+                <option value="TRANSPORT">TRANSPORT</option>
+            </select>
         </div>
+        <!-- Private Marka now per-item (auto-filled from Order ID) -->
         <div class="form-group">
             <label>Loading Contractor Name</label>
             <input type="text" id="contractor-name" placeholder="Enter Contractor Name"
                 oninput="convertToUpperCase(this)">
         </div>
+        <!-- Hidden: Mob No auto-filled from OrderSheet -->
+        <input type="hidden" id="mob-no" value="">
     </div>
 
     <!-- Dispatch Details Card -->
@@ -702,20 +713,20 @@
                 <input type="date" id="ord-date">
             </div>
             <div class="form-group">
-                <label>Order By</label>
-                <input type="text" id="ord-by" placeholder="Order By" oninput="convertToUpperCase(this)">
+                <label>Order By <span class="required-star">*</span></label>
+                <input type="text" id="ord-by" placeholder="Order By" oninput="convertToUpperCase(this)" required>
             </div>
             <div class="form-group">
                 <label>Party Name <span class="required-star">*</span></label>
                 <input type="text" id="ord-party" placeholder="Party Name" list="dl-ord-party" oninput="convertToUpperCase(this)" autocomplete="off" required>
             </div>
             <div class="form-group">
-                <label>Sub Dealer Name</label>
-                <input type="text" id="ord-sub-dealer" placeholder="Sub Dealer / Direct" list="dl-ord-sub-dealer" oninput="convertToUpperCase(this)" autocomplete="off">
+                <label>Sub Dealer Name <span class="required-star">*</span></label>
+                <input type="text" id="ord-sub-dealer" placeholder="Sub Dealer / Direct" list="dl-ord-sub-dealer" oninput="convertToUpperCase(this)" autocomplete="off" required>
             </div>
             <div class="form-group">
-                <label>Address</label>
-                <input type="text" id="ord-address" placeholder="Address" list="dl-ord-address" oninput="convertToUpperCase(this)" autocomplete="off">
+                <label>Address <span class="required-star">*</span></label>
+                <input type="text" id="ord-address" placeholder="Address" list="dl-ord-address" oninput="convertToUpperCase(this)" autocomplete="off" required>
             </div>
             <div class="form-group">
                 <label>Buyer Name</label>
@@ -766,8 +777,8 @@
                 <input type="text" id="ord-transporter" placeholder="Transporter Name" list="dl-ord-transporter" oninput="convertToUpperCase(this)" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Review Order</label>
-                <select id="ord-review">
+                <label>Review Order <span class="required-star">*</span></label>
+                <select id="ord-review" required>
                     <option value="">Select</option>
                     <option value="CONFIRM">CONFIRM</option>
                     <option value="PENDING">PENDING</option>
@@ -808,7 +819,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxM3mfMba1YmES9m6Z1IfezGtu5__VPdCsociH9wHa6R309bOlWQOunjkPrCn5JDhHO/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywxCSO6WBFZpBRCWbAcb9yYTey99_VMSQu1ybzYwTUjNKHWXUQfs3ks8fYpYu6LWC1/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1140,15 +1151,21 @@ function onOrderIdChange(selectEl) {
         setTimeout(function() { deliveryAddrEl.style.background = ''; }, 900);
     }
 
-    // ── Auto-fill Private Marka from order ──
-    if (order.privateMarka) {
-        var markaEl = document.getElementById('private-marka');
-        if (markaEl) {
-            markaEl.value = order.privateMarka;
-            markaEl.style.transition = 'background 0.3s';
-            markaEl.style.background = '#bbf7d0';
-            setTimeout(function() { markaEl.style.background = ''; }, 900);
+    // ── Auto-fill Private Marka per item (readonly display) ──
+    var itemMarkaEl = block.querySelector('.item-marka');
+    if (itemMarkaEl) {
+        itemMarkaEl.value = order.privateMarka || '';
+        if (order.privateMarka) {
+            itemMarkaEl.style.transition = 'background 0.3s';
+            itemMarkaEl.style.background = '#bbf7d0';
+            setTimeout(function() { itemMarkaEl.style.background = '#f5f3ff'; }, 900);
         }
+    }
+
+    // ── Auto-fill Mob No from order (hidden field → goes to PDF) ──
+    if (order.mob) {
+        var mobEl = document.getElementById('mob-no');
+        if (mobEl) mobEl.value = order.mob;
     }
 
     // ── Auto-fill Quality (locked — read-only when order selected) ──
@@ -1627,6 +1644,14 @@ function addItem() {
                             <option value="SECOND FLOOR">SECOND FLOOR</option>
                             <option value="GODOWN 3">GODOWN 3</option>
                         </select>
+                    </td>
+                </tr>
+                <tr class="order-id-row">
+                    <td class="order-id-label" style="font-size:10px;font-weight:700;color:#7c3aed;">MARKA</td>
+                    <td colspan="3">
+                        <input type="text" class="item-marka" readonly
+                            style="border:1.5px solid #c4b5fd;border-radius:5px;padding:7px 8px;font-size:13px;font-weight:700;background:#f5f3ff;color:#5b21b6;width:100%;"
+                            placeholder="— Order select karo →" value="">
                     </td>
                 </tr>
                 <tr class="item-green-header">
@@ -2271,7 +2296,8 @@ function buildFormPayload() {
         });
         var orderId = block.querySelector('.item-order-id') ? block.querySelector('.item-order-id').value : '';
         var dispatchFrom = block.querySelector('.item-dispatch-from') ? block.querySelector('.item-dispatch-from').value : '';
-        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows, orderId: orderId, dispatchFrom: dispatchFrom });
+        var privateMarka = block.querySelector('.item-marka') ? block.querySelector('.item-marka').value : '';
+        itemsData.push({ type: type, brand: brand, totalSr: subRows.length, subRows: subRows, orderId: orderId, dispatchFrom: dispatchFrom, privateMarka: privateMarka });
     });
 
     return {
@@ -2281,8 +2307,9 @@ function buildFormPayload() {
             partyName:        document.getElementById('party-name').value,
             subPartyName:     document.getElementById('sub-party-name').value,
             thirdPartyName:   document.getElementById('third-party-name').value,
-            privateMarka:     document.getElementById('private-marka').value,
-            contractorName:   document.getElementById('contractor-name').value
+            dispatchTo:       document.getElementById('dispatch-to').value,
+            contractorName:   document.getElementById('contractor-name').value,
+            mobNo:            document.getElementById('mob-no').value
         },
         items: itemsData,
         dispatch: {
@@ -2311,7 +2338,7 @@ function populateFormFromDraft(data, draftId, draftType) {
     document.getElementById('party-name').value       = h.partyName       || '';
     document.getElementById('sub-party-name').value   = h.subPartyName    || '';
     document.getElementById('third-party-name').value = h.thirdPartyName  || '';
-    document.getElementById('private-marka').value    = h.privateMarka    || '';
+    document.getElementById('dispatch-to').value      = h.dispatchTo      || '';
     document.getElementById('contractor-name').value  = h.contractorName  || '';
 
     // Dispatch fields
@@ -2341,11 +2368,10 @@ function populateFormFromDraft(data, draftId, draftType) {
         // Set type, brand, and order ID
         if (item.type)  block.querySelector('.item-type').value  = item.type;
         if (item.brand) block.querySelector('.item-brand').value = item.brand;
-        // Restore Private Marka display
-        var draftMarkaEl = block.querySelector('.item-marka-val');
-        if (draftMarkaEl && item.privateMarka) {
-            draftMarkaEl.textContent = item.privateMarka;
-            draftMarkaEl.setAttribute('data-marka', item.privateMarka);
+        // Restore per-item Private Marka
+        if (item.privateMarka) {
+            var markaInput = block.querySelector('.item-marka');
+            if (markaInput) markaInput.value = item.privateMarka;
         }
         if (item.orderId) {
             var orderSel = block.querySelector('.item-order-id');
@@ -2978,7 +3004,7 @@ function showOrderForm(order) {
         document.getElementById('ord-address').value     = order.address || '';
         // Populate single quality row for edit (one order row = one quality)
         clearQualityRows();
-        addQualityRow(order.quality, order.item, order.quantity);
+        addQualityRow(order.quality, order.item, order.quantity, order.privateMarka);
         document.getElementById('ord-transport-type').value    = order.transportType || '';
         document.getElementById('ord-deliver-dest').value      = order.deliverDestination || '';
         document.getElementById('ord-transporter').value       = order.transporterName || '';
@@ -3027,7 +3053,7 @@ function showOrderForm(order) {
 // ══════════════════════════════════════════════════════════
 var qualityRowCounter = 0;
 
-function addQualityRow(quality, item, qty) {
+function addQualityRow(quality, item, qty, privateMarka) {
     qualityRowCounter++;
     var id = 'qr-' + qualityRowCounter;
     var container = document.getElementById('ord-quality-rows');
@@ -3053,6 +3079,10 @@ function addQualityRow(quality, item, qty) {
             '<label>Qty *</label>' +
             '<input type="number" class="qr-qty" min="1" placeholder="0" value="' + (qty || '') + '" oninput="updateOrdGrandTotal()">' +
         '</div>' +
+        '<div>' +
+            '<label>Marka</label>' +
+            '<input type="text" class="qr-marka" placeholder="Private Marka" value="' + escapeHtmlJs(privateMarka || '') + '" oninput="this.value=this.value.toUpperCase()">' +
+        '</div>' +
         '<button type="button" class="btn-remove-quality" onclick="removeQualityRow(\'' + id + '\')" title="Remove">×</button>';
     container.appendChild(div);
 }
@@ -3075,9 +3105,10 @@ function getQualityRows() {
     var rows = [];
     document.querySelectorAll('.quality-row').forEach(function(div) {
         rows.push({
-            quality:  div.querySelector('.qr-quality').value.trim().toUpperCase(),
-            item:     div.querySelector('.qr-item').value,
-            quantity: div.querySelector('.qr-qty').value
+            quality:      div.querySelector('.qr-quality').value.trim().toUpperCase(),
+            item:         div.querySelector('.qr-item').value,
+            quantity:     div.querySelector('.qr-qty').value,
+            privateMarka: div.querySelector('.qr-marka') ? div.querySelector('.qr-marka').value.trim().toUpperCase() : ''
         });
     });
     return rows;
