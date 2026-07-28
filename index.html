@@ -820,7 +820,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywxCSO6WBFZpBRCWbAcb9yYTey99_VMSQu1ybzYwTUjNKHWXUQfs3ks8fYpYu6LWC1/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7elZZ63pBVkl4NYrDVvwNZBVm3f533WQawnEEKEGPnQqUgjMR0PVics2KMx3kH1QM/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -2080,6 +2080,14 @@ async function handleFinish() {
         autoDownloadPdf(result.pdfBase64, result.pdfFileName);
     }
 
+    // ── Double-save protection: disable form completely after successful save ──
+    btn.disabled = true;
+    btn.textContent = '✅ Saved — Refreshing...';
+    btn.style.opacity = '0.5';
+    // Clear all item blocks so re-click can't save duplicate data
+    var container = document.getElementById('item-container');
+    if (container) container.innerHTML = '';
+
     setSavingStage('done', 'Slip ' + (result.slipNo || '') + ' saved! Refreshing...');
     setTimeout(function () { location.reload(); }, 1800);
 }
@@ -2764,7 +2772,12 @@ async function sendSlipWhatsApp(packingType, slipNo, btnEl) {
     // ── Try generating PDF and sharing as file attachment ──
     try {
         // Show loading state on the button
-        if (btnEl) { btnEl.style.opacity = '0.5'; btnEl.style.pointerEvents = 'none'; }
+        if (btnEl) {
+            btnEl.style.opacity = '0.5';
+            btnEl.style.pointerEvents = 'none';
+            btnEl.textContent = '⏳';
+            btnEl.title = 'PDF generate ho raha hai...';
+        }
 
         var res = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
@@ -2776,9 +2789,10 @@ async function sendSlipWhatsApp(packingType, slipNo, btnEl) {
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
             redirect: 'follow'
         });
+
         var result = await res.json();
 
-        if (btnEl) { btnEl.style.opacity = ''; btnEl.style.pointerEvents = ''; }
+        if (btnEl) { btnEl.style.opacity = ''; btnEl.style.pointerEvents = ''; btnEl.textContent = '📲'; btnEl.title = 'Send via WhatsApp'; }
 
         if (handleAuthFailure(result)) return;
 
@@ -2791,37 +2805,44 @@ async function sendSlipWhatsApp(packingType, slipNo, btnEl) {
             var fileName = result.pdfFileName || 'Packing_Slip_' + slipNo + '.pdf';
             var pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
 
-            // navigator.share with file (mobile Android/iOS)
+            // ── Mobile: navigator.share with PDF file attached ──
             if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    text: msg,
-                    files: [pdfFile]
-                });
-                return; // ✅ native share sheet opened — done
+                try {
+                    await navigator.share({
+                        text: msg,
+                        files: [pdfFile]
+                    });
+                    return; // ✅ native share sheet opened with PDF attached
+                } catch (shareErr) {
+                    // User cancelled share dialog — that's OK, don't fallback
+                    if (shareErr.name === 'AbortError') return;
+                    console.warn('navigator.share failed, trying download fallback:', shareErr.message);
+                }
             }
 
-            // Desktop fallback: auto-download PDF + open WhatsApp with text
+            // ── Desktop fallback: auto-download PDF + open WhatsApp with text ──
             var blobUrl = URL.createObjectURL(pdfBlob);
             var a = document.createElement('a');
             a.href = blobUrl; a.download = fileName;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 3000);
 
-            // Open WhatsApp with text (PDF already downloaded separately)
-            msg += '\n\n📄 _PDF downloaded — attach manually_';
+            msg += '\n\n📄 _PDF downloaded — WhatsApp mein attach karo_';
             var waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
             window.open(waUrl, '_blank');
             return;
         }
+
+        // Backend returned error
+        console.error('getOriginalPdf failed:', result.error || 'pdfBase64 empty');
+        alert('PDF generate nahi ho saka: ' + (result.error || 'Unknown error'));
     } catch (e) {
-        console.warn('PDF share failed, falling back to text:', e.message);
-        if (btnEl) { btnEl.style.opacity = ''; btnEl.style.pointerEvents = ''; }
+        console.error('WhatsApp PDF error:', e.message);
+        if (btnEl) { btnEl.style.opacity = ''; btnEl.style.pointerEvents = ''; btnEl.textContent = '📲'; }
     }
 
-    // ── Final fallback: text-only WhatsApp (no PDF) ──
-    if (slip.pdfLink) {
-        msg += '\n\n📄 *PDF:*\n' + slip.pdfLink;
-    }
+    // ── Final fallback: text-only WhatsApp (if PDF generation failed) ──
+    msg += '\n\n⚠️ _PDF attach nahi ho saka — manually share karein_';
     var waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
     window.open(waUrl, '_blank');
 }
@@ -4368,8 +4389,7 @@ function renderAssignedDrafts(drafts) {
                 '<td style="padding:4px 6px;">' + escapeHtmlJs(d.partyName || '-') + '</td>' +
                 '<td style="padding:4px 6px;font-size:10px;">' + escapeHtmlJs(d.savedAt || '') + '</td>' +
                 '<td style="padding:4px 6px;white-space:nowrap;">' +
-                    '<button onclick="loadDraftForEdit(\'' + escapeHtmlJs(d.draftId) + '\')" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;margin-right:3px;">✏️ Edit</button>' +
-                    '<button onclick="deleteAssignedDraft(\'' + escapeHtmlJs(d.draftId) + '\')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;">🗑</button>' +
+                    '<button onclick="deleteAssignedDraft(\'' + escapeHtmlJs(d.draftId) + '\')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;">🗑 Delete</button>' +
                 '</td></tr>';
         }).join('') +
         '</table>';
