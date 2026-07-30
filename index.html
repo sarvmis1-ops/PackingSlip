@@ -820,7 +820,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7elZZ63pBVkl4NYrDVvwNZBVm3f533WQawnEEKEGPnQqUgjMR0PVics2KMx3kH1QM/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7GlMOWq7_ZhcujeIZxeqhvXRFmcqeA1-aYQ-Zelhrhgiue4rxOP6jkXnfVAaITjWf/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1395,6 +1395,20 @@ function debouncedCalculateTotals() {
 }
 
 // ══════════════════════════════════════════════
+// ⚖️ WEIGHT CLAMP — max 100 Kg per serial row
+// Fires on every keystroke in weight input. If value exceeds 100,
+// it's capped instantly and a red flash warns the user.
+// ══════════════════════════════════════════════
+function clampWeight(input) {
+    var val = parseFloat(input.value);
+    if (isNaN(val) || val <= 100) return;   // within limit → do nothing
+    input.value = 100;
+    input.style.transition = 'background 0.3s';
+    input.style.background = '#fee2e2';     // red flash
+    setTimeout(function() { input.style.background = ''; }, 900);
+}
+
+// ══════════════════════════════════════════════
 // 📦 PACKING TYPE CHANGE HANDLER
 // When user switches type:
 //   1. Re-fetch slip number for that type (different sheet, different prefix)
@@ -1712,9 +1726,9 @@ function addSubRow(blockIdx, qty, wt) {
                 style="border-radius:5px;">
         </td>
         <td>
-            <input type="number" class="sub-wt" min="0" step="0.01" placeholder="0.00"
+            <input type="number" class="sub-wt" min="0" max="100" step="0.01" placeholder="0.00"
                 value="${wtVal}"
-                oninput="updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
+                oninput="clampWeight(this); updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
                 onkeydown="onWeightEnter(event, ${blockIdx}, '${rowId}')"
                 style="border-radius:5px;">
         </td>
@@ -1927,13 +1941,20 @@ function validateItems() {
             alert('Item ' + num + ': At least one row required');
             return false;
         }
-        // ── Qty must be > 0 in every Sr row ──
+        // ── Qty must be > 0 and Weight must be ≤ 100 in every Sr row ──
         for (let sr = 0; sr < subRows.length; sr++) {
             var qtyInput = subRows[sr].querySelector('.sub-qty');
             var qtyVal = Number(qtyInput ? qtyInput.value : 0) || 0;
             if (qtyVal <= 0) {
                 alert('Item ' + num + ', Sr ' + (sr+1) + ': Qty 0 ya empty hai — Qty > 0 hona zaroori hai');
                 if (qtyInput) { qtyInput.focus(); qtyInput.select(); }
+                return false;
+            }
+            var wtInput = subRows[sr].querySelector('.sub-wt');
+            var wtVal = Number(wtInput ? wtInput.value : 0) || 0;
+            if (wtVal > 100) {
+                alert('Item ' + num + ', Sr ' + (sr+1) + ': Weight 100 Kg se zyada nahi ho sakta! Abhi ' + wtVal + ' Kg hai.');
+                if (wtInput) { wtInput.focus(); wtInput.select(); }
                 return false;
             }
         }
@@ -1951,7 +1972,11 @@ function setSavingStage(stage, detail) {
     const subtitle = document.getElementById('savingSubtitle');
     overlay.style.display = 'flex';
 
-    if (stage === 'saving') {
+    if (stage === 'locking') {
+        icon.className = 'saving-spinner'; icon.innerHTML = '';
+        title.textContent = '🔒 Processing...';
+        subtitle.textContent = 'Please wait, do not tap anything';
+    } else if (stage === 'saving') {
         icon.className = 'saving-spinner'; icon.innerHTML = '';
         title.textContent = '📊 Saving to Sheet...';
         subtitle.textContent = 'Data upload ho raha hai, page close mat karein';
@@ -2022,10 +2047,37 @@ function removeZeroWeightRows() {
     return removed;
 }
 
+// 🔒 Global submission guard — prevents re-entry even if button disable is slow
+var isSubmitting = false;
+
 async function handleFinish() {
+    // ═══ INSTANT LOCK — before ANY validation ═══
+    if (isSubmitting) return;         // already in progress → hard block
+    isSubmitting = true;
+
+    const btn = document.getElementById('finishBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Processing...';
+    btn.style.opacity = '0.5';
+
+    // Show full-screen overlay immediately (z-index:2000 blocks ALL clicks)
+    setSavingStage('locking');
+
+    // Stop auto-save so it doesn't interfere with the submission
+    stopAutoSaveDraft();
+
+    // ⏸️ Pause the slip-number poller
+    slipSyncPaused = true;
+
+    // ═══ VALIDATE under the lock ═══
     const form = document.getElementById('packing-slip-form');
-    if (!form.checkValidity()) { form.reportValidity(); return; }
-    if (!validateItems()) return;
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        unlockFinish(btn); return;
+    }
+    if (!validateItems()) {
+        unlockFinish(btn); return;
+    }
 
     // 🧹 Auto-remove zero-weight rows before save
     var removed = removeZeroWeightRows();
@@ -2037,17 +2089,10 @@ async function handleFinish() {
     if (document.querySelectorAll('.item-block').length === 0) {
         alert('Sab rows ka weight 0 hai — kuch bhi save nahi ho sakta!');
         addItem();
-        return;
+        unlockFinish(btn); return;
     }
 
-    const btn = document.getElementById('finishBtn');
-    btn.disabled = true;
-
-    // ⏸️ Pause the slip-number poller while saving
-    // Prevents a background poll from overwriting the confirmed slip no
-    // during the save/PDF window
-    slipSyncPaused = true;
-
+    // ═══ SAVE ═══
     setSavingStage('saving');
 
     let result;
@@ -2055,24 +2100,20 @@ async function handleFinish() {
         result = await saveToSheet();
     } catch (err) {
         setSavingStage('error', 'Network error! Internet check karein.');
-        btn.disabled = false;
-        slipSyncPaused = false; // ▶️ Resume polling so slip number stays current
-        return;
+        unlockFinish(btn); return;
     }
 
     if (handleAuthFailure(result)) {
         document.getElementById('savingOverlay').style.display = 'none';
-        btn.disabled = false;
-        return;
+        unlockFinish(btn); return;
     }
 
     if (!result.success) {
         setSavingStage('error', result.error || 'Save failed!');
-        btn.disabled = false;
-        slipSyncPaused = false; // ▶️ Resume polling so number stays current
-        return;
+        unlockFinish(btn); return;
     }
 
+    // ═══ SUCCESS — keep locked, no going back ═══
     setSavingStage('pdf');
     document.getElementById('slip-sr-no').value = result.slipNo || '';
 
@@ -2080,16 +2121,25 @@ async function handleFinish() {
         autoDownloadPdf(result.pdfBase64, result.pdfFileName);
     }
 
-    // ── Double-save protection: disable form completely after successful save ──
-    btn.disabled = true;
+    // Double-save protection: clear item data so re-click can't send anything
     btn.textContent = '✅ Saved — Refreshing...';
-    btn.style.opacity = '0.5';
-    // Clear all item blocks so re-click can't save duplicate data
     var container = document.getElementById('item-container');
     if (container) container.innerHTML = '';
 
     setSavingStage('done', 'Slip ' + (result.slipNo || '') + ' saved! Refreshing...');
+    // isSubmitting stays true — page will reload, no unlock needed
     setTimeout(function () { location.reload(); }, 1800);
+}
+
+// 🔓 Unlock helper — only called on validation/network FAILURE
+function unlockFinish(btn) {
+    isSubmitting = false;
+    btn.disabled = false;
+    btn.textContent = '✅ Finish Packing Slip';
+    btn.style.opacity = '1';
+    document.getElementById('savingOverlay').style.display = 'none';
+    slipSyncPaused = false;      // ▶️ Resume slip number polling
+    startAutoSaveDraft();        // ▶️ Resume auto-save
 }
 
 // ══════════════════════════════════════
@@ -2517,6 +2567,18 @@ function renderVerificationList() {
         var breakdownHtml = '';
         var existingRates = {};
         try { existingRates = JSON.parse((s.status || {}).ratesJson || '{}'); } catch(e) {}
+
+        // 💰 Check: are ALL quality rows' rates filled & saved?
+        var hasAllRates = false;
+        if (tbKeys.length > 0) {
+            hasAllRates = tbKeys.every(function(k) {
+                return existingRates[k] && Number(existingRates[k]) > 0;
+            });
+        }
+        var rateBadge = hasAllRates
+            ? '<span class="verify-badge done">✓ Rate</span>'
+            : '<span class="verify-badge pending">Rate ⏳</span>';
+
         if (tbKeys.length > 0) {
             var tds = 'padding:3px 6px;border:1px solid #cbd5e1;font-size:11px;';
             breakdownHtml = '<table style="width:100%;border-collapse:collapse;margin:6px 0;">' +
@@ -2577,11 +2639,13 @@ function renderVerificationList() {
                 '<span class="vc-slip">' + escapeHtmlJs(s.slipNo) + '</span>' +
                 '<span class="vc-party">' + escapeHtmlJs(s.partyName) + '</span>' +
                 '<span class="vc-meta">' + s.totalWeight.toFixed(1) + 'Kg</span>' +
-                '<span class="vc-badges">' + preBadge + afterBadge + recvBadge + '</span>' +
-                (s.pdfLink ? '<a href="' + escapeHtmlJs(s.pdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:9px;color:#2563eb;text-decoration:none;margin-left:3px;" title="Original Copy (1 page)">📄1P</a>' : '') +
-                (s.fullPdfLink ? '<a href="' + escapeHtmlJs(s.fullPdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:9px;color:#7c3aed;text-decoration:none;margin-left:2px;" title="Full 3-Copy PDF">📄3P</a>' : '') +
-                '<a href="javascript:void(0)" onclick="event.stopPropagation();sendSlipWhatsApp(\'' + escapeHtmlJs(s.packingType) + '\',\'' + escapeHtmlJs(s.slipNo) + '\', this)" ' +
-                    'style="font-size:13px;color:#25D366;text-decoration:none;margin-left:5px;display:inline-flex;align-items:center;" title="Send via WhatsApp">📲</a>' +
+                '<span class="vc-badges">' + preBadge + afterBadge + rateBadge + recvBadge + '</span>' +
+                (hasAllRates && s.pdfLink ? '<a href="' + escapeHtmlJs(s.pdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:9px;color:#2563eb;text-decoration:none;margin-left:3px;" title="Original Copy (1 page)">📄1P</a>' : '') +
+                (hasAllRates && s.fullPdfLink ? '<a href="' + escapeHtmlJs(s.fullPdfLink) + '" target="_blank" onclick="event.stopPropagation();" style="font-size:9px;color:#7c3aed;text-decoration:none;margin-left:2px;" title="Full 3-Copy PDF">📄3P</a>' : '') +
+                (hasAllRates
+                    ? '<a href="javascript:void(0)" onclick="event.stopPropagation();sendSlipWhatsApp(\'' + escapeHtmlJs(s.packingType) + '\',\'' + escapeHtmlJs(s.slipNo) + '\', this)" ' +
+                        'style="font-size:13px;color:#25D366;text-decoration:none;margin-left:5px;display:inline-flex;align-items:center;" title="Send via WhatsApp">📲</a>'
+                    : '<span style="font-size:13px;color:#cbd5e1;margin-left:5px;cursor:not-allowed;display:inline-flex;align-items:center;" title="Rate save karein pehle" onclick="event.stopPropagation();">📲</span>') +
             '</div>';
 
         // Expanded body
@@ -3513,6 +3577,23 @@ async function saveRates(key) {
     // Collect all rate inputs for this slip
     var rateInputs = document.querySelectorAll('.rate-input[data-key="' + key + '"]');
     var discInputs = document.querySelectorAll('.disc-input[data-key="' + key + '"]');
+
+    // 🔍 Validate: every quality row must have a Rate > 0
+    var missingRates = [];
+    rateInputs.forEach(function (inp) {
+        var val = parseFloat(inp.value);
+        if (!val || val <= 0) {
+            missingRates.push(inp.getAttribute('data-quality'));
+            inp.style.transition = 'background 0.3s';
+            inp.style.background = '#fee2e2';
+            setTimeout(function() { inp.style.background = ''; }, 1500);
+        }
+    });
+    if (missingRates.length > 0) {
+        alert('⚠️ Rate bharna zaroori hai sab quality mein!\n\n' + missingRates.length + ' quality mein Rate missing hai.');
+        return;
+    }
+
     var ratesObj = {};
     rateInputs.forEach(function (inp) {
         var qualityKey = inp.getAttribute('data-quality');
@@ -3544,7 +3625,9 @@ async function saveRates(key) {
         var result = await res.json();
         if (handleAuthFailure(result)) return;
         if (result.success) {
-            alert('✅ Rates saved successfully!');
+            alert('✅ Rates saved! PDF & WhatsApp ab enable ho gaye.');
+            // 🔄 Auto-refresh verification list to update badges + PDF links
+            fetchVerificationSlips();
         } else {
             alert('Error: ' + (result.error || 'Unknown'));
         }
@@ -4225,10 +4308,14 @@ async function createPackingDraft() {
         if (result.success) {
             alert('✅ Draft created: ' + result.draftId + '\nAssigned to: ' + assignUser + '\nParty: ' + partyName + '\nItems: ' + items.length + '\n\nUser will see this draft in their Packing Form.');
             btn.textContent = '✅ Draft Created!';
+            // 🔄 Auto-reload panel — reset party selection + refresh data
             setTimeout(function() {
                 btn.disabled = false;
                 btn.textContent = '📝 Create Packing Slip Draft';
-            }, 2000);
+                // Force fresh data fetch + rebuild panel
+                appData.lastFetch = 0;   // invalidate cache so ensureAppData re-fetches
+                showPackOrdersPanel();   // re-enters panel: resets filters, reloads orders + drafts
+            }, 1200);
         } else {
             alert('Error: ' + (result.error || 'Unknown'));
             btn.disabled = false;
