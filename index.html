@@ -1396,12 +1396,20 @@ function debouncedCalculateTotals() {
 
 // ══════════════════════════════════════════════
 // ⚖️ WEIGHT CLAMP — max 100 Kg per serial row
-// Fires on every keystroke in weight input. If value exceeds 100,
-// it's capped instantly and a red flash warns the user.
+// Exception: Type = "PVC BAG" → no limit (PVC bags are heavier)
+// Fires on every keystroke in weight input.
 // ══════════════════════════════════════════════
 function clampWeight(input) {
     var val = parseFloat(input.value);
     if (isNaN(val) || val <= 100) return;   // within limit → do nothing
+
+    // 🔍 Check parent item block's Type — PVC BAG gets unlimited weight
+    var block = input.closest('.item-block');
+    if (block) {
+        var typeSel = block.querySelector('.item-type');
+        if (typeSel && typeSel.value === 'PVC BAG') return;   // ✅ PVC BAG — allow >100
+    }
+
     input.value = 100;
     input.style.transition = 'background 0.3s';
     input.style.background = '#fee2e2';     // red flash
@@ -1726,7 +1734,7 @@ function addSubRow(blockIdx, qty, wt) {
                 style="border-radius:5px;">
         </td>
         <td>
-            <input type="number" class="sub-wt" min="0" max="100" step="0.01" placeholder="0.00"
+            <input type="number" class="sub-wt" min="0" step="0.01" placeholder="0.00"
                 value="${wtVal}"
                 oninput="clampWeight(this); updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
                 onkeydown="onWeightEnter(event, ${blockIdx}, '${rowId}')"
@@ -1941,7 +1949,8 @@ function validateItems() {
             alert('Item ' + num + ': At least one row required');
             return false;
         }
-        // ── Qty must be > 0 and Weight must be ≤ 100 in every Sr row ──
+        // ── Qty must be > 0 and Weight must be ≤ 100 in every Sr row (except PVC BAG) ──
+        var blockType = (b.querySelector('.item-type').value || '').trim();
         for (let sr = 0; sr < subRows.length; sr++) {
             var qtyInput = subRows[sr].querySelector('.sub-qty');
             var qtyVal = Number(qtyInput ? qtyInput.value : 0) || 0;
@@ -1952,8 +1961,8 @@ function validateItems() {
             }
             var wtInput = subRows[sr].querySelector('.sub-wt');
             var wtVal = Number(wtInput ? wtInput.value : 0) || 0;
-            if (wtVal > 100) {
-                alert('Item ' + num + ', Sr ' + (sr+1) + ': Weight 100 Kg se zyada nahi ho sakta! Abhi ' + wtVal + ' Kg hai.');
+            if (wtVal > 100 && blockType !== 'PVC BAG') {
+                alert('Item ' + num + ', Sr ' + (sr+1) + ': Weight 100 Kg se zyada nahi ho sakta! Abhi ' + wtVal + ' Kg hai.\n\n(Sirf PVC BAG mein 100+ allowed hai)');
                 if (wtInput) { wtInput.focus(); wtInput.select(); }
                 return false;
             }
