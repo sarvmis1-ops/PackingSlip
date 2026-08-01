@@ -232,6 +232,39 @@
         .pending-table .num { text-align: right; font-weight: 600; }
         .pending-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
         .pending-filter-bar select, .pending-filter-bar input { flex: 1; min-width: 100px; padding: 7px; font-size: 11px; border: 1.5px solid var(--border); border-radius: 8px; }
+
+        /* ── Custom Multi-Select Dropdown ── */
+        .ms-wrap { position:relative; flex:1; min-width:100px; }
+        .ms-btn { display:flex; align-items:center; justify-content:space-between; width:100%; padding:7px 10px; font-size:11px; font-weight:600; border:1.5px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-sizing:border-box; user-select:none; }
+        .ms-btn:hover { border-color:var(--primary); }
+        .ms-btn .ms-arrow { font-size:9px; margin-left:4px; opacity:.6; flex-shrink:0; }
+        .ms-btn .ms-badge { background:var(--primary); color:#fff; font-size:9px; font-weight:700; border-radius:10px; padding:1px 6px; margin-left:4px; flex-shrink:0; }
+        .ms-dropdown { display:none; position:absolute; top:100%; left:0; right:0; z-index:500; background:#fff; border:1.5px solid var(--primary); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.15); max-height:240px; overflow-y:auto; margin-top:2px; }
+        .ms-dropdown.open { display:block; }
+        .ms-search { width:100%; padding:8px 10px; font-size:11px; border:none; border-bottom:1px solid #e2e8f0; outline:none; box-sizing:border-box; }
+        .ms-option { display:flex; align-items:center; padding:6px 10px; font-size:11px; cursor:pointer; gap:6px; }
+        .ms-option:hover { background:#f0f9ff; }
+        .ms-option.selected { background:#eff6ff; font-weight:700; }
+        .ms-option input[type="checkbox"] { accent-color:var(--primary); margin:0; flex-shrink:0; }
+        .ms-option.ms-all { font-weight:700; color:var(--primary); border-bottom:1px solid #e2e8f0; padding:8px 10px; }
+        .ms-clear-bar { display:flex; justify-content:space-between; padding:6px 10px; border-top:1px solid #e2e8f0; background:#f8fafc; border-radius:0 0 8px 8px; }
+        .ms-clear-bar button { font-size:10px; font-weight:700; cursor:pointer; border:none; padding:4px 10px; border-radius:4px; }
+        .ms-clear-bar .ms-clear-btn { background:#fee2e2; color:#dc2626; }
+        .ms-clear-bar .ms-done-btn { background:#dcfce7; color:#166534; }
+
+        /* ── Signature Pad Modal ── */
+        .sig-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.8); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+        .sig-overlay.open { display:flex; }
+        .sig-modal { background:#fff; border-radius:16px; padding:20px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+        .sig-modal h3 { margin:0 0 4px; font-size:16px; color:var(--primary); }
+        .sig-modal p { margin:0 0 12px; font-size:11px; color:var(--text-muted); }
+        .sig-canvas-wrap { border:2px dashed var(--primary); border-radius:10px; background:#fafafa; position:relative; }
+        .sig-canvas-wrap canvas { display:block; border-radius:8px; width:100%; touch-action:none; }
+        .sig-actions { display:flex; gap:8px; margin-top:12px; }
+        .sig-actions button { flex:1; padding:10px; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+        .sig-clear-btn { background:#fee2e2; color:#dc2626; }
+        .sig-save-btn { background:var(--primary); color:#fff; }
+        .sig-preview button { background:#e2e8f0; border:none; border-radius:4px; padding:3px 8px; font-size:10px; cursor:pointer; }
         .pf-count { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
         #reports-panel { display: none; }
         .report-card { background: var(--surface); border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
@@ -247,9 +280,9 @@
         .kpi-value { font-size: 22px; font-weight: 900; color: var(--primary); }
         .kpi-label { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
         /* Quality row inside order form */
-        .quality-row { display:grid; grid-template-columns:1fr 1fr 80px auto; gap:6px; align-items:end; margin-bottom:6px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:8px 10px; }
-        .quality-row label { font-size:11px; font-weight:600; color:#166534; display:block; margin-bottom:2px; }
-        .quality-row input, .quality-row select { padding:7px 8px; border:1.5px solid #86efac; border-radius:6px; font-size:13px; font-weight:600; background:#fff; width:100%; }
+        .quality-row { display:grid; grid-template-columns:2fr 1.5fr 1.5fr 70px 36px; gap:6px; align-items:end; margin-bottom:6px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:8px 10px; }
+        .quality-row label { font-size:10px; font-weight:600; color:#166534; display:block; margin-bottom:2px; }
+        .quality-row input, .quality-row select { padding:7px 8px; border:1.5px solid #86efac; border-radius:6px; font-size:13px; font-weight:600; background:#fff; width:100%; box-sizing:border-box; }
         .quality-row .btn-remove-quality { background:#ef4444; color:#fff; border:none; border-radius:6px; padding:8px 10px; font-size:14px; cursor:pointer; line-height:1; align-self:end; }
         .order-card { background: var(--surface); border-radius: 10px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; }
         .order-card.active { border-color: var(--primary); }
@@ -305,6 +338,8 @@
             .totals-flex { color: black !important; font-size: 12px; border-top: 1.5px solid black; }
         }
     </style>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 </head>
 <body>
 
@@ -362,6 +397,21 @@
         <div id="savingIcon" class="saving-spinner"></div>
         <div class="saving-title" id="savingTitle">Saving to Sheet...</div>
         <div class="saving-subtitle" id="savingSubtitle">Please wait, do not close</div>
+    </div>
+</div>
+
+<!-- ✍️ Signature Pad Modal -->
+<div class="sig-overlay" id="sigOverlay">
+    <div class="sig-modal">
+        <h3>✍️ Draw Your Signature</h3>
+        <p>Ek baar draw karein — har packing slip PDF me auto-include hoga</p>
+        <div class="sig-canvas-wrap">
+            <canvas id="sigCanvas" width="380" height="160"></canvas>
+        </div>
+        <div class="sig-actions">
+            <button type="button" class="sig-clear-btn" onclick="sigClear()">🗑 Clear</button>
+            <button type="button" class="sig-save-btn" id="sigSaveBtn" onclick="sigSave()">💾 Save Signature</button>
+        </div>
     </div>
 </div>
 
@@ -557,19 +607,7 @@
 <!-- 📋 Order Collection Panel -->
 <!-- 📊 Reports Panel (Admin only) -->
 <div class="container" id="reports-panel">
-    <div class="card">
-        <div class="card-title">📊 MIS Reports Dashboard</div>
-        <div class="report-kpi" id="report-kpi-row"></div>
-    </div>
-    <div id="report-daily" class="report-card" style="display:none;"></div>
-    <div id="report-parties" class="report-card" style="display:none;"></div>
-    <div id="report-qualities" class="report-card" style="display:none;"></div>
-    <div id="report-types" class="report-card" style="display:none;"></div>
-    <div id="report-order-status" class="report-card" style="display:none;"></div>
-    <div id="report-order-parties" class="report-card" style="display:none;"></div>
-    <div id="report-order-qualities" class="report-card" style="display:none;"></div>
-    <div id="report-order-review" class="report-card" style="display:none;"></div>
-    <div id="report-loading" style="text-align:center;padding:30px;color:var(--text-muted);">📊 Loading reports...</div>
+    <div id="react-reports-root"></div>
 </div>
 
 <!-- 📦 Pack Orders Panel (Mobile Mode) -->
@@ -649,41 +687,19 @@
     <div class="card">
         <div class="card-title">📋 Order — Pending Details</div>
         <div class="pending-filter-bar">
-            <select id="pf-party" onchange="onPfPartyChange();renderPendingTable();">
-                <option value="">All Parties</option>
-            </select>
-            <select id="pf-subdealer" onchange="renderPendingTable()">
-                <option value="">All Sub Dealers</option>
-            </select>
-            <select id="pf-status" onchange="renderPendingTable()">
-                <option value="">All Status</option>
-                <option value="PENDING">PENDING</option>
-                <option value="IN PROGRESS">IN PROGRESS</option>
-                <option value="COMPLETED">COMPLETED</option>
-            </select>
-            <select id="pf-type" onchange="renderPendingTable()">
-                <option value="">All Types</option>
-                <option value="BILL">Bill</option>
-                <option value="NB">NB</option>
-            </select>
-            <select id="pf-item" onchange="renderPendingTable()">
-                <option value="">All Items</option>
-                <option value="BORA">BORA</option>
-                <option value="BALE">BALE</option>
-                <option value="ROLL">ROLL</option>
-                <option value="PVC BAG">PVC BAG</option>
-                <option value="LOOSE PCS">LOOSE PCS</option>
-                <option value="BOX">BOX</option>
-                <option value="OTHER">OTHER</option>
-            </select>
+            <div class="ms-wrap" id="ms-party"></div>
+            <div class="ms-wrap" id="ms-subdealer"></div>
+            <div class="ms-wrap" id="ms-status"></div>
         </div>
         <div class="pending-filter-bar">
-            <select id="pf-quality" multiple onchange="renderPendingTable()" style="min-height:36px;">
-                <option value="">All Qualities</option>
-            </select>
-            <span style="font-size:10px;color:var(--text-muted);align-self:center;">(Ctrl+click for multi-select)</span>
+            <div class="ms-wrap" id="ms-type"></div>
+            <div class="ms-wrap" id="ms-item"></div>
+            <div class="ms-wrap" id="ms-quality"></div>
         </div>
-        <div class="pf-count" id="pf-count"></div>
+        <div class="pending-filter-bar" style="align-items:center;">
+            <div class="pf-count" id="pf-count" style="flex:1;"></div>
+            <button type="button" onclick="clearAllPendingFilters()" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:5px 12px;font-size:10px;font-weight:700;cursor:pointer;">✕ Clear Filters</button>
+        </div>
     </div>
     <div style="overflow-x:auto;">
         <div id="pending-table-container"></div>
@@ -746,7 +762,7 @@
         <div style="margin-bottom:8px;">
             <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:6px;">📦 Quality Details <span class="required-star">*</span></div>
             <div id="ord-quality-rows"></div>
-            <button type="button" onclick="addQualityRow()"
+            <button type="button" onclick="addQualityRowFromLast()"
                 style="width:100%;background:#f0fdf4;color:#166534;border:1.5px dashed #86efac;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px;">
                 ＋ Add Another Quality
             </button>
@@ -783,6 +799,7 @@
                     <option value="">Select</option>
                     <option value="CONFIRM">CONFIRM</option>
                     <option value="PENDING">PENDING</option>
+                    <option value="PENDING CANCEL">PENDING CANCEL</option>
                     <option value="PARTIAL HOLD">PARTIAL HOLD</option>
                     <option value="STARTED">STARTED</option>
                     <option value="CANCEL">CANCEL</option>
@@ -820,7 +837,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7GlMOWq7_ZhcujeIZxeqhvXRFmcqeA1-aYQ-Zelhrhgiue4rxOP6jkXnfVAaITjWf/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby3ao4pBltBvDJE9hY5bw-rb4dWxKDJUakf7iBP6ybLoKlia8R0eCkYP3cQ53n1mKND/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -911,7 +928,7 @@ async function handleLogin() {
         const result = await res.json();
 
         if (result.success) {
-            session = { token: result.token, role: result.role, fullName: result.fullName, username: result.username };
+            session = { token: result.token, role: result.role, fullName: result.fullName, username: result.username, signature: result.signature || '' };
             saveSessionToStorage(session);
             document.getElementById('login-password').value = '';
             enterApp();
@@ -944,6 +961,141 @@ async function handleLogout() {
     clearSession(false);
 }
 
+// ══════════════════════════════════════════
+// ✍️ SIGNATURE PAD — Draw, Save, Auto-Pick
+// ══════════════════════════════════════════
+var sigCtx = null;
+var sigDrawing = false;
+var sigHasStrokes = false;
+
+function showSignaturePad() {
+    document.getElementById('sigOverlay').classList.add('open');
+    initSigCanvas();
+}
+
+function hideSigPad() {
+    document.getElementById('sigOverlay').classList.remove('open');
+}
+
+function initSigCanvas() {
+    var canvas = document.getElementById('sigCanvas');
+    if (!canvas) return;
+
+    // Set canvas internal size to match CSS display size
+    var rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;   // 2x for retina sharpness
+    canvas.height = rect.height * 2;
+
+    sigCtx = canvas.getContext('2d');
+    sigCtx.scale(2, 2);
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+    sigCtx.strokeStyle = '#1e293b';
+    sigHasStrokes = false;
+
+    // Touch events
+    canvas.addEventListener('touchstart', sigTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', sigTouchMove, { passive: false });
+    canvas.addEventListener('touchend', sigTouchEnd);
+
+    // Mouse events (desktop)
+    canvas.addEventListener('mousedown', sigMouseDown);
+    canvas.addEventListener('mousemove', sigMouseMove);
+    canvas.addEventListener('mouseup', sigMouseUp);
+    canvas.addEventListener('mouseleave', sigMouseUp);
+}
+
+function sigGetPos(e, canvas) {
+    var rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length) {
+        return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function sigTouchStart(e) { e.preventDefault(); sigStart(e); }
+function sigTouchMove(e)  { e.preventDefault(); sigMove(e); }
+function sigTouchEnd(e)   { sigEnd(); }
+function sigMouseDown(e)  { sigStart(e); }
+function sigMouseMove(e)  { if (sigDrawing) sigMove(e); }
+function sigMouseUp(e)    { sigEnd(); }
+
+function sigStart(e) {
+    sigDrawing = true;
+    sigHasStrokes = true;
+    var pos = sigGetPos(e, document.getElementById('sigCanvas'));
+    sigCtx.beginPath();
+    sigCtx.moveTo(pos.x, pos.y);
+}
+
+function sigMove(e) {
+    if (!sigDrawing) return;
+    var pos = sigGetPos(e, document.getElementById('sigCanvas'));
+    sigCtx.lineTo(pos.x, pos.y);
+    sigCtx.stroke();
+}
+
+function sigEnd() {
+    sigDrawing = false;
+}
+
+function sigClear() {
+    var canvas = document.getElementById('sigCanvas');
+    if (sigCtx && canvas) {
+        sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    sigHasStrokes = false;
+}
+
+async function sigSave() {
+    if (!sigHasStrokes) {
+        alert('Pehle signature draw karein!');
+        return;
+    }
+
+    var canvas = document.getElementById('sigCanvas');
+    var dataUrl = canvas.toDataURL('image/png'); // "data:image/png;base64,..."
+
+    var btn = document.getElementById('sigSaveBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Saving...';
+
+    try {
+        var payload = withAuthPayload({
+            action: 'saveSignature',
+            signatureData: dataUrl
+        });
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (handleAuthFailure(result)) return;
+
+        if (result.success) {
+            // Save to session + localStorage
+            session.signature = dataUrl;
+            saveSessionToStorage(session);
+            hideSigPad();
+            btn.textContent = '✅ Saved!';
+            setTimeout(function() { btn.textContent = '💾 Save Signature'; btn.disabled = false; }, 1000);
+        } else {
+            alert('Error: ' + (result.error || 'Unknown'));
+            btn.textContent = '💾 Save Signature';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        alert('Network error! Try again.');
+        btn.textContent = '💾 Save Signature';
+        btn.disabled = false;
+    }
+}
+
+// Signature preview removed — pad only shows when no signature saved in sheet
+
 // Called after a successful login (fresh or restored from storage)
 function enterApp() {
     document.getElementById('loginOverlay').style.display = 'none';
@@ -951,6 +1103,12 @@ function enterApp() {
     document.getElementById('userBarName').textContent = session.fullName;
     var roleLabels = { 'ADMIN': '(Admin)', 'PACKING_INCHARGE': '(Packing Incharge)', 'DATA_ENTRY': '(Data Entry)' };
     document.getElementById('userBarRole').textContent = roleLabels[session.role] || '(' + session.role + ')';
+
+    // ✍️ Show signature pad if user has no saved signature
+    if (!session.signature) {
+        setTimeout(function() { showSignaturePad(); }, 600);
+    }
+
     showPackingForm();
 }
 
@@ -2069,6 +2227,9 @@ async function handleFinish() {
     btn.textContent = '⏳ Processing...';
     btn.style.opacity = '0.5';
 
+    // 🔒 FULL INTERFACE LOCK — disable entire form so nothing can be changed
+    lockEntireInterface(true);
+
     // Show full-screen overlay immediately (z-index:2000 blocks ALL clicks)
     setSavingStage('locking');
 
@@ -2136,8 +2297,56 @@ async function handleFinish() {
     if (container) container.innerHTML = '';
 
     setSavingStage('done', 'Slip ' + (result.slipNo || '') + ' saved! Refreshing...');
-    // isSubmitting stays true — page will reload, no unlock needed
-    setTimeout(function () { location.reload(); }, 1800);
+
+    // 🔄 Auto-clear form + reload — isSubmitting stays true
+    setTimeout(function () {
+        clearFormCompletely();
+        location.reload();
+    }, 1800);
+}
+
+// 🔒 FULL INTERFACE LOCK — disables ALL inputs, selects, buttons in the form
+function lockEntireInterface(lock) {
+    var form = document.getElementById('packing-slip-form');
+    if (!form) return;
+    if (lock) {
+        form.style.pointerEvents = 'none';
+        form.style.opacity = '0.6';
+        form.style.userSelect = 'none';
+        // Disable all interactive elements as extra safety
+        form.querySelectorAll('input, select, textarea, button').forEach(function(el) {
+            el.dataset.wasDisabled = el.disabled ? 'true' : 'false';
+            el.disabled = true;
+        });
+    } else {
+        form.style.pointerEvents = '';
+        form.style.opacity = '';
+        form.style.userSelect = '';
+        form.querySelectorAll('input, select, textarea, button').forEach(function(el) {
+            // Only re-enable if it wasn't disabled before lock
+            if (el.dataset.wasDisabled === 'false') el.disabled = false;
+            delete el.dataset.wasDisabled;
+        });
+    }
+}
+
+// 🧹 Clear form completely after successful save (before reload)
+function clearFormCompletely() {
+    try {
+        document.getElementById('party-name').value = '';
+        document.getElementById('sub-party-name').value = '';
+        document.getElementById('third-party-name').value = '';
+        document.getElementById('contractor-name').value = '';
+        document.getElementById('tempo-no').value = '';
+        document.getElementById('driver-name').value = '';
+        document.getElementById('driver-mobile').value = '';
+        document.getElementById('supervisor-name').value = '';
+        document.getElementById('dispatch-to').value = '';
+        document.getElementById('mob-no').value = '';
+        var ic = document.getElementById('items-container');
+        if (ic) ic.innerHTML = '';
+        currentDraftId = '';
+    } catch(e) { /* page is about to reload anyway */ }
 }
 
 // 🔓 Unlock helper — only called on validation/network FAILURE
@@ -2147,6 +2356,7 @@ function unlockFinish(btn) {
     btn.textContent = '✅ Finish Packing Slip';
     btn.style.opacity = '1';
     document.getElementById('savingOverlay').style.display = 'none';
+    lockEntireInterface(false);  // 🔓 Re-enable all form fields
     slipSyncPaused = false;      // ▶️ Resume slip number polling
     startAutoSaveDraft();        // ▶️ Resume auto-save
 }
@@ -3158,7 +3368,7 @@ function addQualityRow(quality, item, qty, privateMarka) {
     div.innerHTML =
         '<div>' +
             '<label>Quality *</label>' +
-            '<input type="text" class="qr-quality" placeholder="Type to search quality..." list="dl-brand-order" autocomplete="off" ' +
+            '<input type="text" class="qr-quality" placeholder="Quality..." list="dl-brand-order" autocomplete="off" ' +
             'value="' + escapeHtmlJs(quality || '') + '" oninput="this.value=this.value.toUpperCase()">' +
         '</div>' +
         '<div>' +
@@ -3171,15 +3381,28 @@ function addQualityRow(quality, item, qty, privateMarka) {
             '</select>' +
         '</div>' +
         '<div>' +
+            '<label>Marka</label>' +
+            '<input type="text" class="qr-marka" placeholder="Marka" value="' + escapeHtmlJs(privateMarka || '') + '" oninput="this.value=this.value.toUpperCase()">' +
+        '</div>' +
+        '<div>' +
             '<label>Qty *</label>' +
             '<input type="number" class="qr-qty" min="1" placeholder="0" value="' + (qty || '') + '" oninput="updateOrdGrandTotal()">' +
         '</div>' +
-        '<div>' +
-            '<label>Marka</label>' +
-            '<input type="text" class="qr-marka" placeholder="Private Marka" value="' + escapeHtmlJs(privateMarka || '') + '" oninput="this.value=this.value.toUpperCase()">' +
-        '</div>' +
         '<button type="button" class="btn-remove-quality" onclick="removeQualityRow(\'' + id + '\')" title="Remove">×</button>';
     container.appendChild(div);
+}
+
+// 📦 Add Quality Row with last row's Quality pre-filled
+function addQualityRowFromLast() {
+    var rows = document.querySelectorAll('.quality-row');
+    var lastQuality = '';
+    if (rows.length > 0) {
+        var lastRow = rows[rows.length - 1];
+        var qInput = lastRow.querySelector('.qr-quality');
+        if (qInput) lastQuality = qInput.value.trim();
+    }
+    addQualityRow(lastQuality, '', '', '');
+    updateOrderNoPreview();
 }
 
 function removeQualityRow(id) {
@@ -3349,234 +3572,452 @@ function showReportsPanel() {
     updateNavButtons('reports-panel');
     if (slipSyncInterval) { clearInterval(slipSyncInterval); slipSyncInterval = null; }
     stopAutoSaveDraft();
-    fetchReports();
+    mountReactReports();
 }
 
-async function fetchReports() {
-    document.getElementById('report-loading').style.display = '';
-    document.getElementById('report-daily').style.display = 'none';
-    document.getElementById('report-parties').style.display = 'none';
-    document.getElementById('report-qualities').style.display = 'none';
-    document.getElementById('report-types').style.display = 'none';
+// ══════════════════════════════════════════
+// ⚛️ REACT REPORTS DASHBOARD
+// Features:
+//   - Network-resilient: caches last-fetched data, shows it even on error
+//   - Auto-refresh: polls every 60 seconds when panel is visible
+//   - Visual: KPI cards, sortable tables, status badges
+// ══════════════════════════════════════════
+var _reactReportsRoot = null;
+var _cachedReportData = null;     // 🛡️ Survives network failures
+var _reportRefreshTimer = null;
+var REPORT_REFRESH_INTERVAL = 60000; // 60 seconds
 
-    try {
-        var url = withToken(APPS_SCRIPT_URL + '?action=getReports');
-        var res = await fetch(url, { redirect: 'follow' });
-        var data = await res.json();
-        if (handleAuthFailure(data)) return;
-        if (data.success) {
-            renderReports(data.reports);
-        } else {
-            document.getElementById('report-loading').textContent = 'Error: ' + (data.error || 'Unknown');
-        }
-    } catch (err) {
-        document.getElementById('report-loading').textContent = 'Network error!';
+function mountReactReports() {
+    var container = document.getElementById('react-reports-root');
+    if (!container) return;
+    if (!_reactReportsRoot) {
+        _reactReportsRoot = ReactDOM.createRoot(container);
     }
+    // Render with cached data first (instant), then fetch fresh
+    _reactReportsRoot.render(React.createElement(ReportsDashboard, {
+        initialData: _cachedReportData,
+        fetchUrl: APPS_SCRIPT_URL,
+        tokenFn: withToken,
+        authFailFn: handleAuthFailure,
+        escFn: escapeHtmlJs,
+        refreshInterval: REPORT_REFRESH_INTERVAL
+    }));
 }
 
-function renderReports(r) {
-    document.getElementById('report-loading').style.display = 'none';
+function unmountReactReports() {
+    if (_reportRefreshTimer) { clearInterval(_reportRefreshTimer); _reportRefreshTimer = null; }
+}
 
+// ⚛️ React Component: ReportsDashboard
+function ReportsDashboard(props) {
+    var useState = React.useState, useEffect = React.useEffect, useRef = React.useRef, useCallback = React.useCallback;
+
+    var _s = useState(props.initialData || null);
+    var data = _s[0], setData = _s[1];
+    var _l = useState(!props.initialData);
+    var loading = _l[0], setLoading = _l[1];
+    var _e = useState('');
+    var error = _e[0], setError = _e[1];
+    var _t = useState(null);
+    var lastUpdated = _t[0], setLastUpdated = _t[1];
+    var _r = useState(false);
+    var isRefreshing = _r[0], setIsRefreshing = _r[1];
+    var mountedRef = useRef(true);
+
+    var fetchData = useCallback(function(isBackground) {
+        if (!isBackground) setLoading(true);
+        else setIsRefreshing(true);
+
+        var url = props.tokenFn(props.fetchUrl + '?action=getReports&t=' + Date.now());
+        fetch(url, { redirect: 'follow' })
+            .then(function(res) { return res.json(); })
+            .then(function(result) {
+                if (!mountedRef.current) return;
+                if (props.authFailFn(result)) return;
+                if (result.success && result.reports) {
+                    setData(result.reports);
+                    _cachedReportData = result.reports; // 🛡️ Cache for network resilience
+                    setError('');
+                    setLastUpdated(new Date());
+                } else {
+                    setError(result.error || 'Unknown error');
+                    // 🛡️ Don't clear data — keep showing cached
+                }
+            })
+            .catch(function(err) {
+                if (!mountedRef.current) return;
+                // 🛡️ NETWORK FAILURE — keep showing cached data
+                if (data) {
+                    setError('⚡ Offline — showing cached data');
+                } else {
+                    setError('Network error! Internet check karein.');
+                }
+            })
+            .finally(function() {
+                if (!mountedRef.current) return;
+                setLoading(false);
+                setIsRefreshing(false);
+            });
+    }, []);
+
+    useEffect(function() {
+        mountedRef.current = true;
+        fetchData(!!props.initialData);
+
+        // ⏱️ Auto-refresh every 60 seconds
+        var timer = setInterval(function() { fetchData(true); }, props.refreshInterval || 60000);
+        _reportRefreshTimer = timer;
+
+        return function() {
+            mountedRef.current = false;
+            clearInterval(timer);
+        };
+    }, []);
+
+    var e = React.createElement;
+
+    // ── Loading state (only on first load with no cache) ──
+    if (loading && !data) {
+        return e('div', { style: { textAlign: 'center', padding: '40px', color: '#64748b' } },
+            e('div', { className: 'saving-spinner', style: { margin: '0 auto 16px' } }),
+            '📊 Loading reports...'
+        );
+    }
+
+    if (!data) {
+        return e('div', { style: { textAlign: 'center', padding: '40px', color: '#ef4444' } },
+            '❌ ' + (error || 'No data available')
+        );
+    }
+
+    var r = data;
     var ord = r.orders || {};
     var itemNames = ord.itemNames || [];
 
     // ── Shared helpers ──
-    function esc(v) { return escapeHtmlJs(String(v||'')); }
+    function esc(v) { return String(v || ''); }
 
-    // Item-wise Ord/Pend cell per row
-    function itemCols(items) {
-        return itemNames.map(function(it) {
-            var d = (items||{})[it];
-            if (!d) return '<td class="num" style="font-size:10px;color:#94a3b8;">-</td>';
-            return '<td class="num" style="font-size:10px;">' + d.ordQty + '/<span style="color:#ef4444;">' + d.pendQty + '</span></td>';
-        }).join('');
-    }
-    function itemHeaders() {
-        return itemNames.map(function(it) {
-            return '<th class="center" style="font-size:9px;background:#312e81;color:#e0e7ff;">' + esc(it) + '<br><span style="font-size:8px;opacity:.8;">Ord/Pend</span></th>';
-        }).join('');
+    // ── Status badge color ──
+    function statusColor(s) {
+        s = (s || '').toUpperCase();
+        if (s === 'PENDING') return '#f59e0b';
+        if (s === 'COMPLETED') return '#10b981';
+        if (s === 'IN PROGRESS') return '#2563eb';
+        if (s === 'CANCEL') return '#ef4444';
+        return '#6366f1';
     }
 
-    // ── KPI Cards (Dispatch + Order) ──
-    var kpi = document.getElementById('report-kpi-row');
-    kpi.innerHTML =
-        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.packs||0).toLocaleString() + '</div><div class="kpi-label">Dispatched Packs</div></div>' +
-        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.pcs||0).toLocaleString() + '</div><div class="kpi-label">Dispatched Pcs</div></div>' +
-        '<div class="kpi-card"><div class="kpi-value">' + (r.totals.wt||0).toLocaleString() + '</div><div class="kpi-label">Total Wt (Kg)</div></div>';
-    if (ord.totals && ord.totals.orders) {
-        kpi.innerHTML +=
-            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
-                '<div class="kpi-value" style="color:#b45309;">' + ord.totals.orders + '</div><div class="kpi-label">Total Orders</div></div>' +
-            '<div class="kpi-card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f59e0b;">' +
-                '<div class="kpi-value" style="color:#b45309;">' + (ord.totals.ordQty||0).toLocaleString() + '</div><div class="kpi-label">Ordered Qty</div></div>' +
-            '<div class="kpi-card" style="background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#ef4444;">' +
-                '<div class="kpi-value" style="color:#dc2626;">' + (ord.totals.pendQty||0).toLocaleString() + '</div><div class="kpi-label">Pending Qty</div></div>';
-    }
-
-    // ── 1. Daily Dispatch (dispatch only — orders have no date dimension to merge)
-    var dailyEl = document.getElementById('report-daily');
-    if (r.daily && r.daily.length) {
-        dailyEl.style.display = '';
-        dailyEl.innerHTML = '<div class="report-title">📅 Daily Dispatch (Last 30 Days)</div>' +
-            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
-            '<th>Date</th><th class="center">Slips</th><th class="center">Packs</th><th class="num">Pcs</th><th class="num">Weight (Kg)</th>' +
-            '</tr></thead><tbody>' +
-            r.daily.map(function(d) {
-                return '<tr><td>' + d.date + '</td><td class="center">' + d.slips + '</td><td class="center">' + d.packs + '</td><td class="num">' + d.pcs.toLocaleString() + '</td><td class="num">' + d.wt.toLocaleString() + '</td></tr>';
-            }).join('') +
-            '</tbody></table></div>';
+    function reviewColor(rv) {
+        if (rv === 'CONFIRM') return '#10b981';
+        if (rv === 'CANCEL') return '#ef4444';
+        if (rv === 'STARTED') return '#2563eb';
+        return '#f59e0b';
     }
 
     // ── Build lookup maps for fast join ──
     var dispByParty = {};
-    (r.parties||[]).forEach(function(p){ dispByParty[p.party.toUpperCase()] = p; });
+    (r.parties || []).forEach(function(p) { dispByParty[p.party.toUpperCase()] = p; });
     var dispByQual = {};
-    (r.qualities||[]).forEach(function(q){ dispByQual[q.quality.toUpperCase()] = q; });
-
-    var dispH = '<th class="center" style="background:#064e3b;color:#a7f3d0;font-size:9px;">Slips</th>' +
-                '<th class="center" style="background:#064e3b;color:#a7f3d0;font-size:9px;">Packs</th>' +
-                '<th class="num"   style="background:#064e3b;color:#a7f3d0;font-size:9px;">Pcs</th>' +
-                '<th class="num"   style="background:#064e3b;color:#a7f3d0;font-size:9px;">Wt(Kg)</th>';
-
-    function dispCells(d) {
-        if (!d) return '<td colspan="4" style="text-align:center;color:#94a3b8;font-size:10px;">—</td>';
-        return '<td class="center" style="font-size:10px;">' + d.slips + '</td>' +
-               '<td class="center" style="font-size:10px;">' + d.packs + '</td>' +
-               '<td class="num"    style="font-size:10px;">' + d.pcs.toLocaleString() + '</td>' +
-               '<td class="num"    style="font-size:10px;">' + d.wt.toLocaleString() + '</td>';
-    }
-
-    // ═══ TABLE 1: Party-wise Merged ═══════════════
-    var partyEl = document.getElementById('report-parties');
-    var allPartyKeys = {};
-    (ord.partyWise||[]).forEach(function(p){ allPartyKeys[p.party] = true; });
-    (r.parties||[]).forEach(function(p){ allPartyKeys[p.party] = true; });
-    var allParties = Object.keys(allPartyKeys).sort();
+    (r.qualities || []).forEach(function(q) { dispByQual[q.quality.toUpperCase()] = q; });
     var ordPartyMap = {};
-    (ord.partyWise||[]).forEach(function(p){ ordPartyMap[p.party.toUpperCase()] = p; });
-    if (allParties.length) {
-        partyEl.style.display = '';
-        var pTotal = { slips:0, packs:0, pcs:0, wt:0 };
-        partyEl.innerHTML = '<div class="report-title">🏢 Party-wise Summary — Order + Dispatch</div>' +
-            '<div style="overflow-x:auto;"><table class="report-table"><thead>' +
-            '<tr><th rowspan="2" style="vertical-align:bottom;">Party Name</th>' +
-            '<th colspan="' + (1 + itemNames.length) + '" style="text-align:center;background:#312e81;color:#e0e7ff;font-size:10px;">📋 ORDER</th>' +
-            '<th colspan="4" style="text-align:center;background:#064e3b;color:#a7f3d0;font-size:10px;">🚚 DISPATCH</th></tr>' +
-            '<tr><th class="center" style="background:#312e81;color:#e0e7ff;font-size:9px;">Count</th>' +
-            itemHeaders() + dispH + '</tr></thead><tbody>' +
-            allParties.map(function(pName) {
-                var o = ordPartyMap[pName.toUpperCase()] || null;
-                var d = dispByParty[pName.toUpperCase()] || null;
-                if (d) { pTotal.slips+=d.slips; pTotal.packs+=d.packs; pTotal.pcs+=d.pcs; pTotal.wt+=d.wt; }
-                return '<tr><td style="font-weight:600;">' + esc(pName) + '</td>' +
-                    '<td class="center" style="font-size:10px;">' + (o ? o.count : '—') + '</td>' +
-                    itemCols(o ? o.items : null) + dispCells(d) + '</tr>';
-            }).join('') +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td></td>' +
-            itemNames.map(function(){ return '<td></td>'; }).join('') +
-            '<td class="center">' + pTotal.slips + '</td><td class="center">' + pTotal.packs +
-            '</td><td class="num">' + pTotal.pcs.toLocaleString() + '</td><td class="num">' + pTotal.wt.toLocaleString() + '</td>' +
-            '</tr></tbody></table></div>';
-    }
-
-    // ═══ TABLE 2: Quality-wise Merged ═════════════
-    var qualEl = document.getElementById('report-qualities');
-    var allQualKeys = {};
-    (ord.qualityWise||[]).forEach(function(q){ allQualKeys[q.quality] = true; });
-    (r.qualities||[]).forEach(function(q){ allQualKeys[q.quality] = true; });
-    var allQuals = Object.keys(allQualKeys).sort();
+    (ord.partyWise || []).forEach(function(p) { ordPartyMap[p.party.toUpperCase()] = p; });
     var ordQualMap = {};
-    (ord.qualityWise||[]).forEach(function(q){ ordQualMap[q.quality.toUpperCase()] = q; });
+    (ord.qualityWise || []).forEach(function(q) { ordQualMap[q.quality.toUpperCase()] = q; });
+
+    // ── Merged party keys ──
+    var allPartyKeys = {};
+    (ord.partyWise || []).forEach(function(p) { allPartyKeys[p.party] = true; });
+    (r.parties || []).forEach(function(p) { allPartyKeys[p.party] = true; });
+    var allParties = Object.keys(allPartyKeys).sort();
+
+    // ── Merged quality keys ──
+    var allQualKeys = {};
+    (ord.qualityWise || []).forEach(function(q) { allQualKeys[q.quality] = true; });
+    (r.qualities || []).forEach(function(q) { allQualKeys[q.quality] = true; });
+    var allQuals = Object.keys(allQualKeys).sort();
+
+    // ── KPI Card component ──
+    function KPI(p) {
+        var bg = p.bg || 'linear-gradient(135deg, #eff6ff, #dbeafe)';
+        var bc = p.bc || '#bfdbfe';
+        var vc = p.vc || 'var(--primary)';
+        return e('div', { className: 'kpi-card', style: { background: bg, borderColor: bc } },
+            e('div', { className: 'kpi-value', style: { color: vc } }, (p.value || 0).toLocaleString()),
+            e('div', { className: 'kpi-label' }, p.label)
+        );
+    }
+
+    // ── Generic table component ──
+    function RTable(p) {
+        if (!p.rows || !p.rows.length) return null;
+        return e('div', { className: 'report-card' },
+            e('div', { className: 'report-title' }, p.title),
+            e('div', { style: { overflowX: 'auto' } },
+                e('table', { className: 'report-table' },
+                    e('thead', null, e('tr', null, p.headers.map(function(h, i) {
+                        return e('th', { key: i, className: h.cls || '', style: h.style || {} }, h.text);
+                    }))),
+                    e('tbody', null,
+                        p.rows.map(function(row, ri) {
+                            return e('tr', { key: ri, style: row._style || {} },
+                                row.cells.map(function(c, ci) {
+                                    return e('td', { key: ci, className: c.cls || '', style: c.style || {},
+                                        dangerouslySetInnerHTML: c.html ? { __html: c.html } : undefined
+                                    }, c.html ? undefined : c.text);
+                                })
+                            );
+                        }),
+                        p.footer ? e('tr', { style: { background: '#fef3c7', fontWeight: 700 } },
+                            p.footer.map(function(c, ci) {
+                                return e('td', { key: ci, className: c.cls || '' }, c.text);
+                            })
+                        ) : null
+                    )
+                )
+            )
+        );
+    }
+
+    // ── Refresh indicator ──
+    var refreshBadge = e('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, fontSize: 11, color: '#64748b' } },
+        e('span', null,
+            isRefreshing ? '🔄 Refreshing...' :
+            lastUpdated ? '✅ Updated: ' + lastUpdated.toLocaleTimeString() :
+            ''
+        ),
+        error ? e('span', { style: { color: data ? '#f59e0b' : '#ef4444', fontWeight: 600 } }, error) : null,
+        e('button', {
+            onClick: function() { fetchData(true); },
+            style: { background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }
+        }, '🔄 Refresh')
+    );
+
+    // ═══ BUILD ALL SECTIONS ═══
+    var sections = [];
+
+    // ── KPI Row ──
+    var kpis = [
+        e(KPI, { key: 'k1', value: r.totals.packs || 0, label: 'Dispatched Packs' }),
+        e(KPI, { key: 'k2', value: r.totals.pcs || 0, label: 'Dispatched Pcs' }),
+        e(KPI, { key: 'k3', value: r.totals.wt || 0, label: 'Total Wt (Kg)' })
+    ];
+    if (ord.totals && ord.totals.orders) {
+        kpis.push(
+            e(KPI, { key: 'k4', value: ord.totals.orders, label: 'Total Orders', bg: 'linear-gradient(135deg,#fef3c7,#fde68a)', bc: '#f59e0b', vc: '#b45309' }),
+            e(KPI, { key: 'k5', value: ord.totals.ordQty || 0, label: 'Ordered Qty', bg: 'linear-gradient(135deg,#fef3c7,#fde68a)', bc: '#f59e0b', vc: '#b45309' }),
+            e(KPI, { key: 'k6', value: ord.totals.pendQty || 0, label: 'Pending Qty', bg: 'linear-gradient(135deg,#fee2e2,#fecaca)', bc: '#ef4444', vc: '#dc2626' })
+        );
+    }
+
+    sections.push(e('div', { className: 'card', key: 'kpi' },
+        e('div', { className: 'card-title' }, '📊 MIS Reports Dashboard'),
+        refreshBadge,
+        e('div', { className: 'report-kpi' }, kpis)
+    ));
+
+    // ── 1. Daily Dispatch ──
+    if (r.daily && r.daily.length) {
+        sections.push(e(RTable, {
+            key: 'daily', title: '📅 Daily Dispatch (Last 30 Days)',
+            headers: [
+                { text: 'Date' }, { text: 'Slips', cls: 'center' }, { text: 'Packs', cls: 'center' },
+                { text: 'Pcs', cls: 'num' }, { text: 'Weight (Kg)', cls: 'num' }
+            ],
+            rows: r.daily.map(function(d) {
+                return { cells: [
+                    { text: d.date }, { text: d.slips, cls: 'center' }, { text: d.packs, cls: 'center' },
+                    { text: d.pcs.toLocaleString(), cls: 'num' }, { text: d.wt.toLocaleString(), cls: 'num' }
+                ]};
+            })
+        }));
+    }
+
+    // ── 2. Party-wise Merged ──
+    if (allParties.length) {
+        var pTotal = { slips: 0, packs: 0, pcs: 0, wt: 0 };
+        var partyHeaders = [{ text: 'Party Name' }, { text: 'Ord#', cls: 'center' }];
+        itemNames.forEach(function(it) { partyHeaders.push({ text: it, cls: 'center', style: { fontSize: 9, background: '#312e81', color: '#e0e7ff' } }); });
+        partyHeaders.push({ text: 'Slips', cls: 'center', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+        partyHeaders.push({ text: 'Packs', cls: 'center', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+        partyHeaders.push({ text: 'Pcs', cls: 'num', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+        partyHeaders.push({ text: 'Wt(Kg)', cls: 'num', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+
+        var partyRows = allParties.map(function(pName) {
+            var o = ordPartyMap[pName.toUpperCase()] || null;
+            var d = dispByParty[pName.toUpperCase()] || null;
+            if (d) { pTotal.slips += d.slips; pTotal.packs += d.packs; pTotal.pcs += d.pcs; pTotal.wt += d.wt; }
+            var cells = [
+                { text: esc(pName), style: { fontWeight: 600 } },
+                { text: o ? o.count : '—', cls: 'center', style: { fontSize: 10 } }
+            ];
+            itemNames.forEach(function(it) {
+                var id = o && o.items ? o.items[it] : null;
+                cells.push(id
+                    ? { html: '<span style="font-size:10px;">' + id.ordQty + '/<span style="color:#ef4444;">' + id.pendQty + '</span></span>', cls: 'num' }
+                    : { text: '—', cls: 'num', style: { color: '#94a3b8', fontSize: 10 } }
+                );
+            });
+            cells.push({ text: d ? d.slips : '—', cls: 'center', style: { fontSize: 10 } });
+            cells.push({ text: d ? d.packs : '—', cls: 'center', style: { fontSize: 10 } });
+            cells.push({ text: d ? d.pcs.toLocaleString() : '—', cls: 'num', style: { fontSize: 10 } });
+            cells.push({ text: d ? d.wt.toLocaleString() : '—', cls: 'num', style: { fontSize: 10 } });
+            return { cells: cells };
+        });
+
+        var pFooterCells = [{ text: 'TOTAL' }, { text: '' }];
+        itemNames.forEach(function() { pFooterCells.push({ text: '' }); });
+        pFooterCells.push({ text: pTotal.slips, cls: 'center' });
+        pFooterCells.push({ text: pTotal.packs, cls: 'center' });
+        pFooterCells.push({ text: pTotal.pcs.toLocaleString(), cls: 'num' });
+        pFooterCells.push({ text: pTotal.wt.toLocaleString(), cls: 'num' });
+
+        sections.push(e(RTable, {
+            key: 'parties', title: '🏢 Party-wise Summary — Order + Dispatch',
+            headers: partyHeaders, rows: partyRows, footer: pFooterCells
+        }));
+    }
+
+    // ── 3. Quality-wise Merged ──
     if (allQuals.length) {
-        qualEl.style.display = '';
-        var qTotal = { slips:0, packs:0, pcs:0, wt:0 };
-        qualEl.innerHTML = '<div class="report-title">🧵 Quality-wise Summary — Order + Dispatch</div>' +
-            '<div style="overflow-x:auto;"><table class="report-table"><thead>' +
-            '<tr><th rowspan="2" style="vertical-align:bottom;">Quality</th>' +
-            '<th colspan="' + (1 + itemNames.length) + '" style="text-align:center;background:#312e81;color:#e0e7ff;font-size:10px;">📋 ORDER</th>' +
-            '<th colspan="4" style="text-align:center;background:#064e3b;color:#a7f3d0;font-size:10px;">🚚 DISPATCH</th></tr>' +
-            '<tr><th class="center" style="background:#312e81;color:#e0e7ff;font-size:9px;">Count</th>' +
-            itemHeaders() + dispH + '</tr></thead><tbody>' +
-            allQuals.map(function(qName) {
-                var o = ordQualMap[qName.toUpperCase()] || null;
-                var d = dispByQual[qName.toUpperCase()] || null;
-                if (d) { qTotal.slips+=d.slips; qTotal.packs+=d.packs; qTotal.pcs+=d.pcs; qTotal.wt+=d.wt; }
-                return '<tr><td style="font-weight:600;">' + esc(qName) + '</td>' +
-                    '<td class="center" style="font-size:10px;">' + (o ? o.count : '—') + '</td>' +
-                    itemCols(o ? o.items : null) + dispCells(d) + '</tr>';
-            }).join('') +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td></td>' +
-            itemNames.map(function(){ return '<td></td>'; }).join('') +
-            '<td class="center">' + qTotal.slips + '</td><td class="center">' + qTotal.packs +
-            '</td><td class="num">' + qTotal.pcs.toLocaleString() + '</td><td class="num">' + qTotal.wt.toLocaleString() + '</td>' +
-            '</tr></tbody></table></div>';
+        var qTotal = { slips: 0, packs: 0, pcs: 0, wt: 0 };
+        var qualHeaders = [{ text: 'Quality' }, { text: 'Ord#', cls: 'center' }];
+        itemNames.forEach(function(it) { qualHeaders.push({ text: it, cls: 'center', style: { fontSize: 9, background: '#312e81', color: '#e0e7ff' } }); });
+        qualHeaders.push({ text: 'Slips', cls: 'center', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+        qualHeaders.push({ text: 'Packs', cls: 'center', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+        qualHeaders.push({ text: 'Pcs', cls: 'num', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+        qualHeaders.push({ text: 'Wt(Kg)', cls: 'num', style: { background: '#064e3b', color: '#a7f3d0', fontSize: 9 } });
+
+        var qualRows = allQuals.map(function(qName) {
+            var o = ordQualMap[qName.toUpperCase()] || null;
+            var d = dispByQual[qName.toUpperCase()] || null;
+            if (d) { qTotal.slips += d.slips; qTotal.packs += d.packs; qTotal.pcs += d.pcs; qTotal.wt += d.wt; }
+            var cells = [
+                { text: esc(qName), style: { fontWeight: 600 } },
+                { text: o ? o.count : '—', cls: 'center', style: { fontSize: 10 } }
+            ];
+            itemNames.forEach(function(it) {
+                var id = o && o.items ? o.items[it] : null;
+                cells.push(id
+                    ? { html: '<span style="font-size:10px;">' + id.ordQty + '/<span style="color:#ef4444;">' + id.pendQty + '</span></span>', cls: 'num' }
+                    : { text: '—', cls: 'num', style: { color: '#94a3b8', fontSize: 10 } }
+                );
+            });
+            cells.push({ text: d ? d.slips : '—', cls: 'center', style: { fontSize: 10 } });
+            cells.push({ text: d ? d.packs : '—', cls: 'center', style: { fontSize: 10 } });
+            cells.push({ text: d ? d.pcs.toLocaleString() : '—', cls: 'num', style: { fontSize: 10 } });
+            cells.push({ text: d ? d.wt.toLocaleString() : '—', cls: 'num', style: { fontSize: 10 } });
+            return { cells: cells };
+        });
+
+        var qFooterCells = [{ text: 'TOTAL' }, { text: '' }];
+        itemNames.forEach(function() { qFooterCells.push({ text: '' }); });
+        qFooterCells.push({ text: qTotal.slips, cls: 'center' });
+        qFooterCells.push({ text: qTotal.packs, cls: 'center' });
+        qFooterCells.push({ text: qTotal.pcs.toLocaleString(), cls: 'num' });
+        qFooterCells.push({ text: qTotal.wt.toLocaleString(), cls: 'num' });
+
+        sections.push(e(RTable, {
+            key: 'qualities', title: '🧵 Quality-wise Summary — Order + Dispatch',
+            headers: qualHeaders, rows: qualRows, footer: qFooterCells
+        }));
     }
 
-    // ═══ TABLE 3: Item-wise Order Summary ═════════
-    var typeEl = document.getElementById('report-types');
+    // ── 4. Item-wise Order Summary ──
     if (ord.itemWise && ord.itemWise.length) {
-        typeEl.style.display = '';
-        var iTotal = { count:0, ordQty:0, pendQty:0 };
-        typeEl.innerHTML = '<div class="report-title">📦 Item-wise Order Summary</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Item Type</th><th class="center">Orders</th><th class="num">Ordered Qty</th><th class="num">Pending Qty</th>' +
-            '</tr></thead><tbody>' +
-            ord.itemWise.map(function(i) {
+        var iTotal = { count: 0, ordQty: 0, pendQty: 0 };
+        sections.push(e(RTable, {
+            key: 'items', title: '📦 Item-wise Order Summary',
+            headers: [
+                { text: 'Item Type' }, { text: 'Orders', cls: 'center' },
+                { text: 'Ordered Qty', cls: 'num' }, { text: 'Pending Qty', cls: 'num' }
+            ],
+            rows: ord.itemWise.map(function(i) {
                 iTotal.count += i.count; iTotal.ordQty += i.ordQty; iTotal.pendQty += i.pendQty;
-                return '<tr><td style="font-weight:600;">' + esc(i.item) + '</td><td class="center">' + i.count +
-                    '</td><td class="num">' + i.ordQty.toLocaleString() + '</td><td class="num">' + i.pendQty.toLocaleString() + '</td></tr>';
-            }).join('') +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + iTotal.count +
-            '</td><td class="num">' + iTotal.ordQty.toLocaleString() + '</td><td class="num">' + iTotal.pendQty.toLocaleString() + '</td></tr>' +
-            '</tbody></table>';
+                return { cells: [
+                    { text: esc(i.item), style: { fontWeight: 600 } },
+                    { text: i.count, cls: 'center' },
+                    { text: i.ordQty.toLocaleString(), cls: 'num' },
+                    { text: i.pendQty.toLocaleString(), cls: 'num' }
+                ]};
+            }),
+            footer: [
+                { text: 'TOTAL' }, { text: iTotal.count, cls: 'center' },
+                { text: iTotal.ordQty.toLocaleString(), cls: 'num' },
+                { text: iTotal.pendQty.toLocaleString(), cls: 'num' }
+            ]
+        }));
     }
 
-    // ═══ TABLE 4: Order Status Summary ════════════
-    var osEl = document.getElementById('report-order-status');
+    // ── 5. Order Status Summary ──
     if (ord.statusWise && ord.statusWise.length) {
-        osEl.style.display = '';
-        var osTotal = { count:0 };
-        osEl.innerHTML = '<div class="report-title">📋 Order Status Summary</div>' +
-            '<div style="overflow-x:auto;"><table class="report-table"><thead><tr>' +
-            '<th>Status</th><th class="center">Orders</th>' + itemHeaders() +
-            '</tr></thead><tbody>' +
-            ord.statusWise.map(function(s) {
-                osTotal.count += s.count;
-                var color = s.status==='PENDING'?'#f59e0b':s.status==='COMPLETED'?'#10b981':s.status==='CANCEL'?'#ef4444':'#6366f1';
-                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:4px;"></span>' +
-                    '<strong>' + esc(s.status) + '</strong></td><td class="center">' + s.count + '</td>' + itemCols(s.items) + '</tr>';
-            }).join('') +
-            '<tr style="background:#fef3c7;font-weight:700;"><td>TOTAL</td><td class="center">' + osTotal.count + '</td>' +
-            itemNames.map(function(){ return '<td></td>'; }).join('') +
-            '</tr></tbody></table></div>';
+        var osHeaders = [{ text: 'Status' }, { text: 'Orders', cls: 'center' }];
+        itemNames.forEach(function(it) { osHeaders.push({ text: it, cls: 'center', style: { fontSize: 9, background: '#312e81', color: '#e0e7ff' } }); });
+        var osTotal = 0;
+        sections.push(e(RTable, {
+            key: 'ordStatus', title: '📋 Order Status Summary',
+            headers: osHeaders,
+            rows: ord.statusWise.map(function(s) {
+                osTotal += s.count;
+                var cells = [
+                    { html: '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + statusColor(s.status) + ';margin-right:4px;"></span><strong>' + esc(s.status) + '</strong>' },
+                    { text: s.count, cls: 'center' }
+                ];
+                itemNames.forEach(function(it) {
+                    var id = s.items ? s.items[it] : null;
+                    cells.push(id
+                        ? { html: '<span style="font-size:10px;">' + id.ordQty + '/<span style="color:#ef4444;">' + id.pendQty + '</span></span>', cls: 'num' }
+                        : { text: '—', cls: 'num', style: { color: '#94a3b8', fontSize: 10 } }
+                    );
+                });
+                return { cells: cells };
+            }),
+            footer: (function() {
+                var f = [{ text: 'TOTAL' }, { text: osTotal, cls: 'center' }];
+                itemNames.forEach(function() { f.push({ text: '' }); });
+                return f;
+            })()
+        }));
     }
 
-    // ═══ TABLE 5: Billed vs Non-Bill + Review ═════
-    var opEl = document.getElementById('report-order-parties');
+    // ── 6. Billed vs Non-Bill ──
     if (r.types && r.types.length) {
-        opEl.style.display = '';
-        opEl.innerHTML = '<div class="report-title">📦 Billed vs Non-Bill Dispatch</div>' +
-            '<table class="report-table"><thead><tr>' +
-            '<th>Packing Type</th><th class="center">Slips</th><th class="num">Pcs</th><th class="num">Wt(Kg)</th>' +
-            '</tr></thead><tbody>' +
-            r.types.map(function(t) {
-                return '<tr><td style="font-weight:600;">' + esc(t.type) + '</td><td class="center">' + t.slips +
-                    '</td><td class="num">' + t.pcs.toLocaleString() + '</td><td class="num">' + t.wt.toLocaleString() + '</td></tr>';
-            }).join('') + '</tbody></table>';
+        sections.push(e(RTable, {
+            key: 'types', title: '📦 Billed vs Non-Bill Dispatch',
+            headers: [
+                { text: 'Packing Type' }, { text: 'Slips', cls: 'center' },
+                { text: 'Pcs', cls: 'num' }, { text: 'Wt(Kg)', cls: 'num' }
+            ],
+            rows: r.types.map(function(t) {
+                return { cells: [
+                    { text: esc(t.type), style: { fontWeight: 600 } },
+                    { text: t.slips, cls: 'center' },
+                    { text: t.pcs.toLocaleString(), cls: 'num' },
+                    { text: t.wt.toLocaleString(), cls: 'num' }
+                ]};
+            })
+        }));
     }
-    var orEl = document.getElementById('report-order-review');
+
+    // ── 7. Review Summary ──
     if (ord.reviewWise && ord.reviewWise.length) {
-        orEl.style.display = '';
-        orEl.innerHTML = '<div class="report-title">📝 Order Review Summary</div>' +
-            '<table class="report-table"><thead><tr><th>Review Status</th><th class="center">Count</th></tr></thead><tbody>' +
-            ord.reviewWise.map(function(rv) {
-                var color = rv.review==='CONFIRM'?'#10b981':rv.review==='CANCEL'?'#ef4444':rv.review==='STARTED'?'#2563eb':'#f59e0b';
-                return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';margin-right:6px;"></span>' +
-                    '<strong>' + esc(rv.review) + '</strong></td><td class="center">' + rv.count + '</td></tr>';
-            }).join('') + '</tbody></table>';
+        sections.push(e(RTable, {
+            key: 'review', title: '📝 Order Review Summary',
+            headers: [{ text: 'Review Status' }, { text: 'Count', cls: 'center' }],
+            rows: ord.reviewWise.map(function(rv) {
+                return { cells: [
+                    { html: '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + reviewColor(rv.review) + ';margin-right:6px;"></span><strong>' + esc(rv.review) + '</strong>' },
+                    { text: rv.count, cls: 'center' }
+                ]};
+            })
+        }));
     }
-    document.getElementById('report-order-qualities').style.display = 'none';
+
+    return e('div', null, sections);
 }
+
+// Legacy stubs — keep for any remaining callers
+async function fetchReports() { mountReactReports(); }
+function renderReports(r) { _cachedReportData = r; mountReactReports(); }
 
 
 // ══════════════════════════════════════
@@ -3725,71 +4166,275 @@ function showPendingPanel() {
     ensureAppData().then(function(){ buildPendingFilters(); renderPendingTable(); });
 }
 
+// ══════════════════════════════════════════
+// 🔽 MULTI-SELECT DROPDOWN COMPONENT
+// ══════════════════════════════════════════
+var _msInstances = {}; // id → { selected: Set, options: [], label, searchable }
+
+function createMultiSelect(containerId, label, options, config) {
+    config = config || {};
+    var wrap = document.getElementById(containerId);
+    if (!wrap) return;
+
+    var inst = {
+        id: containerId,
+        label: label,
+        options: options,  // [ { value, text } ]
+        selected: new Set(),
+        searchable: config.searchable !== false && options.length > 6,
+        onChange: config.onChange || function(){}
+    };
+    _msInstances[containerId] = inst;
+
+    // Build HTML
+    var html =
+        '<div class="ms-btn" id="' + containerId + '-btn" onclick="msToggle(\'' + containerId + '\')">' +
+            '<span class="ms-label">' + escapeHtmlJs(label) + '</span>' +
+            '<span class="ms-arrow">▼</span>' +
+        '</div>' +
+        '<div class="ms-dropdown" id="' + containerId + '-dd">';
+
+    if (inst.searchable) {
+        html += '<input type="text" class="ms-search" id="' + containerId + '-search" placeholder="🔍 Search..." oninput="msSearch(\'' + containerId + '\')" onclick="event.stopPropagation()">';
+    }
+
+    html += '<div class="ms-option ms-all" onclick="msToggleAll(\'' + containerId + '\')">' +
+            '<input type="checkbox" id="' + containerId + '-all"> <span>Select All</span></div>';
+
+    options.forEach(function(opt, i) {
+        html += '<div class="ms-option" data-value="' + escapeHtmlAttr(opt.value) + '" data-idx="' + i + '" onclick="msOptionClick(\'' + containerId + '\',' + i + ')">' +
+                '<input type="checkbox" tabindex="-1"> <span>' + escapeHtmlJs(opt.text) + '</span></div>';
+    });
+
+    html += '<div class="ms-clear-bar">' +
+            '<button type="button" class="ms-clear-btn" onclick="msClearAll(\'' + containerId + '\')">✕ Clear</button>' +
+            '<button type="button" class="ms-done-btn" onclick="msDone(\'' + containerId + '\')">✓ Done</button>' +
+            '</div></div>';
+
+    wrap.innerHTML = html;
+}
+
+function msToggle(id) {
+    var dd = document.getElementById(id + '-dd');
+    var isOpen = dd.classList.contains('open');
+    // Close ALL other dropdowns first
+    Object.keys(_msInstances).forEach(function(k) {
+        var d = document.getElementById(k + '-dd');
+        if (d) d.classList.remove('open');
+    });
+    if (!isOpen) {
+        dd.classList.add('open');
+        var srch = document.getElementById(id + '-search');
+        if (srch) { srch.value = ''; msSearch(id); setTimeout(function(){ srch.focus(); }, 50); }
+    }
+}
+
+function msOptionClick(id, idx) {
+    var inst = _msInstances[id];
+    if (!inst) return;
+    var opt = inst.options[idx];
+    if (inst.selected.has(opt.value)) {
+        inst.selected.delete(opt.value);
+    } else {
+        inst.selected.add(opt.value);
+    }
+    msRefreshUI(id);
+    inst.onChange();
+}
+
+function msToggleAll(id) {
+    var inst = _msInstances[id];
+    if (!inst) return;
+    var allCb = document.getElementById(id + '-all');
+    if (inst.selected.size === inst.options.length) {
+        inst.selected.clear();
+    } else {
+        inst.options.forEach(function(o) { inst.selected.add(o.value); });
+    }
+    msRefreshUI(id);
+    inst.onChange();
+}
+
+function msClearAll(id) {
+    var inst = _msInstances[id];
+    if (!inst) return;
+    inst.selected.clear();
+    msRefreshUI(id);
+    inst.onChange();
+    event.stopPropagation();
+}
+
+function msDone(id) {
+    var dd = document.getElementById(id + '-dd');
+    if (dd) dd.classList.remove('open');
+    event.stopPropagation();
+}
+
+function msSearch(id) {
+    var inst = _msInstances[id];
+    var srch = document.getElementById(id + '-search');
+    if (!inst || !srch) return;
+    var q = srch.value.trim().toUpperCase();
+    var dd = document.getElementById(id + '-dd');
+    dd.querySelectorAll('.ms-option:not(.ms-all)').forEach(function(el) {
+        var val = el.querySelector('span').textContent.toUpperCase();
+        el.style.display = (!q || val.indexOf(q) >= 0) ? '' : 'none';
+    });
+}
+
+function msRefreshUI(id) {
+    var inst = _msInstances[id];
+    if (!inst) return;
+    var dd = document.getElementById(id + '-dd');
+    var btn = document.getElementById(id + '-btn');
+
+    // Update checkboxes
+    dd.querySelectorAll('.ms-option:not(.ms-all)').forEach(function(el) {
+        var val = el.getAttribute('data-value');
+        var cb = el.querySelector('input');
+        var isSel = inst.selected.has(val);
+        cb.checked = isSel;
+        el.className = 'ms-option' + (isSel ? ' selected' : '');
+    });
+
+    // Update "Select All"
+    var allCb = document.getElementById(id + '-all');
+    if (allCb) allCb.checked = (inst.selected.size === inst.options.length && inst.options.length > 0);
+
+    // Update button label
+    var labelSpan = btn.querySelector('.ms-label');
+    var oldBadge = btn.querySelector('.ms-badge');
+    if (oldBadge) oldBadge.remove();
+
+    if (inst.selected.size === 0) {
+        labelSpan.textContent = inst.label;
+    } else if (inst.selected.size === 1) {
+        var val = Array.from(inst.selected)[0];
+        var opt = inst.options.find(function(o){ return o.value === val; });
+        labelSpan.textContent = opt ? opt.text : val;
+    } else {
+        labelSpan.textContent = inst.label;
+        var badge = document.createElement('span');
+        badge.className = 'ms-badge';
+        badge.textContent = inst.selected.size;
+        btn.insertBefore(badge, btn.querySelector('.ms-arrow'));
+    }
+}
+
+function msGetSelected(id) {
+    var inst = _msInstances[id];
+    return inst ? Array.from(inst.selected) : [];
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    var inMs = e.target.closest('.ms-wrap');
+    Object.keys(_msInstances).forEach(function(k) {
+        if (!inMs || inMs.id !== k) {
+            var dd = document.getElementById(k + '-dd');
+            if (dd) dd.classList.remove('open');
+        }
+    });
+});
+
+// ══════════════════════════════════════════
+// 📋 PENDING FILTERS — build multi-selects
+// ══════════════════════════════════════════
 function buildPendingFilters() {
-    // Party dropdown
-    var partySel = document.getElementById('pf-party');
+    // 1. Party
     var parties = {};
     allOrders.forEach(function(o) { if (o.partyName) parties[o.partyName.toUpperCase()] = o.partyName; });
-    partySel.innerHTML = '<option value="">All Parties</option>';
-    Object.keys(parties).sort().forEach(function(k) {
-        partySel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(parties[k]) + '</option>';
-    });
+    createMultiSelect('ms-party', 'All Parties',
+        Object.keys(parties).sort().map(function(k) { return { value: k, text: parties[k] }; }),
+        { onChange: function() { onPfPartyChange(); renderPendingTable(); } }
+    );
 
-    // Sub Dealer dropdown
-    var sdSel = document.getElementById('pf-subdealer');
-    var subDealers = {};
-    allOrders.forEach(function(o) { if (o.subDealerName) subDealers[o.subDealerName.toUpperCase()] = o.subDealerName; });
-    sdSel.innerHTML = '<option value="">All Sub Dealers</option>';
-    Object.keys(subDealers).sort().forEach(function(k) {
-        sdSel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(subDealers[k]) + '</option>';
-    });
+    // 2. Sub Dealer
+    buildPfSubDealerDropdown();
 
-    // Quality dropdown (all — filtered by party on change)
+    // 3. Status
+    createMultiSelect('ms-status', 'All Status', [
+        { value: 'PENDING', text: 'PENDING' },
+        { value: 'IN PROGRESS', text: 'IN PROGRESS' },
+        { value: 'COMPLETED', text: 'COMPLETED' }
+    ], { searchable: false, onChange: renderPendingTable });
+
+    // 4. Type
+    createMultiSelect('ms-type', 'All Types', [
+        { value: 'BILL', text: 'Bill' },
+        { value: 'NB', text: 'NB' }
+    ], { searchable: false, onChange: renderPendingTable });
+
+    // 5. Item
+    createMultiSelect('ms-item', 'All Items', [
+        { value: 'BORA', text: 'BORA' },
+        { value: 'BALE', text: 'BALE' },
+        { value: 'ROLL', text: 'ROLL' },
+        { value: 'PVC BAG', text: 'PVC BAG' },
+        { value: 'LOOSE PCS', text: 'LOOSE PCS' },
+        { value: 'BOX', text: 'BOX' },
+        { value: 'BORA WITH BAG', text: 'BORA WITH BAG' },
+        { value: 'OTHER', text: 'OTHER' }
+    ], { searchable: false, onChange: renderPendingTable });
+
+    // 6. Quality
     buildPfQualityDropdown();
 }
 
 function onPfPartyChange() {
+    buildPfSubDealerDropdown();
     buildPfQualityDropdown();
 }
 
-function buildPfQualityDropdown() {
-    var party = document.getElementById('pf-party').value.toUpperCase();
-    var qualSel = document.getElementById('pf-quality');
-    var qualities = {};
+function buildPfSubDealerDropdown() {
+    var selectedParties = msGetSelected('ms-party');
+    var subDealers = {};
     allOrders.forEach(function(o) {
-        if (party && o.partyName.toUpperCase() !== party) return;
-        if (o.quality) qualities[o.quality.toUpperCase()] = o.quality;
+        if (selectedParties.length && selectedParties.indexOf(o.partyName.toUpperCase()) === -1) return;
+        if (o.subDealerName) subDealers[o.subDealerName.toUpperCase()] = o.subDealerName;
     });
-    qualSel.innerHTML = '';
-    Object.keys(qualities).sort().forEach(function(k) {
-        qualSel.innerHTML += '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlJs(qualities[k]) + '</option>';
-    });
+    createMultiSelect('ms-subdealer', 'All Sub Dealers',
+        Object.keys(subDealers).sort().map(function(k) { return { value: k, text: subDealers[k] }; }),
+        { onChange: renderPendingTable }
+    );
 }
 
-function getSelectedQualities() {
-    var sel = document.getElementById('pf-quality');
-    var vals = [];
-    for (var i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].selected) vals.push(sel.options[i].value.toUpperCase());
-    }
-    return vals;
+function buildPfQualityDropdown() {
+    var selectedParties = msGetSelected('ms-party');
+    var qualities = {};
+    allOrders.forEach(function(o) {
+        if (selectedParties.length && selectedParties.indexOf(o.partyName.toUpperCase()) === -1) return;
+        if (o.quality) qualities[o.quality.toUpperCase()] = o.quality;
+    });
+    createMultiSelect('ms-quality', 'All Qualities',
+        Object.keys(qualities).sort().map(function(k) { return { value: k, text: qualities[k] }; }),
+        { onChange: renderPendingTable }
+    );
+}
+
+function clearAllPendingFilters() {
+    ['ms-party','ms-subdealer','ms-status','ms-type','ms-item','ms-quality'].forEach(function(id) {
+        var inst = _msInstances[id];
+        if (inst) { inst.selected.clear(); msRefreshUI(id); }
+    });
+    renderPendingTable();
 }
 
 function renderPendingTable() {
-    var partyF   = document.getElementById('pf-party').value.toUpperCase();
-    var sdF      = document.getElementById('pf-subdealer').value.toUpperCase();
-    var statusF  = document.getElementById('pf-status').value.toUpperCase();
-    var typeF    = document.getElementById('pf-type').value.toUpperCase();
-    var itemF    = document.getElementById('pf-item').value.toUpperCase();
-    var qualFs   = getSelectedQualities();
+    var partyFs   = msGetSelected('ms-party');
+    var sdFs      = msGetSelected('ms-subdealer');
+    var statusFs  = msGetSelected('ms-status');
+    var typeFs    = msGetSelected('ms-type');
+    var itemFs    = msGetSelected('ms-item');
+    var qualFs    = msGetSelected('ms-quality');
 
     var filtered = allOrders.filter(function(o) {
-        if (partyF  && o.partyName.toUpperCase() !== partyF) return false;
-        if (sdF     && o.subDealerName.toUpperCase() !== sdF) return false;
-        if (statusF && o.status.toUpperCase() !== statusF) return false;
-        if (typeF   && o.orderType.toUpperCase() !== typeF) return false;
-        if (itemF   && o.item.toUpperCase() !== itemF) return false;
-        if (qualFs.length && qualFs.indexOf(o.quality.toUpperCase()) === -1) return false;
+        if (partyFs.length  && partyFs.indexOf(o.partyName.toUpperCase()) === -1) return false;
+        if (sdFs.length     && sdFs.indexOf(o.subDealerName.toUpperCase()) === -1) return false;
+        if (statusFs.length && statusFs.indexOf(o.status.toUpperCase()) === -1) return false;
+        if (typeFs.length   && typeFs.indexOf(o.orderType.toUpperCase()) === -1) return false;
+        if (itemFs.length   && itemFs.indexOf(o.item.toUpperCase()) === -1) return false;
+        if (qualFs.length   && qualFs.indexOf(o.quality.toUpperCase()) === -1) return false;
         return true;
     });
 
@@ -3992,6 +4637,8 @@ function hideAllPanels() {
         var el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
+    // 🛑 Stop reports auto-refresh when leaving reports panel
+    if (_reportRefreshTimer) { clearInterval(_reportRefreshTimer); _reportRefreshTimer = null; }
 }
 
 // 🧭 CENTRALIZED NAV — sets ALL button visibility based on active panel + role
@@ -4104,7 +4751,8 @@ function buildPoFilters() {
     var partySel = document.getElementById('po-party');
     var parties = {};
     allOrders.forEach(function(o) {
-        if (o.pendingOrder > 0 && o.partyName) parties[o.partyName.toUpperCase()] = o.partyName;
+        var st = (o.status || '').toUpperCase();
+        if (o.pendingOrder > 0 && o.partyName && (st === 'PENDING' || st === 'IN PROGRESS')) parties[o.partyName.toUpperCase()] = o.partyName;
     });
     partySel.innerHTML = '<option value="">— Select Party —</option>';
     Object.keys(parties).sort().forEach(function(k) {
@@ -4120,7 +4768,8 @@ function onPoPartyChange() {
     var sdSel = document.getElementById('po-subdealer');
     var sds = {};
     allOrders.forEach(function(o) {
-        if (o.pendingOrder > 0 && o.partyName.toUpperCase() === party && o.subDealerName) {
+        var st = (o.status || '').toUpperCase();
+        if (o.pendingOrder > 0 && (st === 'PENDING' || st === 'IN PROGRESS') && o.partyName.toUpperCase() === party && o.subDealerName) {
             sds[o.subDealerName.toUpperCase()] = o.subDealerName;
         }
     });
@@ -4145,6 +4794,8 @@ function renderPackOrderTable() {
 
     var pending = allOrders.filter(function(o) {
         if (o.pendingOrder <= 0) return false;
+        var st = (o.status || '').toUpperCase();
+        if (st !== 'PENDING' && st !== 'IN PROGRESS') return false;
         if (o.partyName.toUpperCase() !== party) return false;
         if (sd && o.subDealerName.toUpperCase() !== sd) return false;
         return true;
