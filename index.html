@@ -459,8 +459,8 @@
             <label>Party Name <span class="required-star">*</span></label>
             <input type="text" id="party-name" placeholder="Type to search party..." onblur="validateDropdown(this, partyMap)"
                 list="dl-party" autocomplete="off" required
-                oninput="this.value=this.value.toUpperCase();"
-                onchange="onPartyNameChange(this)"
+                oninput="this.value=this.value.toUpperCase(); updateWeightGate();"
+                onchange="onPartyNameChange(this); updateWeightGate();"
                 style="font-weight:600;">
         </div>
         <div class="form-group">
@@ -753,12 +753,8 @@
                 <label>Mob.</label>
                 <input type="tel" id="ord-mob" placeholder="Mobile No">
             </div>
-            <div class="form-group">
-                <label>Private Marka</label>
-                <input type="text" id="ord-private-marka" placeholder="Private Marka" oninput="convertToUpperCase(this)">
-            </div>
         </div>
-        <!-- Quality Rows (dynamic — one per quality) -->
+        <!-- Quality Rows (dynamic — one per quality, Marka is per-quality) -->
         <div style="margin-bottom:8px;">
             <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:6px;">📦 Quality Details <span class="required-star">*</span></div>
             <div id="ord-quality-rows"></div>
@@ -837,7 +833,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIyJfKMw1FN8u4HIFiLnMtdy7yCJmFm5N62_vnJDB6bfLSANIzjqkgNK80Rse807g/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLGTo7W9otAcb-rfwQxvTyDUHvyWzgudlFVuBNO48Wqc_AGvC79Bpjw2T8rVpAxT2N/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1271,14 +1267,49 @@ function onOrderIdChange(selectEl) {
 
     if (!orderId) {
         if (infoDiv) { infoDiv.style.display = 'none'; infoDiv.innerHTML = ''; }
-        // Unlock Quality when no order selected
-        var brandEl = block.querySelector('.item-brand');
-        if (brandEl) { brandEl.readOnly = false; brandEl.style.background = ''; brandEl.style.fontWeight = ''; }
+        // Unlock Quality + Type when no order selected
+        updateQualityGate(block, false); // 🔒 Disable quality without order
+        updateTypeGate(block, false);    // 🔓 Unlock type
+        updateWeightGate();              // 🔒 Disable weight without order
+        updateHeaderFieldsLock();        // 🔓 Unlock Party/ShipTo/Address if no orders remain
         return;
     }
 
     const order = orderMap.get(orderId);
     if (!order) return;
+
+    // ── Auto-fill Party Name from Order ID + LOCK ──
+    var partyEl = document.getElementById('party-name');
+    if (partyEl && order.partyName) {
+        partyEl.value = order.partyName;
+        partyEl.style.transition = 'background 0.3s';
+        partyEl.style.background = '#bbf7d0';
+        setTimeout(function() { updateHeaderFieldsLock(); }, 900);
+        updateWeightGate();
+    }
+
+    // ── Auto-fill Ship To + Delivery Address + LOCK ──
+    var shipToEl       = document.getElementById('sub-party-name');
+    var deliveryAddrEl = document.getElementById('third-party-name');
+
+    if (order.shipTo && shipToEl) {
+        shipToEl.value = order.shipTo;
+        shipToEl.style.transition = 'background 0.3s';
+        shipToEl.style.background = '#bbf7d0';
+        setTimeout(function() { updateHeaderFieldsLock(); }, 900);
+    }
+    if (order.deliveryAddr && deliveryAddrEl) {
+        deliveryAddrEl.value = order.deliveryAddr;
+        deliveryAddrEl.style.transition = 'background 0.3s';
+        deliveryAddrEl.style.background = '#bbf7d0';
+        setTimeout(function() { updateHeaderFieldsLock(); }, 900);
+    }
+
+    // 🔑 Filter Order ID dropdowns AFTER all 3 fields (Party + ShipTo + Address) are filled
+    if (partyEl) onPartyNameChange(partyEl);
+
+    // Lock immediately (green flash fades, lock stays)
+    updateHeaderFieldsLock();
 
     // ── Auto-fill Type (only if it matches one of the fixed dropdown options) ──
     const typeSelect = block.querySelector('.item-type');
@@ -1293,22 +1324,8 @@ function onOrderIdChange(selectEl) {
         }
     }
 
-    // ── Auto-fill Ship To + Delivery Address from Order ID data ──
-    var shipToEl       = document.getElementById('sub-party-name');
-    var deliveryAddrEl = document.getElementById('third-party-name');
-
-    if (order.shipTo && shipToEl) {
-        shipToEl.value = order.shipTo;
-        shipToEl.style.transition = 'background 0.3s';
-        shipToEl.style.background = '#bbf7d0';
-        setTimeout(function() { shipToEl.style.background = ''; }, 900);
-    }
-    if (order.deliveryAddr && deliveryAddrEl) {
-        deliveryAddrEl.value = order.deliveryAddr;
-        deliveryAddrEl.style.transition = 'background 0.3s';
-        deliveryAddrEl.style.background = '#bbf7d0';
-        setTimeout(function() { deliveryAddrEl.style.background = ''; }, 900);
-    }
+    // Lock Type dropdown when Order ID is selected
+    updateTypeGate(block, true);
 
     // ── Auto-fill Private Marka per item (readonly display) ──
     var itemMarkaEl = block.querySelector('.item-marka');
@@ -1330,10 +1347,12 @@ function onOrderIdChange(selectEl) {
     // ── Auto-fill Quality (locked — read-only when order selected) ──
     const brandInput = block.querySelector('.item-brand');
     if (brandInput) {
+        brandInput.disabled = false; // 🔓 Re-enable (was disabled by gate)
         brandInput.value = order.brand;
         brandInput.readOnly = true;
         brandInput.style.background = '#e2e8f0';
         brandInput.style.fontWeight = '700';
+        brandInput.placeholder = 'Type to search quality...';
         onBrandChange(brandInput);
     }
 
@@ -1702,14 +1721,18 @@ function onPartyNameChange(input) {
     var partyName = (input.value || '').trim().toUpperCase();
 
     // ── Auto-fill Ship To + Delivery Address ──
+    // SKIP if any Order ID is selected (Order ID fills these with correct per-order values)
+    var anyOrderSelected = false;
+    document.querySelectorAll('.item-order-id').forEach(function(sel) {
+        if (sel.value) anyOrderSelected = true;
+    });
+
     var shipToEl       = document.getElementById('sub-party-name');
     var deliveryAddrEl = document.getElementById('third-party-name');
 
-    if (partyName && partyMap.has(partyName)) {
+    if (!anyOrderSelected && partyName && partyMap.has(partyName)) {
         var info = partyMap.get(partyName);
-
-        // ALWAYS overwrite Ship To + Delivery Address when party changes
-        // (user changed party = previous values are wrong, replace them)
+        // Only overwrite when user manually changed party (no Order ID selected)
         if (shipToEl) {
             shipToEl.value = info.shipTo;
             shipToEl.style.transition = 'background 0.3s';
@@ -1724,12 +1747,18 @@ function onPartyNameChange(input) {
         }
     }
 
-    // ── Filter Order ID dropdowns to this party's orders ──
-    // Rebuild the shared orderIdOptionsHtml with party filter applied,
-    // then refresh all item-order-id selects already on screen.
-    var filteredOrders = partyName
-        ? allPendingOrders.filter(function (o) { return o.partyName === partyName; })
-        : allPendingOrders;
+    // ── Filter Order ID dropdowns to matching Party + Ship To + Delivery Address ──
+    var shipToVal  = (document.getElementById('sub-party-name').value || '').trim().toUpperCase();
+    var deliverVal = (document.getElementById('third-party-name').value || '').trim().toUpperCase();
+
+    var filteredOrders = allPendingOrders.filter(function (o) {
+        if (!partyName) return true; // no party = show all
+        if (o.partyName !== partyName) return false;
+        // Also match Ship To & Delivery Address if they're filled
+        if (shipToVal && (o.shipTo || '').toUpperCase() !== shipToVal) return false;
+        if (deliverVal && (o.deliveryAddr || '').toUpperCase() !== deliverVal) return false;
+        return true;
+    });
 
     var opts = ['<option value="">-- Select Order ID (optional) --</option>'];
     filteredOrders.forEach(function (o) {
@@ -1809,10 +1838,11 @@ function addItem() {
                 <tr class="brand-name-row">
                     <td class="brand-label">QUALITY</td>
                     <td colspan="3">
-                        <input type="text" class="item-brand" placeholder="Type to search quality..." onblur="validateDropdown(this, brandMap)"
-                            list="dl-brand" autocomplete="off" required
+                        <input type="text" class="item-brand" placeholder="🔒 Pehle ORDER ID select karo" onblur="validateDropdown(this, brandMap)"
+                            list="dl-brand" autocomplete="off" required disabled
                             oninput="this.value=this.value.toUpperCase();"
-                            onchange="onBrandChange(this);">
+                            onchange="onBrandChange(this);"
+                            style="background:#f1f5f9;">
                     </td>
                 </tr>
                 <tr class="order-id-row">
@@ -1882,6 +1912,12 @@ function addSubRow(blockIdx, qty, wt) {
     const qtyVal = (qty !== null && qty !== undefined) ? qty : '';
     const wtVal  = (wt  !== null && wt  !== undefined) ? wt  : '';
 
+    var isPartyFilled = !!document.getElementById('party-name').value.trim();
+    var blockEl = document.getElementById('item-block-' + blockIdx);
+    var orderSel = blockEl ? blockEl.querySelector('.item-order-id') : null;
+    var isOrderFilled = orderSel && !!orderSel.value;
+    var canFillWt = isPartyFilled && isOrderFilled;
+    var wtPlaceholder = !isPartyFilled ? '🔒 Party fill karo' : (!isOrderFilled ? '🔒 Order ID select karo' : '0.00');
     tr.innerHTML = `
         <td class="sr-cell">${srNum}</td>
         <td>
@@ -1892,9 +1928,11 @@ function addSubRow(blockIdx, qty, wt) {
                 style="border-radius:5px;">
         </td>
         <td>
-            <input type="number" class="sub-wt" min="0" step="0.01" placeholder="0.00"
+            <input type="number" class="sub-wt" min="0" step="0.01" placeholder="${wtPlaceholder}"
                 value="${wtVal}"
-                oninput="clampWeight(this); updateItemTotal(${blockIdx}); debouncedCalculateTotals();"
+                ${canFillWt ? '' : 'disabled'}
+                inputmode="decimal" enterkeyhint="next"
+                oninput="clampWeight(this); updateItemTotal(${blockIdx}); debouncedCalculateTotals(); updatePartyLock();"
                 onkeydown="onWeightEnter(event, ${blockIdx}, '${rowId}')"
                 style="border-radius:5px;">
         </td>
@@ -1933,11 +1971,142 @@ function addRowCopyLast(blockIdx) {
         if (newRow) {
             const wtInput = newRow.querySelector('.sub-wt');
             wtInput.focus();
-            // Place cursor at end of existing value (not select-all)
             // Select ALL text so user can immediately overtype the copied value
             wtInput.select();
         }
     }, 0);
+}
+
+// ══════════════════════════════════════
+// 🔒 FIELD GATES — restrict inputs until prerequisites are filled
+// ══════════════════════════════════════
+
+// 🔒 Gate 1: Weight inputs disabled until Party Name is filled AND Order ID is selected
+function updateWeightGate() {
+    var partyFilled = !!document.getElementById('party-name').value.trim();
+    document.querySelectorAll('.item-block').forEach(function(block) {
+        var orderSel = block.querySelector('.item-order-id');
+        var orderFilled = orderSel && !!orderSel.value;
+        var canFill = partyFilled && orderFilled;
+        block.querySelectorAll('.sub-wt').forEach(function(wt) {
+            if (canFill) {
+                wt.disabled = false;
+                wt.placeholder = '0.00';
+            } else {
+                wt.disabled = true;
+                wt.value = '';
+                wt.placeholder = !partyFilled ? '🔒 Party fill karo' : '🔒 Order ID select karo';
+            }
+        });
+    });
+}
+
+// 🔒 Gate 1b: Party Name locks when any Weight > 0 exists
+function updatePartyLock() {
+    var partyEl = document.getElementById('party-name');
+    if (!partyEl) return;
+    var hasWeight = false;
+    document.querySelectorAll('.sub-wt').forEach(function(wt) {
+        if (Number(wt.value) > 0) hasWeight = true;
+    });
+    if (hasWeight && partyEl.value.trim()) {
+        partyEl.readOnly = true;
+        partyEl.style.background = '#e2e8f0';
+        partyEl.style.cursor = 'not-allowed';
+        partyEl.title = '🔒 Weight fill hone ke baad Party change nahi ho sakti';
+    } else {
+        partyEl.readOnly = false;
+        partyEl.style.background = '';
+        partyEl.style.cursor = '';
+        partyEl.title = '';
+    }
+}
+
+// 🔒 Gate 2: Quality input disabled until Order ID is selected
+function updateQualityGate(block, hasOrder) {
+    var brandEl = block.querySelector('.item-brand');
+    if (!brandEl) return;
+    if (hasOrder) {
+        // Quality is auto-filled & locked by onOrderIdChange — don't touch
+    } else {
+        brandEl.disabled = true;
+        brandEl.value = '';
+        brandEl.placeholder = '🔒 Pehle ORDER ID select karo';
+        brandEl.readOnly = false;
+        brandEl.style.background = '#f1f5f9';
+        brandEl.style.fontWeight = '';
+    }
+}
+
+// 🔒 Gate 3: Type dropdown locked when Order ID is selected
+function updateTypeGate(block, hasOrder) {
+    var typeEl = block.querySelector('.item-type');
+    if (!typeEl) return;
+    if (hasOrder) {
+        typeEl.disabled = true;
+        typeEl.style.background = '#e2e8f0';
+        typeEl.style.fontWeight = '700';
+    } else {
+        typeEl.disabled = false;
+        typeEl.style.background = '';
+        typeEl.style.fontWeight = '';
+    }
+}
+
+// 🔒 Gate 4: Party Name, Ship To, Delivery Address lock when ANY Order ID is selected
+function updateHeaderFieldsLock() {
+    var anyOrderSelected = false;
+    document.querySelectorAll('.item-order-id').forEach(function(sel) {
+        if (sel.value) anyOrderSelected = true;
+    });
+
+    var partyEl = document.getElementById('party-name');
+    var shipToEl = document.getElementById('sub-party-name');
+    var deliveryEl = document.getElementById('third-party-name');
+    var lockStyle = { bg: '#e2e8f0', cursor: 'not-allowed' };
+    var unlockStyle = { bg: '', cursor: '' };
+
+    if (anyOrderSelected) {
+        // Lock all three
+        if (partyEl) {
+            partyEl.readOnly = true;
+            partyEl.style.background = lockStyle.bg;
+            partyEl.style.cursor = lockStyle.cursor;
+            partyEl.title = '🔒 Order ID select hone ke baad change nahi hoga';
+        }
+        if (shipToEl) {
+            shipToEl.readOnly = true;
+            shipToEl.style.background = lockStyle.bg;
+            shipToEl.style.cursor = lockStyle.cursor;
+            shipToEl.title = '🔒 Order se auto-fill — change nahi hoga';
+        }
+        if (deliveryEl) {
+            deliveryEl.readOnly = true;
+            deliveryEl.style.background = lockStyle.bg;
+            deliveryEl.style.cursor = lockStyle.cursor;
+            deliveryEl.title = '🔒 Order se auto-fill — change nahi hoga';
+        }
+    } else {
+        // Unlock all three (unless weight gate keeps party locked)
+        if (shipToEl) {
+            shipToEl.readOnly = false;
+            shipToEl.style.background = unlockStyle.bg;
+            shipToEl.style.cursor = unlockStyle.cursor;
+            shipToEl.title = '';
+        }
+        if (deliveryEl) {
+            deliveryEl.readOnly = false;
+            deliveryEl.style.background = unlockStyle.bg;
+            deliveryEl.style.cursor = unlockStyle.cursor;
+            deliveryEl.title = '';
+        }
+        // Party unlock — but respect weight-based lock (updatePartyLock handles that)
+        if (partyEl) {
+            partyEl.style.cursor = unlockStyle.cursor;
+            partyEl.title = '';
+        }
+        updatePartyLock(); // Let weight gate decide Party lock status
+    }
 }
 
 // ══════════════════════════════════════
@@ -1955,6 +2124,7 @@ function deleteSubRow(rowId, blockIdx) {
     renumberSubRows(blockIdx);
     updateItemTotal(blockIdx);
     calculateTotals();
+    updatePartyLock(); // Re-check: if all weights gone → unlock Party
 }
 
 // Renumber Sr. column after any add/delete
@@ -1969,32 +2139,65 @@ function renumberSubRows(blockIdx) {
 // ✅ Change 5: ENTER on Weight → move cursor to next weight input
 // ══════════════════════════════════════
 function onWeightEnter(event, blockIdx, rowId) {
-    if (event.key !== 'Enter' && event.key !== 'Tab') return;
+    // Handle Enter key (desktop) + mobile "Next"/"Go" button
+    var isEnter = (event.key === 'Enter' || event.keyCode === 13 || event.which === 13);
+    if (!isEnter) return;
     event.preventDefault();
+    event.stopPropagation();
 
-    var thisWt = document.getElementById(rowId).querySelector('.sub-wt');
+    // Move cursor DOWN to next weight input (across all blocks)
+    moveCursorToNextWeight(rowId);
+}
 
-    // Get ALL weight inputs on the entire page (across all blocks)
-    var allWts = Array.from(document.querySelectorAll('.sub-wt'));
-    var curIdx = allWts.indexOf(thisWt);
+// 🔽 Global: move focus from current weight to the NEXT weight input below
+function moveCursorToNextWeight(currentRowId) {
+    var allWts = Array.from(document.querySelectorAll('.sub-wt:not([disabled])'));
+    if (!allWts.length) return;
+
+    var currentRow = document.getElementById(currentRowId);
+    var thisWt = currentRow ? currentRow.querySelector('.sub-wt') : null;
+    var curIdx = thisWt ? allWts.indexOf(thisWt) : -1;
 
     if (curIdx >= 0 && curIdx < allWts.length - 1) {
-        // Not the last weight on page → move cursor DOWN to next weight
+        // Not the last → move DOWN
         allWts[curIdx + 1].focus();
         allWts[curIdx + 1].select();
-    } else {
-        // Last weight on entire page → add new row in current block
-        var tbody = document.getElementById('sub-body-' + blockIdx);
-        var lastRow = tbody ? tbody.querySelector('.sub-row:last-child') : null;
-        var lastQty = lastRow ? lastRow.querySelector('.sub-qty').value : '';
-        addSubRow(blockIdx, lastQty || null, null);
-        setTimeout(function() {
-            var newWts = Array.from(document.querySelectorAll('.sub-wt'));
-            var newLast = newWts[newWts.length - 1];
-            if (newLast) { newLast.focus(); newLast.select(); }
-        }, 50);
+    } else if (curIdx === allWts.length - 1) {
+        // Last weight on page → add new row in the same block
+        var block = thisWt.closest('.item-block');
+        if (block) {
+            var blockIdx = Number(block.dataset.idx);
+            var tbody = document.getElementById('sub-body-' + blockIdx);
+            var lastRow = tbody ? tbody.querySelector('.sub-row:last-child') : null;
+            var lastQty = lastRow ? lastRow.querySelector('.sub-qty').value : '';
+            addSubRow(blockIdx, lastQty || null, null);
+            setTimeout(function() {
+                var newWts = Array.from(document.querySelectorAll('.sub-wt:not([disabled])'));
+                var newLast = newWts[newWts.length - 1];
+                if (newLast) { newLast.focus(); newLast.select(); }
+            }, 50);
+        }
     }
 }
+
+// 📱 MOBILE FALLBACK: Intercept form-level Enter on weight inputs
+// Some mobile browsers fire 'submit' instead of 'keydown' on Next/Go
+document.addEventListener('keydown', function(e) {
+    var isEnter = (e.key === 'Enter' || e.keyCode === 13);
+    if (!isEnter) return;
+
+    var active = document.activeElement;
+    if (!active || !active.classList.contains('sub-wt')) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Find the row this weight belongs to
+    var row = active.closest('.sub-row');
+    if (row && row.id) {
+        moveCursorToNextWeight(row.id);
+    }
+}, true); // capture phase to fire before any form submit
 
 // ══════════════════════════════════════
 // DELETE ITEM BLOCK
@@ -2008,6 +2211,7 @@ function deleteItem(idx) {
     if (block) block.remove();
     renumberItems();
     calculateTotals();
+    updatePartyLock(); // Re-check: if all weights gone → unlock Party
 }
 
 function renumberItems() {
@@ -2220,9 +2424,33 @@ var isSubmitting = false;
 async function handleFinish() {
     // ═══ INSTANT LOCK — before ANY validation ═══
     if (isSubmitting) return;         // already in progress → hard block
-    isSubmitting = true;
 
     const btn = document.getElementById('finishBtn');
+
+    // ═══ VALIDATE FIRST — before showing any overlay ═══
+    const form = document.getElementById('packing-slip-form');
+
+    // Check Party Name
+    var partyVal = document.getElementById('party-name').value.trim();
+    if (!partyVal) {
+        alert('⚠️ Party Name fill karna zaroori hai!');
+        document.getElementById('party-name').focus();
+        return;
+    }
+
+    // HTML5 required field validation
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    // Custom item-level validation
+    if (!validateItems()) {
+        return;
+    }
+
+    // ═══ ALL VALID — now lock everything ═══
+    isSubmitting = true;
     btn.disabled = true;
     btn.textContent = '⏳ Processing...';
     btn.style.opacity = '0.5';
@@ -2230,7 +2458,7 @@ async function handleFinish() {
     // 🔒 FULL INTERFACE LOCK — disable entire form so nothing can be changed
     lockEntireInterface(true);
 
-    // Show full-screen overlay immediately (z-index:2000 blocks ALL clicks)
+    // Show full-screen overlay (z-index:2000 blocks ALL clicks)
     setSavingStage('locking');
 
     // Stop auto-save so it doesn't interfere with the submission
@@ -2238,16 +2466,6 @@ async function handleFinish() {
 
     // ⏸️ Pause the slip-number poller
     slipSyncPaused = true;
-
-    // ═══ VALIDATE under the lock ═══
-    const form = document.getElementById('packing-slip-form');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        unlockFinish(btn); return;
-    }
-    if (!validateItems()) {
-        unlockFinish(btn); return;
-    }
 
     // 🧹 Auto-remove zero-weight rows before save
     var removed = removeZeroWeightRows();
@@ -2696,6 +2914,11 @@ function populateFormFromDraft(data, draftId, draftType) {
     document.querySelectorAll('.item-order-id').forEach(function(sel) {
         if (sel.value) onOrderIdChange(sel);
     });
+
+    // 🔒 Re-check weight gate after draft load
+    updateWeightGate();
+    updatePartyLock();
+    updateHeaderFieldsLock();
 
     // 🔒 Lock ONLY ASSIGNED drafts for DATA_ENTRY (from Quick Pack)
     // OWN drafts (self-created) remain fully editable
@@ -3267,7 +3490,7 @@ function renderOrderList() {
                 '</div>' +
                 '<div class="order-actions">' +
                     (o.status === 'COMPLETED' ? '<span style="color:#10b981;font-size:11px;font-weight:700;">✅ Completed</span>' : '<button type="button" class="btn-edit" onclick="event.stopPropagation();editOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">✏️ Edit</button>') +
-                    '<button type="button" class="btn-delete" onclick="event.stopPropagation();handleDeleteOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">🗑 Delete</button>' +
+                    (o.status === 'COMPLETED' ? '' : '<button type="button" class="btn-delete" onclick="event.stopPropagation();handleDeleteOrder(\'' + escapeHtmlJs(o.orderNo) + '\')">🗑 Delete</button>') +
                 '</div>' +
             '</div>';
 
@@ -3316,7 +3539,8 @@ function showOrderForm(order) {
         document.getElementById('ord-buyer').value             = order.buyerName || '';
         document.getElementById('ord-mob').value               = order.mob || '';
         document.getElementById('ord-review').value            = order.reviewOrder || '';
-        document.getElementById('ord-private-marka').value      = order.privateMarka || '';
+        var markaEl = document.getElementById('ord-private-marka');
+        if (markaEl) markaEl.value = order.privateMarka || '';
         document.getElementById('ord-type').value              = order.orderType || '';
     } else {
         editingOrderNo = null;
@@ -3342,7 +3566,8 @@ function showOrderForm(order) {
         document.getElementById('ord-buyer').value = '';
         document.getElementById('ord-mob').value = '';
         document.getElementById('ord-review').value = '';
-        document.getElementById('ord-private-marka').value = '';
+        var markaResetEl = document.getElementById('ord-private-marka');
+        if (markaResetEl) markaResetEl.value = '';
         document.getElementById('ord-type').value = '';
         // Start with one empty quality row
         clearQualityRows();
@@ -3459,6 +3684,12 @@ async function handleSaveOrder() {
 
     if (!party) { alert('Party Name zaroori hai!'); document.getElementById('ord-party').focus(); return; }
 
+    // Validate required fields before showing overlay
+    var review = document.getElementById('ord-review').value;
+    if (!review) { alert('Review Order select karna zaroori hai!'); document.getElementById('ord-review').focus(); return; }
+    var ordType = document.getElementById('ord-type').value;
+    if (!ordType) { alert('Order Type select karna zaroori hai!'); document.getElementById('ord-type').focus(); return; }
+
     // Collect and validate all quality rows
     var qualityRows = getQualityRows();
     for (var v = 0; v < qualityRows.length; v++) {
@@ -3469,18 +3700,27 @@ async function handleSaveOrder() {
     }
     if (!qualityRows.length) { alert('At least one Quality row zaroori hai!'); return; }
 
+    // ═══ ALL VALID — show saving overlay ═══
     var btn = document.getElementById('ord-save-btn');
     btn.disabled = true;
-    btn.textContent = '⏳ Saving...';
+    var isEdit = !!editingOrderNo;
+    var actionLabel = isEdit ? 'Updating' : 'Saving';
+
+    // Show overlay with stages
+    setOrderSavingStage('validating', actionLabel);
 
     // For edit (single row), keep original orderNo
     // For new, use base number from ord-no (backend assigns suffixes)
-    var baseOrderNo = editingOrderNo
+    var baseOrderNo = isEdit
         ? editingOrderNo
         : document.getElementById('ord-no').getAttribute('data-next') || orderNoDisplay;
 
+    // Stage 2: Building payload
+    await sleep(300);
+    setOrderSavingStage('preparing', actionLabel);
+
     var payload = withAuthPayload({
-        action:             editingOrderNo ? 'updateOrder' : 'saveOrder',
+        action:             isEdit ? 'updateOrder' : 'saveOrder',
         orderNo:            baseOrderNo,
         orderDate:          document.getElementById('ord-date').value,
         orderBy:            document.getElementById('ord-by').value,
@@ -3498,9 +3738,12 @@ async function handleSaveOrder() {
         buyerName:          document.getElementById('ord-buyer').value,
         mob:                document.getElementById('ord-mob').value,
         reviewOrder:        document.getElementById('ord-review').value,
-        privateMarka:       document.getElementById('ord-private-marka').value,
+        privateMarka:       (document.getElementById('ord-private-marka') || {}).value || '',
         orderType:          document.getElementById('ord-type').value
     });
+
+    // Stage 3: Sending to server
+    setOrderSavingStage('saving', actionLabel);
 
     try {
         var res = await fetch(APPS_SCRIPT_URL, {
@@ -3508,31 +3751,75 @@ async function handleSaveOrder() {
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, redirect: 'follow'
         });
         var result = await res.json();
-        if (handleAuthFailure(result)) return;
+        if (handleAuthFailure(result)) { hideOrderSavingOverlay(); btn.disabled = false; btn.textContent = isEdit ? '💾 Update Order' : '💾 Save Order'; return; }
 
         if (result.success) {
             var successMsg = result.action === 'updated' ? 'Updated!' : 'Saved!';
             if (result.orderNos && result.orderNos.length > 1) {
                 successMsg += ' (' + result.orderNos.join(', ') + ')';
             }
-            btn.textContent = '✅ ' + successMsg;
+            setOrderSavingStage('done', successMsg);
             setTimeout(function () {
+                hideOrderSavingOverlay();
                 btn.disabled = false;
-                btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
+                btn.textContent = isEdit ? '💾 Update Order' : '💾 Save Order';
                 hideOrderForm();
                 fetchAllOrders();
                 fetchNextOrderNo();
-            }, 1000);
+            }, 1200);
         } else {
-            alert('Error: ' + (result.error || 'Unknown'));
-            btn.disabled = false;
-            btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
+            setOrderSavingStage('error', result.error || 'Unknown error');
+            setTimeout(function() {
+                hideOrderSavingOverlay();
+                btn.disabled = false;
+                btn.textContent = isEdit ? '💾 Update Order' : '💾 Save Order';
+            }, 2000);
         }
     } catch (err) {
-        alert('Network error! Internet check karein.');
-        btn.disabled = false;
-        btn.textContent = editingOrderNo ? '💾 Update Order' : '💾 Save Order';
+        setOrderSavingStage('error', 'Network error! Internet check karein.');
+        setTimeout(function() {
+            hideOrderSavingOverlay();
+            btn.disabled = false;
+            btn.textContent = isEdit ? '💾 Update Order' : '💾 Save Order';
+        }, 2000);
     }
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+// ── Order Saving Overlay (reuses the main savingOverlay with order-specific stages) ──
+function setOrderSavingStage(stage, detail) {
+    var overlay  = document.getElementById('savingOverlay');
+    var icon     = document.getElementById('savingIcon');
+    var title    = document.getElementById('savingTitle');
+    var subtitle = document.getElementById('savingSubtitle');
+    overlay.style.display = 'flex';
+
+    if (stage === 'validating') {
+        icon.className = 'saving-spinner'; icon.innerHTML = '';
+        title.textContent = '🔍 Validating...';
+        subtitle.textContent = detail + ' — fields check ho rahe hain';
+    } else if (stage === 'preparing') {
+        icon.className = 'saving-spinner'; icon.innerHTML = '';
+        title.textContent = '📦 Preparing Order...';
+        subtitle.textContent = detail + ' — data pack ho raha hai';
+    } else if (stage === 'saving') {
+        icon.className = 'saving-spinner'; icon.innerHTML = '';
+        title.textContent = '📊 Saving to Sheet...';
+        subtitle.textContent = detail + ' — server pe upload ho raha hai, wait karein';
+    } else if (stage === 'done') {
+        icon.className = 'saving-check'; icon.innerHTML = '✓';
+        title.textContent = '✅ ' + (detail || 'Order Saved!');
+        subtitle.textContent = 'Order list refresh ho raha hai...';
+    } else if (stage === 'error') {
+        icon.className = 'saving-error-icon'; icon.innerHTML = '✕';
+        title.textContent = '❌ Error!';
+        subtitle.textContent = detail || 'Kuch galat ho gaya';
+    }
+}
+
+function hideOrderSavingOverlay() {
+    document.getElementById('savingOverlay').style.display = 'none';
 }
 
 function editOrder(orderNo) {
@@ -4812,7 +5099,7 @@ function renderPackOrderTable() {
     container.innerHTML =
         '<table class="po-table"><thead><tr>' +
         '<th style="width:30px;"><input type="checkbox" class="po-check" onchange="poToggleAll(this)"></th>' +
-        '<th>Order ID</th><th>Quality</th><th>Item</th><th class="num">Pending</th><th style="width:80px;">Pack Qty</th>' +
+        '<th>Order ID</th><th>Party</th><th>Sub Dealer</th><th>Address</th><th>Quality</th><th>Item</th><th class="num">Pending</th><th style="width:70px;">Pack Qty</th>' +
         '</tr></thead><tbody>' +
         pending.map(function(o, i) {
             return '<tr id="po-row-' + i + '">' +
@@ -4824,12 +5111,16 @@ function renderPackOrderTable() {
                     'data-address="' + escapeHtmlAttr(o.address || '') + '" ' +
                     'data-subdealer="' + escapeHtmlAttr(o.subDealerName || '') + '" ' +
                     'onchange="poRowToggle(this)"></td>' +
-                '<td style="font-weight:700;color:var(--primary);">' + escapeHtmlJs(o.orderNo) + '</td>' +
-                '<td style="font-weight:600;">' + escapeHtmlJs(o.quality) + '</td>' +
-                '<td>' + escapeHtmlJs(o.item) + '</td>' +
+                '<td style="font-weight:700;color:var(--primary);font-size:10px;white-space:nowrap;">' + escapeHtmlJs(o.orderNo) + '</td>' +
+                '<td style="font-size:10px;font-weight:600;">' + escapeHtmlJs(o.partyName || '') + '</td>' +
+                '<td style="font-size:10px;">' + escapeHtmlJs(o.subDealerName || '—') + '</td>' +
+                '<td style="font-size:10px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtmlAttr(o.address || '') + '">' + escapeHtmlJs(o.address || '—') + '</td>' +
+                '<td style="font-weight:600;font-size:10px;">' + escapeHtmlJs(o.quality) + '</td>' +
+                '<td style="font-size:10px;">' + escapeHtmlJs(o.item) + '</td>' +
                 '<td class="num" style="color:#ef4444;font-weight:700;">' + o.pendingOrder + '</td>' +
                 '<td><input type="number" class="po-qty-input" data-idx="' + i + '" ' +
                     'value="' + o.pendingOrder + '" min="1" max="' + o.pendingOrder + '" ' +
+                    'style="width:100%;font-size:11px;" ' +
                     'onchange="poClampQty(this,' + o.pendingOrder + ')"></td>' +
             '</tr>';
         }).join('') +
@@ -5128,16 +5419,14 @@ function renderAssignedDrafts(drafts) {
         '<table style="width:100%;border-collapse:collapse;font-size:11px;">' +
         '<tr style="background:#f1f5f9;"><th style="padding:4px 6px;text-align:left;">Draft ID</th>' +
         '<th style="padding:4px 6px;">Assigned To</th><th style="padding:4px 6px;">Party</th>' +
-        '<th style="padding:4px 6px;">Saved</th><th style="padding:4px 6px;">Actions</th></tr>' +
+        '<th style="padding:4px 6px;">Saved</th></tr>' +
         drafts.map(function(d) {
             return '<tr style="border-bottom:1px solid var(--border);">' +
                 '<td style="padding:4px 6px;font-weight:700;color:var(--primary);">' + escapeHtmlJs(d.draftId) + '</td>' +
                 '<td style="padding:4px 6px;font-weight:600;">' + escapeHtmlJs(d.username || '-') + '</td>' +
                 '<td style="padding:4px 6px;">' + escapeHtmlJs(d.partyName || '-') + '</td>' +
                 '<td style="padding:4px 6px;font-size:10px;">' + escapeHtmlJs(d.savedAt || '') + '</td>' +
-                '<td style="padding:4px 6px;white-space:nowrap;">' +
-                    '<button onclick="deleteAssignedDraft(\'' + escapeHtmlJs(d.draftId) + '\')" style="background:#ef4444;color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;">🗑 Delete</button>' +
-                '</td></tr>';
+                '</tr>';
         }).join('') +
         '</table>';
 }
