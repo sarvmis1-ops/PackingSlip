@@ -338,8 +338,6 @@
             .totals-flex { color: black !important; font-size: 12px; border-top: 1.5px solid black; }
         }
     </style>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 </head>
 <body>
 
@@ -833,7 +831,7 @@
 
 <script>
 // ▼▼▼ Apna deployed Web App URL yahan paste karein ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLGTo7W9otAcb-rfwQxvTyDUHvyWzgudlFVuBNO48Wqc_AGvC79Bpjw2T8rVpAxT2N/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyF9mKKcZw76A38Er-B1KNsYxCMPsPi0agPSBGeW4ZdLh1pxWuG1Xarrt2xTTYRS682/exec';
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 document.getElementById('date-today').valueAsDate = new Date();
@@ -1306,7 +1304,8 @@ function onOrderIdChange(selectEl) {
     }
 
     // 🔑 Filter Order ID dropdowns AFTER all 3 fields (Party + ShipTo + Address) are filled
-    if (partyEl) onPartyNameChange(partyEl);
+    // Skip during draft load — dropdown already rebuilt, re-triggering would lose Order IDs
+    if (partyEl && !_draftLoading) onPartyNameChange(partyEl);
 
     // Lock immediately (green flash fades, lock stays)
     updateHeaderFieldsLock();
@@ -2420,6 +2419,7 @@ function removeZeroWeightRows() {
 
 // 🔒 Global submission guard — prevents re-entry even if button disable is slow
 var isSubmitting = false;
+var _draftLoading = false;  // 🛡️ Prevents dropdown rebuild loops during draft load
 
 async function handleFinish() {
     // ═══ INSTANT LOCK — before ANY validation ═══
@@ -2901,24 +2901,66 @@ function populateFormFromDraft(data, draftId, draftType) {
     slipField.value = '📝 Draft ' + draftId + ' loaded';
     slipField.style.color = '#7c3aed';
 
-    // Auto-update Order ID dropdowns for the filled Party Name
+    // ═══ FIX: Save Order IDs BEFORE dropdown rebuild ═══
+    _draftLoading = true; // 🛡️ Prevent onOrderIdChange from re-triggering onPartyNameChange
+    var savedOrderIds = [];
+    container.querySelectorAll('.item-block').forEach(function(block) {
+        var sel = block.querySelector('.item-order-id');
+        savedOrderIds.push(sel ? sel.value : '');
+    });
+
+    // Rebuild Order ID dropdown options filtered by Party + ShipTo + Address
     var partyEl = document.getElementById('party-name');
     if (partyEl && partyEl.value) {
         onPartyNameChange(partyEl);
     }
 
-    // ── Auto-fill Ship To + Delivery Address from each item's Order ID ──
-    // onPartyNameChange above rebuilds Order ID options; now trigger
-    // onOrderIdChange for each block that has an Order ID set — this fills
-    // Ship To, Delivery Address, Private Marka from live OrderSheet data.
-    document.querySelectorAll('.item-order-id').forEach(function(sel) {
-        if (sel.value) onOrderIdChange(sel);
+    // ═══ RESTORE Order IDs after dropdown rebuild ═══
+    var allBlocks = container.querySelectorAll('.item-block');
+    allBlocks.forEach(function(block, i) {
+        if (savedOrderIds[i]) {
+            var sel = block.querySelector('.item-order-id');
+            if (sel) {
+                sel.value = savedOrderIds[i];
+                // If value didn't stick (order not in filtered list), force-add it
+                if (sel.value !== savedOrderIds[i]) {
+                    var opt = document.createElement('option');
+                    opt.value = savedOrderIds[i];
+                    opt.textContent = savedOrderIds[i];
+                    sel.appendChild(opt);
+                    sel.value = savedOrderIds[i];
+                }
+            }
+        }
     });
 
-    // 🔒 Re-check weight gate after draft load
+    // NOW trigger onOrderIdChange for each block (Order IDs are set correctly)
+    allBlocks.forEach(function(block) {
+        var sel = block.querySelector('.item-order-id');
+        if (sel && sel.value) onOrderIdChange(sel);
+    });
+
+    // Restore brand/quality values that might have been overwritten by onOrderIdChange
+    var allBlocksFinal = container.querySelectorAll('.item-block');
+    items.forEach(function(item, i) {
+        if (i < allBlocksFinal.length) {
+            var block = allBlocksFinal[i];
+            if (item.brand) {
+                var brandEl = block.querySelector('.item-brand');
+                if (brandEl) brandEl.value = item.brand;
+            }
+            if (item.type) {
+                var typeEl = block.querySelector('.item-type');
+                if (typeEl) typeEl.value = item.type;
+            }
+        }
+    });
+
+    // 🔒 Re-check gates after everything is properly set
     updateWeightGate();
     updatePartyLock();
     updateHeaderFieldsLock();
+    _draftLoading = false; // 🛡️ Resume normal behavior
 
     // 🔒 Lock ONLY ASSIGNED drafts for DATA_ENTRY (from Quick Pack)
     // OWN drafts (self-created) remain fully editable
@@ -3590,11 +3632,22 @@ function addQualityRow(quality, item, qty, privateMarka) {
     var div = document.createElement('div');
     div.className = 'quality-row';
     div.id = id;
+
+    // Pre-lookup stdPcs for pre-filled quality
+    var stdPcsVal = '';
+    if (quality && brandMap.has(quality.toUpperCase())) {
+        stdPcsVal = brandMap.get(quality.toUpperCase());
+    }
+
     div.innerHTML =
         '<div>' +
             '<label>Quality *</label>' +
             '<input type="text" class="qr-quality" placeholder="Quality..." list="dl-brand-order" autocomplete="off" ' +
-            'value="' + escapeHtmlJs(quality || '') + '" oninput="this.value=this.value.toUpperCase()">' +
+            'value="' + escapeHtmlJs(quality || '') + '" oninput="this.value=this.value.toUpperCase()" ' +
+            'onchange="onQualityRowChange(this, \'' + id + '\')">' +
+            '<span class="qr-stdpcs" style="font-size:9px;color:#6366f1;font-weight:700;margin-top:1px;display:block;">' +
+                (stdPcsVal ? 'Std: ' + stdPcsVal + ' pcs' : '') +
+            '</span>' +
         '</div>' +
         '<div>' +
             '<label>Item *</label>' +
@@ -3615,6 +3668,86 @@ function addQualityRow(quality, item, qty, privateMarka) {
         '</div>' +
         '<button type="button" class="btn-remove-quality" onclick="removeQualityRow(\'' + id + '\')" title="Remove">×</button>';
     container.appendChild(div);
+}
+
+// 📋 Quality row onchange — show Standard Pcs + auto-save new quality to Item List
+function onQualityRowChange(input, rowId) {
+    var qualityName = (input.value || '').trim().toUpperCase();
+    var row = document.getElementById(rowId);
+    var stdPcsSpan = row ? row.querySelector('.qr-stdpcs') : null;
+
+    if (!qualityName) {
+        if (stdPcsSpan) stdPcsSpan.innerHTML = '';
+        return;
+    }
+
+    // Show Standard Pcs if quality exists in brandMap
+    if (brandMap.has(qualityName)) {
+        var stdPcs = brandMap.get(qualityName);
+        if (stdPcsSpan) {
+            stdPcsSpan.innerHTML = '<span style="color:#6366f1;">Std: ' + stdPcs + ' pcs</span>';
+        }
+    } else {
+        // New quality — show Std Pcs input for user to fill
+        if (stdPcsSpan) {
+            stdPcsSpan.innerHTML =
+                '<span style="color:#f59e0b;">🆕 New Quality — </span>' +
+                '<input type="number" class="qr-new-stdpcs" min="0" placeholder="Std Pcs?" ' +
+                'style="width:65px;padding:2px 5px;font-size:10px;border:1.5px solid #f59e0b;border-radius:4px;font-weight:700;background:#fffbeb;" ' +
+                'onchange="onNewQualityStdPcsFill(this,\'' + escapeHtmlJs(qualityName) + '\',\'' + rowId + '\')" ' +
+                'enterkeyhint="done" inputmode="numeric">' +
+                '<span class="qr-save-status" style="font-size:9px;margin-left:4px;"></span>';
+        }
+    }
+}
+
+// 📋 User filled Std Pcs for new quality → save both to Item List sheet
+async function onNewQualityStdPcsFill(input, qualityName, rowId) {
+    var stdPcs = Number(input.value) || 0;
+    if (stdPcs <= 0) { alert('Standard Pcs 0 se zyada hona chahiye!'); input.focus(); return; }
+
+    var row = document.getElementById(rowId);
+    var statusSpan = row ? row.querySelector('.qr-save-status') : null;
+
+    input.disabled = true;
+    if (statusSpan) { statusSpan.textContent = '⏳ Saving...'; statusSpan.style.color = '#f59e0b'; }
+
+    try {
+        var res = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(withAuthPayload({ action: 'saveNewQuality', qualityName: qualityName, stdPcs: stdPcs })),
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            redirect: 'follow'
+        });
+        var result = await res.json();
+        if (result.success) {
+            // Update local brandMap
+            brandMap.set(qualityName, stdPcs);
+            // Add to datalists
+            var dlOrd = document.getElementById('dl-brand-order');
+            if (dlOrd && !dlOrd.querySelector('option[value="' + qualityName + '"]')) {
+                var opt = document.createElement('option'); opt.value = qualityName; dlOrd.appendChild(opt);
+            }
+            var dlBrand = document.getElementById('dl-brand');
+            if (dlBrand && !dlBrand.querySelector('option[value="' + qualityName + '"]')) {
+                var opt2 = document.createElement('option'); opt2.value = qualityName; dlBrand.appendChild(opt2);
+            }
+            // Show success
+            var stdPcsSpan = row ? row.querySelector('.qr-stdpcs') : null;
+            if (stdPcsSpan) {
+                stdPcsSpan.innerHTML = '<span style="color:#10b981;">✅ Saved! Std: ' + stdPcs + ' pcs</span>';
+                setTimeout(function() {
+                    if (stdPcsSpan) stdPcsSpan.innerHTML = '<span style="color:#6366f1;">Std: ' + stdPcs + ' pcs</span>';
+                }, 2000);
+            }
+        } else {
+            if (statusSpan) { statusSpan.textContent = '❌ ' + (result.error || 'Error'); statusSpan.style.color = '#ef4444'; }
+            input.disabled = false;
+        }
+    } catch(e) {
+        if (statusSpan) { statusSpan.textContent = '❌ Network error'; statusSpan.style.color = '#ef4444'; }
+        input.disabled = false;
+    }
 }
 
 // 📦 Add Quality Row with last row's Quality pre-filled
